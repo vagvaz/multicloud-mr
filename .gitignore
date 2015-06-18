@@ -1,0 +1,11 @@
+conf/
+common/conf
+**/*.iml
+**/target/*
+**/.idea/
+**/.project
+**/.classpath
+**/.settings/*
+**/*.log.*
+**/*.log
+target/
