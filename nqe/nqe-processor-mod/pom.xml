@@ -148,7 +148,6 @@
                 <exclusion>
                     <groupId>org.apache.tajo</groupId>
                     <artifactId>tajo-jdbc</artifactId>
-
                 </exclusion>
             </exclusions>
         </dependency>
@@ -173,7 +172,6 @@
                 <exclusion>
                     <groupId>org.apache.tajo</groupId>
                     <artifactId>tajo-jdbc</artifactId>
-
                 </exclusion>
             </exclusions>
         </dependency>
