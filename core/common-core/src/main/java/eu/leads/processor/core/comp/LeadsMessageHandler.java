@@ -7,7 +7,7 @@ import org.vertx.java.core.json.JsonObject;
  */
 public interface LeadsMessageHandler {
 
-    public void handle(JsonObject message);
+  public void handle(JsonObject message);
 
 
 }

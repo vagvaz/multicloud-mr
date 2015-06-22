@@ -1,7 +1,7 @@
 package eu.leads.processor.core.comp;
 
-import eu.leads.processor.core.PersistenceProxy;
 import eu.leads.processor.core.net.Node;
+
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -9,12 +9,12 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class DefaultFailHandler implements LeadsMessageHandler {
 
-    public DefaultFailHandler(ComponentControlVerticle componentControlVerticle, Node com,
-                              LogProxy log) {
-    }
+  public DefaultFailHandler(ComponentControlVerticle componentControlVerticle, Node com,
+                            LogProxy log) {
+  }
 
-    @Override
-    public void handle(JsonObject jsonObject) {
+  @Override
+  public void handle(JsonObject jsonObject) {
 
-    }
+  }
 }

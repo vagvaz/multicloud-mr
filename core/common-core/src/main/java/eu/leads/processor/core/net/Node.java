@@ -2,6 +2,7 @@ package eu.leads.processor.core.net;
 
 import eu.leads.processor.core.ReplyHandler;
 import eu.leads.processor.core.comp.LeadsMessageHandler;
+
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.json.JsonObject;
@@ -13,62 +14,63 @@ import java.util.concurrent.Callable;
  * Created by vagvaz on 7/8/14.
  */
 public interface Node {
-    public void sendTo(String nodeid, JsonObject message);
 
-    public void sendRequestTo(String nodeid, JsonObject message, LeadsMessageHandler handler);
+  public void sendTo(String nodeid, JsonObject message);
 
-    public void sendToGroup(String groupId, JsonObject message);
+  public void sendRequestTo(String nodeid, JsonObject message, LeadsMessageHandler handler);
 
-    public void sendRequestToGroup(String groupId, JsonObject message, LeadsMessageHandler handler);
+  public void sendToGroup(String groupId, JsonObject message);
 
-    public void sendToAllGroup(String groupId, JsonObject message);
+  public void sendRequestToGroup(String groupId, JsonObject message, LeadsMessageHandler handler);
 
-    public void subscribe(String groupId, LeadsMessageHandler handler);
+  public void sendToAllGroup(String groupId, JsonObject message);
 
-    void subscribe(String groupId, LeadsMessageHandler handler, Callable callable);
+  public void subscribe(String groupId, LeadsMessageHandler handler);
 
-    public void unsubscribe(String groupId);
+  void subscribe(String groupId, LeadsMessageHandler handler, Callable callable);
 
-    public void initialize(JsonObject config, LeadsMessageHandler defaultHandler,
-                              LeadsMessageHandler failHandler, Vertx vertx);
+  public void unsubscribe(String groupId);
 
-    public void initialize(String id, String group, Set<String> groups,
-                              LeadsMessageHandler defaultHandler, LeadsMessageHandler failHandler,
-                              Vertx vertx);
+  public void initialize(JsonObject config, LeadsMessageHandler defaultHandler,
+                         LeadsMessageHandler failHandler, Vertx vertx);
 
-    public JsonObject getConfig();
+  public void initialize(String id, String group, Set<String> groups,
+                         LeadsMessageHandler defaultHandler, LeadsMessageHandler failHandler,
+                         Vertx vertx);
 
-    public void setEventBus(EventBus bus);
+  public JsonObject getConfig();
 
-    public int getRetries();
+  public void setEventBus(EventBus bus);
 
-    public void setRetries(int retries);
+  public int getRetries();
 
-    public long getTimeout();
+  public void setRetries(int retries);
 
-    public void setTimeout(long timeout);
+  public long getTimeout();
 
-    public void retry(Long messageId, AckHandler handler);
+  public void setTimeout(long timeout);
 
-    public void fail(Long messageId);
+  public void retry(Long messageId, AckHandler handler);
 
-    public void succeed(Long messageId);
+  public void fail(Long messageId);
 
-    public long getNextMessageId();
+  public void succeed(Long messageId);
 
-    public String getId();
+  public long getNextMessageId();
 
-    public String getGroup();
+  public String getId();
 
-    void sendWithEventBus(String workQueue, JsonObject msg);
+  public String getGroup();
 
-    void sendWithEventBusReply(String id, JsonObject putAction, ReplyHandler replyHandler);
+  void sendWithEventBus(String workQueue, JsonObject msg);
 
-    void unsubscribeFromAll();
+  void sendWithEventBusReply(String id, JsonObject putAction, ReplyHandler replyHandler);
 
-    void ack(JsonObject incoming);
+  void unsubscribeFromAll();
 
-    boolean checkIfDelivered(JsonObject message);
+  void ack(JsonObject incoming);
 
-    void receive(JsonObject message);
+  boolean checkIfDelivered(JsonObject message);
+
+  void receive(JsonObject message);
 }

@@ -8,21 +8,21 @@ import org.vertx.java.core.json.JsonObject;
 public class RecursiveCallQuery extends SpecialQuery {
 
 
-    public RecursiveCallQuery(String user, String url, int depth) {
-        super();
-        setSpecialQueryType("rec_call");
-        setUrl(url);
-        setDepth(depth);
-    }
+  public RecursiveCallQuery(String user, String url, int depth) {
+    super();
+    setSpecialQueryType("rec_call");
+    setUrl(url);
+    setDepth(depth);
+  }
 
-    public RecursiveCallQuery(SpecialQuery specialQuery) {
-        super(specialQuery.asJsonObject());
-        generatePlan();
-    }
+  public RecursiveCallQuery(SpecialQuery specialQuery) {
+    super(specialQuery.asJsonObject());
+    generatePlan();
+  }
 
-    private void generatePlan() {
+  private void generatePlan() {
 
-    }
+  }
 
   @Override
   public String getQueryType() {
@@ -131,19 +131,19 @@ public class RecursiveCallQuery extends SpecialQuery {
     data.putObject("read", readStatus.asJsonObject());
   }
 
-    public String getUrl() {
-        return data.getString("url");
-    }
+  public String getUrl() {
+    return data.getString("url");
+  }
 
-    public void setUrl(String url) {
-        data.putString("url", url);
-    }
+  public void setUrl(String url) {
+    data.putString("url", url);
+  }
 
-    public int getDepth() {
-        return Integer.parseInt(data.getString("depth"));
-    }
+  public int getDepth() {
+    return Integer.parseInt(data.getString("depth"));
+  }
 
-    public void setDepth(int depth) {
-        data.putString("depth", Integer.toString(depth));
-    }
+  public void setDepth(int depth) {
+    data.putString("depth", Integer.toString(depth));
+  }
 }

@@ -15,18 +15,18 @@
 
     <dependencies>
         <!--<dependency>-->
-            <!--<groupId>gr.tuc.softnet</groupId>-->
-            <!--<artifactId>common-core</artifactId>-->
-            <!--<version>${processor.version}</version>-->
-            <!--<scope>provided</scope>-->
+        <!--<groupId>gr.tuc.softnet</groupId>-->
+        <!--<artifactId>common-core</artifactId>-->
+        <!--<version>${processor.version}</version>-->
+        <!--<scope>provided</scope>-->
         <!--</dependency>-->
     </dependencies>
 
     <modules>
-<!--         <module>imanager-comp-mod</module> -->
-<!--         <module>imanager-logic-mod</module> -->
+        <!--         <module>imanager-comp-mod</module> -->
+        <!--         <module>imanager-logic-mod</module> -->
         <module>processor-webservice</module>
-<!--         <module>imanager-processor-mod</module> -->
+        <!--         <module>imanager-processor-mod</module> -->
     </modules>
 
 

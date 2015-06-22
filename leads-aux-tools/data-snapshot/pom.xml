@@ -13,92 +13,92 @@
     <artifactId>data-snapshot</artifactId>
 
     <dependencies>
-       <dependency>
-          <groupId>gr.tuc.softnet</groupId>
-          <artifactId>common-core</artifactId>
-          <version>${processor.version}</version>
-          <exclusions>
-             <exclusion>
-                <groupId>log4j</groupId>
-                <artifactId>log4j</artifactId>
-             </exclusion>
-             <exclusion>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-core</artifactId>
-             </exclusion>
-             <exclusion>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-log4j12</artifactId>
-             </exclusion>
-             <exclusion>
-                <groupId>org.apache.tajo</groupId>
-                <artifactId>tajo-jdbc</artifactId>
+        <dependency>
+            <groupId>gr.tuc.softnet</groupId>
+            <artifactId>common-core</artifactId>
+            <version>${processor.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tajo</groupId>
+                    <artifactId>tajo-jdbc</artifactId>
 
-             </exclusion>
-          </exclusions>
-       </dependency>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>gr.tuc.softnet</groupId>
             <artifactId>multicloud-mr-common</artifactId>
             <version>${processor.version}</version>
-           <exclusions>
-              <exclusion>
-                 <groupId>log4j</groupId>
-                 <artifactId>log4j</artifactId>
-              </exclusion>
-              <exclusion>
-                 <groupId>org.apache.logging.log4j</groupId>
-                 <artifactId>log4j-core</artifactId>
-              </exclusion>
-              <exclusion>
-                 <groupId>org.slf4j</groupId>
-                 <artifactId>slf4j-log4j12</artifactId>
-              </exclusion>
-              <exclusion>
-                 <groupId>org.apache.tajo</groupId>
-                 <artifactId>tajo-jdbc</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tajo</groupId>
+                    <artifactId>tajo-jdbc</artifactId>
 
-              </exclusion>
-           </exclusions>
+                </exclusion>
+            </exclusions>
         </dependency>
-      <dependency>
-         <groupId>io.vertx</groupId>
-         <artifactId>vertx-core</artifactId>
-         <version>${vertx.version}</version>
-         <exclusions>
-            <exclusion>
-               <groupId>log4j</groupId>
-               <artifactId>log4j</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.apache.logging.log4j</groupId>
-               <artifactId>log4j-core</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>slf4j-log4j12</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.apache.tajo</groupId>
-               <artifactId>tajo-jdbc</artifactId>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
+            <version>${vertx.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.tajo</groupId>
+                    <artifactId>tajo-jdbc</artifactId>
 
-            </exclusion>
-         </exclusions>
-      </dependency>
+                </exclusion>
+            </exclusions>
+        </dependency>
 
     </dependencies>
     <build>
         <plugins>
             <!-- The vert.x Maven plugin -->
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>${maven.compiler.plugin.version}</version>
-            <configuration>
-               <source>1.7</source>
-               <target>1.7</target>
-            </configuration>
-         </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
@@ -107,8 +107,8 @@
                     </descriptorRefs>
                 </configuration>
             </plugin>
-      </plugins>
+        </plugins>
 
-   </build>
+    </build>
 
 </project>

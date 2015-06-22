@@ -2,38 +2,36 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsMapper;
+
 import org.infinispan.distexec.mapreduce.Collector;
 import org.vertx.java.core.json.JsonObject;
 
 /**
- * Created with IntelliJ IDEA.
- * User: vagvaz
- * Date: 12/3/13
- * Time: 10:22 AM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: vagvaz Date: 12/3/13 Time: 10:22 AM To change this template use
+ * File | Settings | File Templates.
  */
 public class SortMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
-    transient protected String[] sortColumns;
-    transient protected Boolean[] asceding;
-    transient protected String[] types;
-    Integer counter = 0;
-    Integer numParts = 0;
+  transient protected String[] sortColumns;
+  transient protected Boolean[] asceding;
+  transient protected String[] types;
+  Integer counter = 0;
+  Integer numParts = 0;
 
-    public SortMapper(JsonObject configuration) {
-        super(configuration);
-    }
+  public SortMapper(JsonObject configuration) {
+    super(configuration);
+  }
 
-    public void initialize() {
-        counter = 0;
-        isInitialized = true;
-        super.initialize();
-        String columns = conf.getString("sortColumns");
+  public void initialize() {
+    counter = 0;
+    isInitialized = true;
+    super.initialize();
+    String columns = conf.getString("sortColumns");
 
-    }
+  }
 
-    @Override
-    public void map(String key, Tuple value, Collector<String, Tuple> collector) {
+  @Override
+  public void map(String key, Tuple value, Collector<String, Tuple> collector) {
 //        if (!isInitialized)
 //            initialize();
 //        progress();
@@ -48,5 +46,5 @@ public class SortMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 //       }
 //       tuples.clear();
 //       return output + key;
-     }
+  }
 }

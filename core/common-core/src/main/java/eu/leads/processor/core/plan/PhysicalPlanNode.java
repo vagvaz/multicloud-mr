@@ -7,40 +7,40 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class PhysicalPlanNode extends PlanNode {
 
-   public PhysicalPlanNode(){
-      super();
-      data.putString("execType","single");
-   }
+  public PhysicalPlanNode() {
+    super();
+    data.putString("execType", "single");
+  }
 
-   public String getExecType(){
-      return data.getString("execType");
-   }
+  public String getExecType() {
+    return data.getString("execType");
+  }
 
-   public void setExecType(String execType){
-      data.putString("execType",execType);
-   }
+  public void setExecType(String execType) {
+    data.putString("execType", execType);
+  }
 
-   public JsonObject preProcess(){
-      return data.getObject("preprocess");
-   }
+  public JsonObject preProcess() {
+    return data.getObject("preprocess");
+  }
 
-   public void setPreProcess(JsonObject preProcess){
-      data.putObject("preprocess",preProcess);
-   }
+  public void setPreProcess(JsonObject preProcess) {
+    data.putObject("preprocess", preProcess);
+  }
 
-   public void setPostProcess(JsonObject stage){
-      data.putObject("postprocess",stage);
-   }
+  public void setPostProcess(JsonObject stage) {
+    data.putObject("postprocess", stage);
+  }
 
-   public JsonObject postProcess(){
-      return data.getObject("postprocess");
-   }
+  public JsonObject postProcess() {
+    return data.getObject("postprocess");
+  }
 
-   public JsonObject onProcess(){
-      return data.getObject("onprocess");
-   }
+  public JsonObject onProcess() {
+    return data.getObject("onprocess");
+  }
 
-   public void setOnProcess(JsonObject stage){
-      data.putObject("onprocess",stage);
-   }
+  public void setOnProcess(JsonObject stage) {
+    data.putObject("onprocess", stage);
+  }
 }

@@ -5,47 +5,47 @@ import org.infinispan.Cache;
 import java.io.Serializable;
 import java.util.Set;
 
-public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K,V> implements
+public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, V> implements
 
-		 Serializable {
+                                                                                   Serializable {
 
-	/**
-	 * tr
-	 */
-	private static final long serialVersionUID = 1242145345234214L;
-	 
-	private LeadsCollector<kOut, vOut> collector = null;
+  /**
+   * tr
+   */
+  private static final long serialVersionUID = 1242145345234214L;
 
-	private Set<K> keys;
-	private LeadsMapper<K, V, kOut, vOut> mapper = null;
-   String site;
+  private LeadsCollector<kOut, vOut> collector = null;
 
-	public LeadsMapperCallable(Cache<K, V> cache,
-			LeadsCollector<kOut, vOut> collector,
-			LeadsMapper<K, V, kOut, vOut> mapper,String site) {
-    super("{}",collector.getCacheName());
-      this.site = site;
-		this.collector = collector;
-		this.mapper = mapper;
-	}
+  private Set<K> keys;
+  private LeadsMapper<K, V, kOut, vOut> mapper = null;
+  String site;
+
+  public LeadsMapperCallable(Cache<K, V> cache,
+                             LeadsCollector<kOut, vOut> collector,
+                             LeadsMapper<K, V, kOut, vOut> mapper, String site) {
+    super("{}", collector.getCacheName());
+    this.site = site;
+    this.collector = collector;
+    this.mapper = mapper;
+  }
 
   @Override
-	public void setEnvironment(Cache<K, V> cache, Set<K> inputKeys) {
-    super.setEnvironment(cache,inputKeys);
+  public void setEnvironment(Cache<K, V> cache, Set<K> inputKeys) {
+    super.setEnvironment(cache, inputKeys);
 //		this.cache =  cache;
 //		this.keys = inputKeys;
 //		collector.initializeCache(cache.getCacheManager());
-	}
+  }
 
   @Override
-  public void initialize(){
+  public void initialize() {
 //    collector.initializeCache(inputCache.getCacheManager());
     super.initialize();
     collector.setOnMap(true);
     collector.setManager(this.embeddedCacheManager);
     collector.setEmanager(emanager);
     collector.setSite(site);
-    collector.initializeCache(inputCache.getName(),imanager);
+    collector.initializeCache(inputCache.getName(), imanager);
   }
 
 //	public String call() throws Exception {
@@ -70,11 +70,13 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K,V
 //		return null;
 //	}
 
-  @Override public void executeOn(K key, V value) {
-    mapper.map(key,value,collector);
+  @Override
+  public void executeOn(K key, V value) {
+    mapper.map(key, value, collector);
   }
 
-  @Override public void finalizeCallable() {
+  @Override
+  public void finalizeCallable() {
     mapper.finalizeTask();
     super.finalizeCallable();
     collector.getCounterCache().stop();

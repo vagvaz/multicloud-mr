@@ -7,23 +7,24 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
  */
 @JsonAutoDetect
 public class WebServiceWorkflow {
-    private String user;
-    private String workflow; //json format
 
-    public String getUser() {
-        return user;
-    }
+  private String user;
+  private String workflow; //json format
 
-    public void setUser(String user) {
-        this.user = user;
-    }
+  public String getUser() {
+    return user;
+  }
 
-    public String getWorkflow() {
-        return workflow;
-    }
+  public void setUser(String user) {
+    this.user = user;
+  }
 
-    public void setWorkflow(String workflow) {
-        this.workflow = workflow;
-    }
+  public String getWorkflow() {
+    return workflow;
+  }
+
+  public void setWorkflow(String workflow) {
+    this.workflow = workflow;
+  }
 }
 

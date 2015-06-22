@@ -5,27 +5,29 @@ import java.io.Serializable;
 /**
  * Created by vagvaz on 9/29/14.
  */
-public class ProcessorEntry implements Serializable{
-    protected String key;
-    protected String value;
-    public ProcessorEntry(Object key, Object value) {
-        this.key = (String)key;
-        this.value = (String)value;
-    }
+public class ProcessorEntry implements Serializable {
 
-    public String getKey() {
-        return key;
-    }
+  protected String key;
+  protected String value;
 
-    public void setKey(String key) {
-        this.key = key;
-    }
+  public ProcessorEntry(Object key, Object value) {
+    this.key = (String) key;
+    this.value = (String) value;
+  }
 
-    public String getValue() {
-        return value;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public void setValue(String value) {
-        this.value = value;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
+
+  public String getValue() {
+    return value;
+  }
+
+  public void setValue(String value) {
+    this.value = value;
+  }
 }

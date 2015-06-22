@@ -7,31 +7,32 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
  */
 @JsonAutoDetect
 public class RecursiveCallRestQuery {
-    String url;
-    String depth;
-    String user;
 
-    public String getUrl() {
-        return url;
-    }
+  String url;
+  String depth;
+  String user;
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
+  public String getUrl() {
+    return url;
+  }
 
-    public String getDepth() {
-        return depth;
-    }
+  public void setUrl(String url) {
+    this.url = url;
+  }
 
-    public void setDepth(String depth) {
-        this.depth = depth;
-    }
+  public String getDepth() {
+    return depth;
+  }
 
-    public String getUser() {
-        return user;
-    }
+  public void setDepth(String depth) {
+    this.depth = depth;
+  }
 
-    public void setUser(String user) {
-        this.user = user;
-    }
+  public String getUser() {
+    return user;
+  }
+
+  public void setUser(String user) {
+    this.user = user;
+  }
 }

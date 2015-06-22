@@ -7,31 +7,31 @@ import org.vertx.java.core.json.JsonObject;
  */
 public interface Component {
 
-    public void setup(JsonObject conf);
+  public void setup(JsonObject conf);
 
-    public void startUp();
+  public void startUp();
 
-    public void stopComponent();
+  public void stopComponent();
 
-    public void shutdown();
+  public void shutdown();
 
-    public void reset(JsonObject conf);
+  public void reset(JsonObject conf);
 
-    public void cleanup();
+  public void cleanup();
 
-    public void kill();
+  public void kill();
 
-    public ComponentMode getRunningMode();
+  public ComponentMode getRunningMode();
 
-    public void setRunningMode(ComponentMode mode);
+  public void setRunningMode(ComponentMode mode);
 
-    public ComponentState getState();
+  public ComponentState getState();
 
-    public String getId();
+  public String getId();
 
-    public void setId(String id);
+  public void setId(String id);
 
-    public String getComponentType();
+  public String getComponentType();
 
-    void setStatus(ComponentState initialized);
+  void setStatus(ComponentState initialized);
 }

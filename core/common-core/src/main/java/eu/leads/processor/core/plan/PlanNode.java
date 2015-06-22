@@ -1,6 +1,7 @@
 package eu.leads.processor.core.plan;
 
 import eu.leads.processor.core.DataType;
+
 import org.apache.tajo.plan.logical.LogicalNode;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -14,147 +15,149 @@ import java.util.List;
  */
 public class PlanNode extends DataType {
 
-    public PlanNode() {
-        super();
-        setSite("C&H micro-cloud 0");
+  public PlanNode() {
+    super();
+    setSite("C&H micro-cloud 0");
+  }
+
+  public PlanNode(JsonObject node) {
+    super(node);
+    if (!node.containsField("status")) {
+      setStatus(NodeStatus.PENDING);
+    }
+    if (!node.containsField("site")) {
+      setSite("C&H micro-cloud 0");
     }
 
-    public PlanNode(JsonObject node) {
-        super(node);
-       if(!node.containsField("status"))
-          setStatus(NodeStatus.PENDING);
-       if(!node.containsField("site")){
-          setSite("C&H micro-cloud 0");
-       }
+  }
 
+  public PlanNode(LogicalNode n) {
+    super();
+    JsonObject configuration = new JsonObject(n.toJson());
+    this.setConfiguration(configuration);
+    setNodeType(LeadsNodeType.valueOf(configuration.getString("type")));
+    setStatus(NodeStatus.PENDING);
+    setSite("C&H micro-cloud 0");
+  }
+
+  public PlanNode(LogicalNode n, String queryId) {
+    super();
+    JsonObject configuration = new JsonObject(n.toJson());
+    this.setConfiguration(configuration);
+    setNodeType(LeadsNodeType.valueOf(configuration.getString("type")));
+    generateId(queryId);
+    setStatus(NodeStatus.PENDING);
+    setSite("C&H micro-cloud 0");
+  }
+
+  public LeadsNodeType getNodeType() {
+    return LeadsNodeType.valueOf(data.getString("nodetype"));
+  }
+
+  public void setNodeType(LeadsNodeType nodeType) {
+    data.putString("nodetype", nodeType.toString());
+  }
+
+  public List<String> getInputs() {
+    ArrayList<String> result = new ArrayList<String>();
+    JsonArray array = data.getArray("inputs");
+    if (array != null && array.size() > 0) {
+      Iterator<Object> inputIterator = array.iterator();
+      while (inputIterator.hasNext()) {
+        result.add((String) inputIterator.next());
+      }
     }
+    return result;
+  }
 
-    public PlanNode(LogicalNode n) {
-        super();
-        JsonObject configuration = new JsonObject(n.toJson());
-        this.setConfiguration(configuration);
-        setNodeType(LeadsNodeType.valueOf(configuration.getString("type")));
-       setStatus(NodeStatus.PENDING);
-       setSite("C&H micro-cloud 0");
+  public void setInputs(List<String> inputs) {
+    JsonArray array = new JsonArray();
+    for (String input : inputs) {
+      array.add(input);
     }
+    data.putArray("inputs", array);
+  }
 
-    public PlanNode(LogicalNode n, String queryId) {
-       super();
-       JsonObject configuration = new JsonObject(n.toJson());
-       this.setConfiguration(configuration);
-       setNodeType(LeadsNodeType.valueOf(configuration.getString("type")));
-       generateId(queryId);
-       setStatus(NodeStatus.PENDING);
-       setSite("C&H micro-cloud 0");
+  public void addInput(String input) {
+    JsonArray array = data.getArray("inputs");
+    if (array == null) {
+      array = new JsonArray();
     }
+    array.add(input);
+    data.putArray("inputs", array);
+  }
 
-    public LeadsNodeType getNodeType() {
-        return LeadsNodeType.valueOf(data.getString("nodetype"));
-    }
+  public String getOutput() {
+    String result = data.getString("output");
+    return result;
+  }
 
-    public void setNodeType(LeadsNodeType nodeType) {
-        data.putString("nodetype", nodeType.toString());
-    }
+  public void setOutput(String output) {
+    data.putString("output", output);
+  }
 
-    public List<String> getInputs() {
-        ArrayList<String> result = new ArrayList<String>();
-        JsonArray array = data.getArray("inputs");
-        if (array != null && array.size() > 0) {
-            Iterator<Object> inputIterator = array.iterator();
-            while (inputIterator.hasNext()) {
-                result.add((String) inputIterator.next());
-            }
-        }
-        return result;
-    }
+  public JsonObject getConfiguration() {
+    JsonObject result = data.getObject("configuration");
+    return result;
+  }
 
-    public void setInputs(List<String> inputs) {
-        JsonArray array = new JsonArray();
-        for (String input : inputs) {
-            array.add(input);
-        }
-        data.putArray("inputs", array);
-    }
+  public void setConfiguration(JsonObject configuration) {
+    data.putObject("configuration", configuration);
+  }
 
-    public void addInput(String input) {
-        JsonArray array = data.getArray("inputs");
-        if (array == null)
-            array = new JsonArray();
-        array.add(input);
-        data.putArray("inputs", array);
-    }
+  public Integer getPid() {
+    String result = "";
+    JsonObject conf = getConfiguration();
+    return conf.getObject("body").getInteger("nodeId");
+  }
 
-    public String getOutput() {
-        String result = data.getString("output");
-        return result;
-    }
+  public String getNodeId() {
+    return data.getString("id");
+  }
 
-    public void setOutput(String output) {
-        data.putString("output", output);
-    }
+  public void setId(String id) {
+    data.putString("id", id);
+  }
 
-    public JsonObject getConfiguration() {
-        JsonObject result = data.getObject("configuration");
-        return result;
-    }
+  public void generateId(String prefix) {
+    Integer pid = getPid();
+    data.putString("id", prefix + "." + pid.toString());
+  }
 
-    public void setConfiguration(JsonObject configuration) {
-        data.putObject("configuration", configuration);
-    }
+  public Double getKParameter() {
+    return (Double) data.getNumber("k");
+  }
 
-    public Integer getPid() {
-        String result = "";
-        JsonObject conf = getConfiguration();
-        return conf.getObject("body").getInteger("nodeId");
-    }
+  public void setKParameter(double k) {
+    data.putNumber("k", k);
+  }
 
-    public String getNodeId() {
-        return data.getString("id");
-    }
+  public Double getVParameter() {
+    return (Double) data.getNumber("v");
+  }
 
-    public void setId(String id) {
-        data.putString("id", id);
-    }
+  public void setVParameter(double v) {
+    data.putNumber("v", v);
+  }
 
-    public void generateId(String prefix) {
-        Integer pid = getPid();
-        data.putString("id", prefix + "." + pid.toString());
-    }
-
-    public Double getKParameter() {
-        return (Double) data.getNumber("k");
-    }
-
-    public void setKParameter(double k) {
-        data.putNumber("k", k);
-    }
-
-    public Double getVParameter() {
-        return (Double) data.getNumber("v");
-    }
-
-    public void setVParameter(double v) {
-        data.putNumber("v", v);
-    }
-
-    public JsonObject getSchedulerRepresentation() {
-        return null;
-    }
+  public JsonObject getSchedulerRepresentation() {
+    return null;
+  }
 
 
-   public NodeStatus getStatus() {
-      return NodeStatus.valueOf(data.getString("status",NodeStatus.UNKNOWN.toString()) ) ;
-   }
+  public NodeStatus getStatus() {
+    return NodeStatus.valueOf(data.getString("status", NodeStatus.UNKNOWN.toString()));
+  }
 
-   public void setStatus(NodeStatus status){
-      data.putString("status",status.toString());
-   }
+  public void setStatus(NodeStatus status) {
+    data.putString("status", status.toString());
+  }
 
-   public String getSite(){
-      return data.getString("site");
-   }
+  public String getSite() {
+    return data.getString("site");
+  }
 
-   public void setSite(String site){
-      data.putString("site",site);
-   }
+  public void setSite(String site) {
+    data.putString("site", site);
+  }
 }

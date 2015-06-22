@@ -5,6 +5,6 @@ package eu.leads.processor.core.comp;
  */
 public class PersistentStateProxy {
 
-    public PersistentStateProxy() {
-    }
+  public PersistentStateProxy() {
+  }
 }

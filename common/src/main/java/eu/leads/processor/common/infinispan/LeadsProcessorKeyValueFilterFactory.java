@@ -18,27 +18,30 @@ import org.vertx.java.core.json.JsonObject;
 
 
 public class LeadsProcessorKeyValueFilterFactory implements CacheEventFilterFactory {
-//public class LeadsProcessorKeyValueFilterFactory {
+
+  //public class LeadsProcessorKeyValueFilterFactory {
   Logger log = LoggerFactory.getLogger(LeadsProcessorKeyValueFilterFactory.class);
   private final EmbeddedCacheManager manager;
 
-    public LeadsProcessorKeyValueFilterFactory(EmbeddedCacheManager cacheManager){
-        this.manager = cacheManager;
-    }
+  public LeadsProcessorKeyValueFilterFactory(EmbeddedCacheManager cacheManager) {
+    this.manager = cacheManager;
+  }
 
-  @Override public <K, V> CacheEventFilter<K, V> getFilter(Object[] params) {
+  @Override
+  public <K, V> CacheEventFilter<K, V> getFilter(Object[] params) {
     log.error("GetFilter called");
-    if(params.length != 1){
+    if (params.length != 1) {
       throw new IllegalArgumentException();
     }
-    JsonObject conf = new JsonObject((String)params[0]);
+    JsonObject conf = new JsonObject((String) params[0]);
     log.error("Json conf parametrized");
 //    PluginRunnerFilter result = new PluginRunnerFilter(manager,conf.toString());
     log.error("Filter init");
-    return new CacheEventFilter<K, V>(){
+    return new CacheEventFilter<K, V>() {
 
-      @Override public boolean accept(K key, V oldValue, Metadata oldMetadata, V newValue,
-          Metadata newMetadata, EventType eventType) {
+      @Override
+      public boolean accept(K key, V oldValue, Metadata oldMetadata, V newValue,
+                            Metadata newMetadata, EventType eventType) {
         return false;
       }
     };

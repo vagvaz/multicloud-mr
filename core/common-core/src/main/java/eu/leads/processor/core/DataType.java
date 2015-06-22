@@ -6,34 +6,35 @@ import org.vertx.java.core.json.JsonObject;
  * Created by angelos on 22/01/15.
  */
 public abstract class DataType {
-    protected JsonObject data;
 
-    public DataType(JsonObject other) {
-        data = other;
-    }
+  protected JsonObject data;
 
-    public DataType(String jsonString) {
-        data = new JsonObject(jsonString);
-    }
+  public DataType(JsonObject other) {
+    data = other;
+  }
 
-    public DataType() {
-        data = new JsonObject();
-    }
+  public DataType(String jsonString) {
+    data = new JsonObject(jsonString);
+  }
 
-    public JsonObject asJsonObject() {
-        return data;
-    }
+  public DataType() {
+    data = new JsonObject();
+  }
 
-    public String asString() {
-        return data.toString();
-    }
+  public JsonObject asJsonObject() {
+    return data;
+  }
 
-    public void copy(JsonObject other) {
-        data = other.copy();
-    }
+  public String asString() {
+    return data.toString();
+  }
 
-    @Override
-    public String toString() {
-        return data.toString();
-    }
+  public void copy(JsonObject other) {
+    data = other.copy();
+  }
+
+  @Override
+  public String toString() {
+    return data.toString();
+  }
 }

@@ -11,32 +11,32 @@ import org.vertx.java.platform.Verticle;
  */
 public class DefaultProcessor extends Verticle implements Handler<Message<JsonObject>> {
 
-    JsonObject config;
-    EventBus bus;
-    String completed;
+  JsonObject config;
+  EventBus bus;
+  String completed;
 
-    public DefaultProcessor() {
+  public DefaultProcessor() {
+  }
+
+  @Override
+  public void start() {
+    super.start();
+    bus.registerHandler(config.getString("workQueueAddress"), this);
+  }
+
+  @Override
+  public void handle(Message<JsonObject> jsonObjectMessage) {
+    System.out.println("Working on " + jsonObjectMessage.toString());
+
+    try {
+      Thread.sleep(1000); //emulating serious work
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
+    JsonObject reply = new JsonObject();
+    reply.putString("action", jsonObjectMessage.toString());
+    reply.putString("result", new JsonObject().putString("completed", "ok").toString());
+    bus.publish(completed, reply);
 
-    @Override
-    public void start() {
-        super.start();
-        bus.registerHandler(config.getString("workQueueAddress"), this);
-    }
-
-    @Override
-    public void handle(Message<JsonObject> jsonObjectMessage) {
-        System.out.println("Working on " + jsonObjectMessage.toString());
-
-        try {
-            Thread.sleep(1000); //emulating serious work
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        JsonObject reply = new JsonObject();
-        reply.putString("action", jsonObjectMessage.toString());
-        reply.putString("result", new JsonObject().putString("completed", "ok").toString());
-        bus.publish(completed, reply);
-
-    }
+  }
 }

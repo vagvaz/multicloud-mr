@@ -8,20 +8,22 @@ import java.io.Serializable;
 /**
  * Created by vagvaz on 8/13/14.
  */
-public class RangeFilter implements KeyValueFilter,Serializable{
-    Long min;
-    Long max;
+public class RangeFilter implements KeyValueFilter, Serializable {
 
-    public RangeFilter(Long min, Long max) {
-        this.min = min;
-        this.max = max;
-    }
+  Long min;
+  Long max;
 
-    @Override
-    public boolean accept(Object key, Object value, Metadata metadata) {
-        Long longKey = Long.parseLong(key.toString());
-        if (min <= longKey && longKey <= max)
-            return true;
-        return false;
+  public RangeFilter(Long min, Long max) {
+    this.min = min;
+    this.max = max;
+  }
+
+  @Override
+  public boolean accept(Object key, Object value, Metadata metadata) {
+    Long longKey = Long.parseLong(key.toString());
+    if (min <= longKey && longKey <= max) {
+      return true;
     }
+    return false;
+  }
 }

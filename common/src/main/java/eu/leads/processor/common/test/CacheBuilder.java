@@ -13,29 +13,30 @@ import java.io.InputStream;
  */
 public class CacheBuilder {
 
-    private EmbeddedCacheManager cacheManager;
+  private EmbeddedCacheManager cacheManager;
 
-    public CacheBuilder(String ispnConfigFile) throws IOException {
-        cacheManager = new DefaultCacheManager(findConfigFile(ispnConfigFile));
-    }
+  public CacheBuilder(String ispnConfigFile) throws IOException {
+    cacheManager = new DefaultCacheManager(findConfigFile(ispnConfigFile));
+  }
 
-    public EmbeddedCacheManager getCacheManager() {
-        return this.cacheManager;
-    }
+  public EmbeddedCacheManager getCacheManager() {
+    return this.cacheManager;
+  }
 
-    private String findConfigFile(String configFile) {
-        FileLookup fl = new FileLookup();
-        if (configFile != null) {
-            InputStream inputStream =
-                fl.lookupFile(configFile, Thread.currentThread().getContextClassLoader());
-            try {
-                if (inputStream != null)
-                    return configFile;
-            } finally {
-                Util.close(inputStream);
-            }
+  private String findConfigFile(String configFile) {
+    FileLookup fl = new FileLookup();
+    if (configFile != null) {
+      InputStream inputStream =
+          fl.lookupFile(configFile, Thread.currentThread().getContextClassLoader());
+      try {
+        if (inputStream != null) {
+          return configFile;
         }
-
-        return null;
+      } finally {
+        Util.close(inputStream);
+      }
     }
+
+    return null;
+  }
 }

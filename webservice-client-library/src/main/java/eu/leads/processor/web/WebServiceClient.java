@@ -3,26 +3,38 @@ package eu.leads.processor.web;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.http.HttpClient;
-import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.PlatformManager;
 
-import javax.ws.rs.core.MediaType;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.security.InvalidAlgorithmParameterException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
+
+import javax.ws.rs.core.MediaType;
 
 /**
  * Created by vagvaz on 8/15/14.
  */
 public class WebServiceClient {
+
   private static PlatformManager pm;
   private final static String prefix = "/rest/";
   private final static ObjectMapper mapper = new ObjectMapper();
@@ -42,11 +54,12 @@ public class WebServiceClient {
 
   public static boolean initialize(String uri) throws MalformedURLException {
     int lastIndex = uri.lastIndexOf(":");
-    host = uri.substring(0,lastIndex);
+    host = uri.substring(0, lastIndex);
     port = uri.substring(lastIndex + 1);
-    address = new URL(host+":"+port);
+    address = new URL(host + ":" + port);
     return true;
   }
+
   public static boolean checkIfOnline() {
     HttpURLConnection connection = null;
     try {
@@ -70,14 +83,15 @@ public class WebServiceClient {
       e.printStackTrace();
       return false;
     } finally {
-      if (connection != null)
+      if (connection != null) {
         connection.disconnect();
+      }
     }
   }
 
   private static HttpURLConnection setUp(HttpURLConnection connection, String type,
-                                          String contentType, boolean hasInput,
-                                          boolean hasOutput) throws ProtocolException {
+                                         String contentType, boolean hasInput,
+                                         boolean hasOutput) throws ProtocolException {
     connection.setRequestMethod(type);
     connection.setRequestProperty("Content-Type", contentType);
     connection.setUseCaches(false);
@@ -111,6 +125,7 @@ public class WebServiceClient {
     os.flush();
     os.close();
   }
+
   private static void setBody(HttpURLConnection connection, JsonObject body) throws IOException {
     String output = body.toString();
     //        System.out.println("Size: " + output.getBytes().length);
@@ -119,6 +134,7 @@ public class WebServiceClient {
     os.flush();
     os.close();
   }
+
   private static void setDataBody(HttpURLConnection connection, byte[] data) throws IOException {
     //String output = mapper.writeValueAsString(body);
     // System.out.println("Size: " + output.getBytes().length);
@@ -134,36 +150,38 @@ public class WebServiceClient {
 
 
   public static ActionResult executeMapReduce(JsonObject newAction, String uri) throws IOException {
-    address = new URL(uri+"/rest/internal/executemr");
-    HttpURLConnection connection = (HttpURLConnection)address.openConnection();
-    connection = setUp(connection,"POST",MediaType.APPLICATION_JSON,true,true);
+    address = new URL(uri + "/rest/internal/executemr");
+    HttpURLConnection connection = (HttpURLConnection) address.openConnection();
+    connection = setUp(connection, "POST", MediaType.APPLICATION_JSON, true, true);
     setBody(connection, newAction);
     String response = getResult(connection);
-    ActionResult result = mapper.readValue(response,ActionResult.class);
+    ActionResult result = mapper.readValue(response, ActionResult.class);
     return result;
   }
-  public static ActionResult executeMapReduce(JsonObject mrAction,String host, String port) throws IOException {
-    address = new URL(host+":"+port+prefix+"internal/executemr");
-    HttpURLConnection connection = (HttpURLConnection)address.openConnection();
-    connection = setUp(connection,"POST",MediaType.APPLICATION_JSON,true,true);
+
+  public static ActionResult executeMapReduce(JsonObject mrAction, String host, String port)
+      throws IOException {
+    address = new URL(host + ":" + port + prefix + "internal/executemr");
+    HttpURLConnection connection = (HttpURLConnection) address.openConnection();
+    connection = setUp(connection, "POST", MediaType.APPLICATION_JSON, true, true);
     setBody(connection, mrAction);
     String response = getResult(connection);
-    ActionResult result = mapper.readValue(response,ActionResult.class);
+    ActionResult result = mapper.readValue(response, ActionResult.class);
     return result;
   }
 
   public static ActionResult completeMapReduce(JsonObject mrAction, String uri) throws IOException {
-    address = new URL(uri+"/"+prefix+"internal/completedmr");
-    HttpURLConnection connection = (HttpURLConnection)address.openConnection();
-    connection = setUp(connection,"POST",MediaType.APPLICATION_JSON,true,true);
-    setBody(connection,mrAction);
+    address = new URL(uri + "/" + prefix + "internal/completedmr");
+    HttpURLConnection connection = (HttpURLConnection) address.openConnection();
+    connection = setUp(connection, "POST", MediaType.APPLICATION_JSON, true, true);
+    setBody(connection, mrAction);
     String response = getResult(connection);
-    ActionResult result = mapper.readValue(response,ActionResult.class);
+    ActionResult result = mapper.readValue(response, ActionResult.class);
     return result;
   }
 
   public static JsonObject getObject(String table, String key, List<String> attributes)
-    throws IOException {
+      throws IOException {
 
     ObjectQuery ob = new ObjectQuery();
     ob.setAttributes(attributes);
@@ -177,8 +195,9 @@ public class WebServiceClient {
     setBody(connection, ob);
     String response = getResult(connection);
     //        System.out.println("getResponse " + response);
-    if (response.length() < 5)
+    if (response.length() < 5) {
       return null;
+    }
     //      HashMap<String,String> res = (HashMap<String, String>) mapper.readValue(response, HashMap.class);
     //      HashMap<String,String> result = new HashMap<>();
     //        for(Map.Entry<String,String> r : res.entrySet()){
@@ -192,7 +211,7 @@ public class WebServiceClient {
   }
 
   public static boolean putObject(String table, String key, JsonObject object)
-    throws IOException {
+      throws IOException {
     boolean result = false;
     PutAction action = new PutAction();
     action.setTable(table);
@@ -224,8 +243,8 @@ public class WebServiceClient {
   public static QueryResults getQueryResults(String id, long min, long max) throws IOException {
     QueryResults result = new QueryResults();
     address = new URL(host + ":" + port + prefix + "query/results/" + id + "/min/" + String
-                                                                                       .valueOf(min)
-                        + "/max/" + String.valueOf(max));
+        .valueOf(min)
+                      + "/max/" + String.valueOf(max));
     HttpURLConnection connection = (HttpURLConnection) address.openConnection();
     connection = setUp(connection, "GET", MediaType.APPLICATION_JSON, true, true);
     String response = getResult(connection);
@@ -261,52 +280,57 @@ public class WebServiceClient {
     return result;
   }
 
-  public static boolean uploadJar(String username,String jarPath,String prefix, int chunkSize){
+  public static boolean uploadJar(String username, String jarPath, String prefix, int chunkSize) {
     try {
       long StartTime = System.currentTimeMillis();
       long totalUploadTime = 0;
-      System.out.println("UploadJar chunks size: "+ chunkSize);
+      System.out.println("UploadJar chunks size: " + chunkSize);
       BufferedInputStream input = new BufferedInputStream(new FileInputStream(jarPath));
       ByteArrayOutputStream array = new ByteArrayOutputStream();
       byte[] buffer = new byte[chunkSize];
       byte[] toWrite = null;
       int size = input.available();
       int initialSize = size;
-      int partsNum = size/chunkSize +1;
-      System.out.println("Must upload "+ size + " bytes, in "+ partsNum +" parts.");
+      int partsNum = size / chunkSize + 1;
+      System.out.println("Must upload " + size + " bytes, in " + partsNum + " parts.");
       int counter = -1;
-      float currentSpeed=0;
-      while( size > 0){
+      float currentSpeed = 0;
+      while (size > 0) {
         counter++;
 
         int readSize = input.read(buffer);
         toWrite = Arrays.copyOfRange(buffer, 0, readSize);
-        if(!uploadData(username,toWrite,prefix+"/"+counter)) {
+        if (!uploadData(username, toWrite, prefix + "/" + counter)) {
           return false;
         }
 
         long endTime = System.currentTimeMillis();
-        long timeDiff = endTime-StartTime +1;
-        StartTime=endTime;
-        currentSpeed=(chunkSize/1000f)/((timeDiff+1f)/1000f);
-        totalUploadTime+=timeDiff;
+        long timeDiff = endTime - StartTime + 1;
+        StartTime = endTime;
+        currentSpeed = (chunkSize / 1000f) / ((timeDiff + 1f) / 1000f);
+        totalUploadTime += timeDiff;
         size = input.available();
-        long ET=(int)(size/(chunkSize/(timeDiff+1)));
+        long ET = (int) (size / (chunkSize / (timeDiff + 1)));
 
-        System.out.println("Uploaded chunk #" + (counter+1) +  "/" + partsNum +", speed:  "+currentSpeed +" kb/s, " + size + " bytes to go estimated finish in:  " + ConvertSecondToHHMMString(ET) );
+        System.out.println(
+            "Uploaded chunk #" + (counter + 1) + "/" + partsNum + ", speed:  " + currentSpeed
+            + " kb/s, " + size + " bytes to go estimated finish in:  " + ConvertSecondToHHMMString(
+                ET));
       }
-      currentSpeed = (initialSize/1000f)/(totalUploadTime/1000f);
-      System.out.println("Upload Completed in: " +ConvertSecondToHHMMString(totalUploadTime)+ " Avg Speed: "+ currentSpeed + " kb/s, ");
+      currentSpeed = (initialSize / 1000f) / (totalUploadTime / 1000f);
+      System.out.println(
+          "Upload Completed in: " + ConvertSecondToHHMMString(totalUploadTime) + " Avg Speed: "
+          + currentSpeed + " kb/s, ");
       return true;
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();
     }
-    return  false;
+    return false;
   }
-  private static String ConvertSecondToHHMMString(long millisecondtTime)
-  {
+
+  private static String ConvertSecondToHHMMString(long millisecondtTime) {
     TimeZone tz = TimeZone.getTimeZone("UTC");
     SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
     df.setTimeZone(tz);
@@ -314,22 +338,23 @@ public class WebServiceClient {
 
     return time;
 
-}
-  public static boolean uploadData(String username, byte[] data, String target){
+  }
+
+  public static boolean uploadData(String username, byte[] data, String target) {
     boolean result = false;
     try {
       address = new URL(host + ":" + port + prefix + "data/upload/");
-    JsonObject action = new JsonObject();
-    HttpURLConnection connection = (HttpURLConnection) address.openConnection();
-    connection = setUp(connection, "POST", MediaType.APPLICATION_JSON, true, true);
-    //        setBody(connection,mapper.writeValueAsString(action));
+      JsonObject action = new JsonObject();
+      HttpURLConnection connection = (HttpURLConnection) address.openConnection();
+      connection = setUp(connection, "POST", MediaType.APPLICATION_JSON, true, true);
+      //        setBody(connection,mapper.writeValueAsString(action));
       action.putBinary("data", data);
-      action.putString("path",target);
-      action.putString("user",username);
-    setBody(connection, action);
-    String response = getResult(connection);
-    ActionResult aresult = mapper.readValue(response, ActionResult.class);
-    result = aresult.getStatus().equals("SUCCESS");
+      action.putString("path", target);
+      action.putString("user", username);
+      setBody(connection, action);
+      String response = getResult(connection);
+      ActionResult aresult = mapper.readValue(response, ActionResult.class);
+      result = aresult.getStatus().equals("SUCCESS");
     } catch (MalformedURLException e) {
       e.printStackTrace();
     } catch (ProtocolException e) {
@@ -348,7 +373,7 @@ public class WebServiceClient {
   private static boolean waitForFinish(JsonObject reply) throws IOException {
     String queryId = reply.getString("id");
     QueryStatus status = WebServiceClient.getQueryStatus(queryId);
-    while(!status.getStatus().equals("COMPLETED") && !status.getStatus().equals("FAILED")){
+    while (!status.getStatus().equals("COMPLETED") && !status.getStatus().equals("FAILED")) {
       try {
         Thread.sleep(1000);
       } catch (InterruptedException e) {
@@ -359,14 +384,14 @@ public class WebServiceClient {
     return status.getStatus().equals("COMPLETED");
   }
 
-  private static JsonObject submitEncryptedQuery(String user,String encryptedCache, String token) throws IOException {
+  private static JsonObject submitEncryptedQuery(String user, String encryptedCache, String token)
+      throws IOException {
     JsonObject result = new JsonObject();
 
-
     JsonObject encryptedQuery = new JsonObject();
-    encryptedQuery.putString("token",token);
-    encryptedQuery.putString("cache",encryptedCache);
-    encryptedQuery.putString("user",user);
+    encryptedQuery.putString("token", token);
+    encryptedQuery.putString("cache", encryptedCache);
+    encryptedQuery.putString("user", user);
     address = new URL(host + ":" + port + prefix + "query/encrypted/ppq");
     HttpURLConnection connection = (HttpURLConnection) address.openConnection();
     connection = setUp(connection, "POST", MediaType.APPLICATION_JSON, true, true);

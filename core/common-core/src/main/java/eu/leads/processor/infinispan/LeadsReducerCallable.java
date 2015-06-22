@@ -2,41 +2,42 @@ package eu.leads.processor.infinispan;
 
 import java.io.Serializable;
 
-public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut,Object> implements
-                                                                              Serializable {
+public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Object> implements
+                                                                                      Serializable {
+  /**
+   * tr
+   */
+  private static final long serialVersionUID = 3724554288677416505L;
+  private LeadsReducer<kOut, vOut> reducer = null;
+  private LeadsCollector collector;
+  private String prefix;
 
-    /**
-     * tr
-     */
-    private static final long serialVersionUID = 3724554288677416505L;
-    private LeadsReducer<kOut, vOut> reducer = null;
-    private LeadsCollector collector;
-    private String prefix;
 
-
-    public LeadsReducerCallable(String cacheName,
-                                 LeadsReducer<kOut, vOut> reducer,String prefix) {
-        super("{}",cacheName);
-        this.reducer = reducer;
-        collector = new LeadsCollector(1000,cacheName);
-        collector.setOnMap(false);
-        this.prefix = prefix;
-    }
-
-  @Override public void executeOn(kOut key, Object value) {
-    LeadsIntermediateIterator<vOut> values = new LeadsIntermediateIterator<>((String) key,prefix,imanager);
-    reducer.reduce(key,values,collector);
+  public LeadsReducerCallable(String cacheName,
+                              LeadsReducer<kOut, vOut> reducer, String prefix) {
+    super("{}", cacheName);
+    this.reducer = reducer;
+    collector = new LeadsCollector(1000, cacheName);
+    collector.setOnMap(false);
+    this.prefix = prefix;
   }
 
-  @Override public void initialize() {
+  @Override
+  public void executeOn(kOut key, Object value) {
+    LeadsIntermediateIterator<vOut> values = new LeadsIntermediateIterator<>((String) key, prefix,
+                                                                             imanager);
+    reducer.reduce(key, values, collector);
+  }
+
+  @Override
+  public void initialize() {
     super.initialize();
-      collector.setOnMap(false);
-      collector.setEmanager(emanager);
+    collector.setOnMap(false);
+    collector.setEmanager(emanager);
 
-      collector.initializeCache(inputCache.getName(),imanager);
+    collector.initializeCache(inputCache.getName(), imanager);
 
-
-     this.reducer.initialize();
+    this.reducer.initialize();
   }
   //    public vOut call() throws Exception {
 //        if (reducer == null) {
@@ -73,8 +74,9 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut,Obj
 //        return null;
 //    }
 
-  @Override public void finalizeCallable() {
+  @Override
+  public void finalizeCallable() {
     reducer.finalizeTask();
-      super.finalizeCallable();
+    super.finalizeCallable();
   }
 }

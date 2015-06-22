@@ -5,44 +5,44 @@ package eu.leads.processor.core.plan;
  */
 public interface Query {
 
-    String getQueryType();
+  String getQueryType();
 
-    void setQueryType(String queryType);
+  void setQueryType(String queryType);
 
-    String getUser();
+  String getUser();
 
-    void setUser(String user);
+  void setUser(String user);
 
-    String getId();
+  String getId();
 
-    void setId(String id);
+  void setId(String id);
 
-    String getMessage();
+  String getMessage();
 
-    void setMessage(String msg);
+  void setMessage(String msg);
 
-    boolean isCompleted();
+  boolean isCompleted();
 
-    void setCompleted(boolean complete);
+  void setCompleted(boolean complete);
 
-    QueryStatus getQueryStatus();
+  QueryStatus getQueryStatus();
 
-    void setQueryStatus(QueryStatus status);
+  void setQueryStatus(QueryStatus status);
 
-    String getLocation();
+  String getLocation();
 
-    void setLocation(String location);
+  void setLocation(String location);
 
-    Plan getPlan();
+  Plan getPlan();
 
-    void setPlan(Plan plan);
+  void setPlan(Plan plan);
 
-    QueryContext getContext();
+  QueryContext getContext();
 
-    void setContext(QueryContext context);
+  void setContext(QueryContext context);
 
-    ReadStatus getReadStatus();
+  ReadStatus getReadStatus();
 
-    void setReadStatus(ReadStatus readStatus);
+  void setReadStatus(ReadStatus readStatus);
 
 }

@@ -12,14 +12,16 @@ public class ComplexIntermediateKey implements Comparable, Serializable {
   private String cache;
   private String key;
   private Integer counter;
-  private static final long  serialVersionUID = -81923791823178123L;
-  public ComplexIntermediateKey(String site, String node,String cache) {
+  private static final long serialVersionUID = -81923791823178123L;
+
+  public ComplexIntermediateKey(String site, String node, String cache) {
     this.site = site;
     this.node = node;
     this.cache = cache;
   }
 
-  public ComplexIntermediateKey(String site, String node,String key, String cache, Integer counter) {
+  public ComplexIntermediateKey(String site, String node, String key, String cache,
+                                Integer counter) {
     this.site = site;
     this.node = node;
     this.key = key;
@@ -112,64 +114,72 @@ public class ComplexIntermediateKey implements Comparable, Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (o == null || getClass() != o.getClass()) return false;
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     ComplexIntermediateKey that = (ComplexIntermediateKey) o;
 
     //      if (site != null ? !site.equals(that.site) : that.site != null) return false;
     //      if (node != null ? !node.equals(that.node) : that.node != null) return false;
     //      if (key != null ? !key.equals(that.key) : that.key != null) return false;
     //      return !(counter != null ? !counter.equals(that.counter) : that.counter != null);
-    if(site.equals(that.getSite()))
-      if(node.equals(that.getNode()))
-        if(key.equals(that.getKey()))
-          if(cache.equals(that.getCache()))
-          if(counter.equals(that.getCounter()))
-            return true;
+    if (site.equals(that.getSite())) {
+      if (node.equals(that.getNode())) {
+        if (key.equals(that.getKey())) {
+          if (cache.equals(that.getCache())) {
+            if (counter.equals(that.getCounter())) {
+              return true;
+            }
+          }
+        }
+      }
+    }
     return false;
     //     return that.toString().equals(this.toString());
   }
 
   @Override
   public int compareTo(Object o) {
-    if (o == null || getClass() != o.getClass()) return -1;
+    if (o == null || getClass() != o.getClass()) {
+      return -1;
+    }
 
     ComplexIntermediateKey that = (ComplexIntermediateKey) o;
     int result = 0;
-    if (site != null){
+    if (site != null) {
       result = site.compareTo(that.site);
-      if(result != 0)
+      if (result != 0) {
         return result;
-    }
-    else{
+      }
+    } else {
       return -1;
     }
 
-    if (node != null){
+    if (node != null) {
       result = node.compareTo(that.node);
-      if(result != 0)
+      if (result != 0) {
         return result;
-    }
-    else{
+      }
+    } else {
       return -1;
     }
-    if(cache != null){
+    if (cache != null) {
       result = node.compareTo(that.cache);
-      if(result != 0)
+      if (result != 0) {
         return result;
-    }
-    else{
+      }
+    } else {
       return -1;
     }
-    if (key != null )
-    {
+    if (key != null) {
       result = key.compareTo(that.key);
-      if(result != 0)
+      if (result != 0) {
         return result;
-    }
-    else{
+      }
+    } else {
       return -1;
     }
-    if(counter != null){
+    if (counter != null) {
       return counter.compareTo(that.counter);
     }
     return -1;
@@ -177,12 +187,13 @@ public class ComplexIntermediateKey implements Comparable, Serializable {
   }
 
   public void next() {
-    counter = new Integer(counter+1);
+    counter = new Integer(counter + 1);
     //     return new ComplexIntermediateKey(site,node,key,counter);
   }
 
-  @Override public String toString() {
-    return site+"--"+node+"--"+cache+"--"+key+"--"+counter;
+  @Override
+  public String toString() {
+    return site + "--" + node + "--" + cache + "--" + key + "--" + counter;
   }
 
   public String getCache() {

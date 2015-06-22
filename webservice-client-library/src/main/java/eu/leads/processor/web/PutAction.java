@@ -7,36 +7,37 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
  */
 @JsonAutoDetect
 public class PutAction {
-    String table;
-    String key;
-    String object;
 
-    public String getTable() {
-        return table;
-    }
+  String table;
+  String key;
+  String object;
 
-    public void setTable(String table) {
-        this.table = table;
-    }
+  public String getTable() {
+    return table;
+  }
 
-    public String getKey() {
-        return key;
-    }
+  public void setTable(String table) {
+    this.table = table;
+  }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public String getObject() {
-        return object;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public void setObject(String object) {
-        this.object = object;
-    }
+  public String getObject() {
+    return object;
+  }
 
-    @Override
-    public String toString() {
-        return table + ":" + key + " -> \n->" + object;
-    }
+  public void setObject(String object) {
+    this.object = object;
+  }
+
+  @Override
+  public String toString() {
+    return table + ":" + key + " -> \n->" + object;
+  }
 }

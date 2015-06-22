@@ -9,7 +9,9 @@ import java.io.Serializable;
  * Created by vagvaz on 9/29/14.
  */
 public class AcceptAllFilter implements KeyValueFilter, Serializable {
-    @Override public boolean accept(Object key, Object value, Metadata metadata) {
-        return true;
-    }
+
+  @Override
+  public boolean accept(Object key, Object value, Metadata metadata) {
+    return true;
+  }
 }

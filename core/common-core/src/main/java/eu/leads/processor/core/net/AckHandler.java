@@ -1,6 +1,7 @@
 package eu.leads.processor.core.net;
 
 import eu.leads.processor.core.comp.LeadsMessageHandler;
+
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
@@ -12,39 +13,39 @@ import org.vertx.java.core.logging.Logger;
  */
 public class AckHandler implements Handler<AsyncResult<Message<JsonObject>>> {
 
-    Node owner;
-    Logger logger;
-    int retries;
-    long msgId;
-    LeadsMessageHandler handler;
+  Node owner;
+  Logger logger;
+  int retries;
+  long msgId;
+  LeadsMessageHandler handler;
 
-    public AckHandler(Node owner, Logger logger, long msgId) {
-        this.owner = owner;
-        this.logger = logger;
-        retries = owner.getRetries();
-        this.msgId = msgId;
-        handler = null;
-    }
+  public AckHandler(Node owner, Logger logger, long msgId) {
+    this.owner = owner;
+    this.logger = logger;
+    retries = owner.getRetries();
+    this.msgId = msgId;
+    handler = null;
+  }
 
-    public AckHandler(Node owner, Logger logger, long msgId, LeadsMessageHandler handler) {
-        this.owner = owner;
-        this.logger = logger;
-        retries = owner.getRetries();
-        this.msgId = msgId;
-        this.handler = handler;
-    }
+  public AckHandler(Node owner, Logger logger, long msgId, LeadsMessageHandler handler) {
+    this.owner = owner;
+    this.logger = logger;
+    retries = owner.getRetries();
+    this.msgId = msgId;
+    this.handler = handler;
+  }
 
 
-    @Override
-    public void handle(AsyncResult<Message<JsonObject>> result) {
-        logger.fatal("Ack RIN");
-        if (result.succeeded()) {
-            logger.fatal("Ack RIN");
+  @Override
+  public void handle(AsyncResult<Message<JsonObject>> result) {
+    logger.fatal("Ack RIN");
+    if (result.succeeded()) {
+      logger.fatal("Ack RIN");
 //            owner.succeed(msgId);
-            //         if (handler != null)
-            //            handler.handle(result.result().body());
-        } else {
-            //IF maximum number of retries reached then fail the message
+      //         if (handler != null)
+      //            handler.handle(result.result().body());
+    } else {
+      //IF maximum number of retries reached then fail the message
 //            if (retries == 0) {
 //                owner.fail(msgId);
 //            } else {
@@ -53,6 +54,6 @@ public class AckHandler implements Handler<AsyncResult<Message<JsonObject>>> {
 //                owner.retry(msgId, this);
 //            }
 
-        }
     }
+  }
 }

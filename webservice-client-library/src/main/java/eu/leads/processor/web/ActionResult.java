@@ -7,30 +7,31 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
  */
 @JsonAutoDetect
 public class ActionResult {
-    String result;
-    String message;
 
-    public ActionResult(String result) {
-        this.result = result;
-    }
+  String result;
+  String message;
 
-    public ActionResult() {
-        result = "FAIL";
-    }
+  public ActionResult(String result) {
+    this.result = result;
+  }
 
-    public String getMessage() {
-        return message;
-    }
+  public ActionResult() {
+    result = "FAIL";
+  }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  public String getMessage() {
+    return message;
+  }
 
-    public String getStatus() {
-        return result;
-    }
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
-    public void setStatus(String result) {
-        this.result = result;
-    }
+  public String getStatus() {
+    return result;
+  }
+
+  public void setStatus(String result) {
+    this.result = result;
+  }
 }

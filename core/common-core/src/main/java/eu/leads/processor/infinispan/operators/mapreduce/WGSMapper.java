@@ -6,8 +6,8 @@ import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
-import eu.leads.processor.core.TupleMarshaller;
 import eu.leads.processor.infinispan.LeadsMapper;
+
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.util.CloseableIterable;
@@ -18,12 +18,16 @@ import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by vagvaz on 9/26/14.
  */
 public class WGSMapper extends LeadsMapper<String, String, String, String> {
+
   public WGSMapper(String configString) {
     super(configString);
   }
@@ -37,10 +41,11 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
   protected transient double totalSum;
   protected transient BasicCache pagerankCache;
   protected transient InfinispanManager imanager;
-  protected transient Logger log ;
-  protected  transient EnsembleCacheManager readManager;
+  protected transient Logger log;
+  protected transient EnsembleCacheManager readManager;
+
   @Override
-  public  void initialize() {
+  public void initialize() {
     imanager = InfinispanClusterSingleton.getInstance().getManager();
     isInitialized = true;
     super.initialize();
@@ -51,22 +56,22 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
     readManager.start();
     //      webCache = (Cache) imanager.getPersisentCache(conf.getString("webCache"));
     webCache = readManager.getCache(conf.getString("webCache"), new ArrayList(readManager.sites()),
-                                     EnsembleCacheManager.Consistency.DIST);
+                                    EnsembleCacheManager.Consistency.DIST);
     pagerankCache = readManager.getCache("pagerankCache", new ArrayList(readManager.sites()),
-                                          EnsembleCacheManager.Consistency.DIST);
-    if(iteration < depth){
-      outputCache = readManager.getCache(conf.getString("outputCache"), new ArrayList(readManager.sites()),
-                                          EnsembleCacheManager.Consistency.DIST);
-    }
-    else{
+                                         EnsembleCacheManager.Consistency.DIST);
+    if (iteration < depth) {
+      outputCache =
+          readManager.getCache(conf.getString("outputCache"), new ArrayList(readManager.sites()),
+                               EnsembleCacheManager.Consistency.DIST);
+    } else {
       outputCache = null;
     }
 
-    prefix = webCache.getName()+":";
+    prefix = webCache.getName() + ":";
     JsonArray array = conf.getArray("attributes");
     Iterator<Object> iterator = array.iterator();
     attributes = new ArrayList<String>(array.size());
-    while(iterator.hasNext()){
+    while (iterator.hasNext()) {
       attributes.add((String) iterator.next());
     }
     LQPConfiguration.initialize();
@@ -75,25 +80,25 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
 
   @Override
   public void map(String key, String value, Collector<String, String> collector) {
-    if(!isInitialized)
+    if (!isInitialized) {
       this.initialize();
+    }
     //      String jsonString = (String) webCache.get(prefix+key);
     //      if (jsonString==null || jsonString.equals("")){
     //         return;
     //      }
     System.err.println("Running map for " + key.toString());
-    Object oo =  webCache.get(prefix+key);
+    Object oo = webCache.get(prefix + key);
     Tuple webpage = null;
-    if( oo instanceof Tuple){
-       webpage = (Tuple)oo;
-    }
-    else{
+    if (oo instanceof Tuple) {
+      webpage = (Tuple) oo;
+    } else {
 //      System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer " + oo.getClass().toString()  );
 //      Byte[] bytes = (Byte[]) oo;
       try {
 //        System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer " + bytes.length);
-      }catch (Exception e ){
-        System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer "  );
+      } catch (Exception e) {
+        System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer ");
         e.printStackTrace();
       }
       return;
@@ -111,7 +116,7 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
 //      }
     }
     //      Tuple t = new Tuple(jsonString);
-    if(webpage == null) {
+    if (webpage == null) {
       System.err.println("WAS NULLL " + key.toString());
       return;
     }
@@ -128,28 +133,28 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
     microclouds.add("dresden2");
 
     int mcIndex = Math.abs((t.getAttribute("url").hashCode())) % microclouds.size();
-    result.putString("micro-cluster",microclouds.get(mcIndex));
+    result.putString("micro-cluster", microclouds.get(mcIndex));
     ArrayList<Object> linksArray = (ArrayList<Object>) t.getGenericAttribute("links");
     JsonArray array = new JsonArray();
-    for(Object o : linksArray){
+    for (Object o : linksArray) {
       log.error("ADDING TO LINKS " + o.toString());
       array.add(o.toString());
     }
-    result.putValue("links",array);
+    result.putValue("links", array);
     System.err.println("WGS TUPLE " + result.toString());
-    collector.emit(String.valueOf(iteration),result.toString());
-    if(outputCache != null){
-      if (!result.getElement("links").isArray())
-      {log.error("SERIOUS ERROR links is not an array WGSMAPPER");
+    collector.emit(String.valueOf(iteration), result.toString());
+    if (outputCache != null) {
+      if (!result.getElement("links").isArray()) {
+        log.error("SERIOUS ERROR links is not an array WGSMAPPER");
         return;
       }
       JsonArray links = result.getArray("links");
       Iterator<Object> iterator = links.iterator();
-      while(iterator.hasNext()){
+      while (iterator.hasNext()) {
         String link = (String) iterator.next();
         log.error("Inserting into next iteration cache " + outputCache.getName() + " l " + link);
-        System.err.println("OUTOUTING WGS " + outputCache.getName() +   " l  " + link );
-        EnsembleCacheUtils.putToCache(outputCache,link, link);
+        System.err.println("OUTOUTING WGS " + outputCache.getName() + " l  " + link);
+        EnsembleCacheUtils.putToCache(outputCache, link, link);
       }
     }
 
@@ -157,21 +162,21 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
 
   private String computePagerank(String url) {
     double result = 0.0;
-    if(totalSum < 0){
+    if (totalSum < 0) {
       computeTotalSum();
     }
     try {
 //      DSPMNode currentPagerank = (DSPMNode) pagerankCache.get(url);
 
 //    if(currentPagerank == null || totalSum <= 0)
-    {
+      {
 
-      return Double.toString(  (10000/ url.length() )/10000 );
-    }
+        return Double.toString((10000 / url.length()) / 10000);
+      }
 //    result = currentPagerank.getVisitCount()/totalSum;
 //    return Double.toString(result);
-    }catch (Exception e){
-      return Double.toString(  (10000/ url.length() )/10000 );
+    } catch (Exception e) {
+      return Double.toString((10000 / url.length()) / 10000);
 
     }
   }
@@ -179,13 +184,13 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
   private void computeTotalSum() {
     Cache approxSumCache = (Cache) imanager.getPersisentCache("approx_sum_cache");
     CloseableIterable<Map.Entry<String, Integer>> iterable =
-      approxSumCache.getAdvancedCache().filterEntries(new AcceptAllFilter());
+        approxSumCache.getAdvancedCache().filterEntries(new AcceptAllFilter());
 
     for (Map.Entry<String, Integer> outerEntry : iterable) {
-      totalSum += outerEntry.getValue() ;
+      totalSum += outerEntry.getValue();
     }
-    if(totalSum > 0){
-      totalSum+=1;
+    if (totalSum > 0) {
+      totalSum += 1;
     }
   }
 }

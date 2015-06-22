@@ -1,6 +1,7 @@
 package eu.leads.processor.math;
 
 import eu.leads.processor.core.Tuple;
+
 import org.vertx.java.core.json.JsonElement;
 import org.vertx.java.core.json.JsonObject;
 
@@ -12,183 +13,188 @@ import java.util.Map;
  * Created by vagvaz on 9/24/14.
  */
 public class FilterOperatorNode {
-   FilterOpType type;
-   FilterOperatorNode left;
-   FilterOperatorNode right;
-   JsonObject value;
-   public FilterOperatorNode(JsonElement node){
-       type = FilterOpType.valueOf(node.asObject().getString("type"));
-       if(type.equals(FilterOpType.FIELD) || type.equals(FilterOpType.CONST) || type.equals(FilterOpType.SIGNED) || type.equals(FilterOpType.CAST))
-       {
-          value = node.asObject();
-          left = null;
-          right = null;
-       }
-       else if(type.equals(FilterOpType.ROW_CONSTANT)){
-          value = node.asObject();
-          left = null;
-          right = null;
-          value = MathUtils.createValueSet(value);
-       }
-       else{
-          left = new FilterOperatorNode(node.asObject().getObject("body").getElement("leftExpr"));
-          right= new FilterOperatorNode(node.asObject().getObject("body").getElement("rightExpr"));
-          value = new JsonObject();
-          value.putString("type","CONST");
-          JsonObject body = new JsonObject();
-          body.putString("type","CONST");
-          JsonObject datum = new JsonObject();
-          datum.putString("type","BOOLEAN");
-          datum.putObject("body",new JsonObject());
-          datum.getObject("body").putString("type","BOOLEAN");
-          body.putObject("datum",datum);
-          value.putObject("body",body);
-       }
 
-   }
+  FilterOpType type;
+  FilterOperatorNode left;
+  FilterOperatorNode right;
+  JsonObject value;
 
-   public FilterOperatorNode() {
+  public FilterOperatorNode(JsonElement node) {
+    type = FilterOpType.valueOf(node.asObject().getString("type"));
+    if (type.equals(FilterOpType.FIELD) || type.equals(FilterOpType.CONST) || type
+        .equals(FilterOpType.SIGNED) || type.equals(FilterOpType.CAST)) {
+      value = node.asObject();
+      left = null;
+      right = null;
+    } else if (type.equals(FilterOpType.ROW_CONSTANT)) {
+      value = node.asObject();
+      left = null;
+      right = null;
+      value = MathUtils.createValueSet(value);
+    } else {
+      left = new FilterOperatorNode(node.asObject().getObject("body").getElement("leftExpr"));
+      right = new FilterOperatorNode(node.asObject().getObject("body").getElement("rightExpr"));
+      value = new JsonObject();
+      value.putString("type", "CONST");
+      JsonObject body = new JsonObject();
+      body.putString("type", "CONST");
+      JsonObject datum = new JsonObject();
+      datum.putString("type", "BOOLEAN");
+      datum.putObject("body", new JsonObject());
+      datum.getObject("body").putString("type", "BOOLEAN");
+      body.putObject("datum", datum);
+      value.putObject("body", body);
+    }
 
-   }
+  }
+
+  public FilterOperatorNode() {
+
+  }
 
 
-   public boolean accept(Tuple t){
-         boolean result =false;
-         if(left != null)
-            left.accept(t);
-         if(right != null)
-            right.accept(t);
+  public boolean accept(Tuple t) {
+    boolean result = false;
+    if (left != null) {
+      left.accept(t);
+    }
+    if (right != null) {
+      right.accept(t);
+    }
 
-         switch (type) {
-            case NOT:
-               //TODO
-               break;
-            case AND: {
-               boolean leftValue = left.getValueAsBoolean();
-               boolean rightValue = right.getValueAsBoolean();
-               result =  leftValue && rightValue;
-            }
-               break;
-            case OR: {
-               boolean leftValue = left.getValueAsBoolean();
-               boolean rightValue = right.getValueAsBoolean();
+    switch (type) {
+      case NOT:
+        //TODO
+        break;
+      case AND: {
+        boolean leftValue = left.getValueAsBoolean();
+        boolean rightValue = right.getValueAsBoolean();
+        result = leftValue && rightValue;
+      }
+      break;
+      case OR: {
+        boolean leftValue = left.getValueAsBoolean();
+        boolean rightValue = right.getValueAsBoolean();
 
-               result =  leftValue || rightValue;
-            }
-               break;
-            case EQUAL:
-               result = MathUtils.equals(left.getValueAsJson(),right.getValueAsJson());
-               break;
-            case IS_NULL:
-               result = left.isValueNull();
-               break;
-            case NOT_EQUAL:
-               result = !(MathUtils.equals(left.getValueAsJson(), right.getValueAsJson()));
-               break;
-            case LTH:
-               result = MathUtils.lessThan(left.getValueAsJson(),right.getValueAsJson());
-               break;
-            case LEQ:
-               result = MathUtils.lessEqualThan(left.getValueAsJson(),right.getValueAsJson());
-               break;
-            case GTH:
-               result = MathUtils.greaterThan(left.getValueAsJson(),right.getValueAsJson());
-               break;
-            case GEQ:
-               result = MathUtils.greaterEqualThan(left.getValueAsJson(),right.getValueAsJson());
-               break;
-            case AGG_FUNCTION:
-               break;
-            case FUNCTION:
-               break;
-            case LIKE:
-               result = MathUtils.like(left.getValueAsJson(),right.getValueAsJson(),value);
-               break;
-            case IN:
-               //TODO
-               JsonObject val = null;
-               JsonObject set = null;
-               if(left.getValueAsJson().getString("type").equals("FIELD")){
-                  val = left.getValueAsJson();
-                  set = right.getValueAsJson();
-               }
-               else{
-                  val = right.getValueAsJson();
-                  set= left.getValueAsJson();
-               }
-               result =  MathUtils.checkIfIn(val,set);
-               // check conditino
-               // rerturn field in set
-            case ROW_CONSTANT:
-               //TODO
-               break;
-            case FIELD:
-               JsonObject datum = computeDatum(t);
-               if(datum != null)
-                  this.value.getObject("body").putObject("datum", datum);
-               result = true;
-               return result;
-            case CONST:
-               result = true;
-               return result;
+        result = leftValue || rightValue;
+      }
+      break;
+      case EQUAL:
+        result = MathUtils.equals(left.getValueAsJson(), right.getValueAsJson());
+        break;
+      case IS_NULL:
+        result = left.isValueNull();
+        break;
+      case NOT_EQUAL:
+        result = !(MathUtils.equals(left.getValueAsJson(), right.getValueAsJson()));
+        break;
+      case LTH:
+        result = MathUtils.lessThan(left.getValueAsJson(), right.getValueAsJson());
+        break;
+      case LEQ:
+        result = MathUtils.lessEqualThan(left.getValueAsJson(), right.getValueAsJson());
+        break;
+      case GTH:
+        result = MathUtils.greaterThan(left.getValueAsJson(), right.getValueAsJson());
+        break;
+      case GEQ:
+        result = MathUtils.greaterEqualThan(left.getValueAsJson(), right.getValueAsJson());
+        break;
+      case AGG_FUNCTION:
+        break;
+      case FUNCTION:
+        break;
+      case LIKE:
+        result = MathUtils.like(left.getValueAsJson(), right.getValueAsJson(), value);
+        break;
+      case IN:
+        //TODO
+        JsonObject val = null;
+        JsonObject set = null;
+        if (left.getValueAsJson().getString("type").equals("FIELD")) {
+          val = left.getValueAsJson();
+          set = right.getValueAsJson();
+        } else {
+          val = right.getValueAsJson();
+          set = left.getValueAsJson();
+        }
+        result = MathUtils.checkIfIn(val, set);
+        // check conditino
+        // rerturn field in set
+      case ROW_CONSTANT:
+        //TODO
+        break;
+      case FIELD:
+        JsonObject datum = computeDatum(t);
+        if (datum != null) {
+          this.value.getObject("body").putObject("datum", datum);
+        }
+        result = true;
+        return result;
+      case CONST:
+        result = true;
+        return result;
 
-         }
-      putBooleanDatum(result);
-      return result;
-   }
-   public void updateWith(Tuple t){
+    }
+    putBooleanDatum(result);
+    return result;
+  }
 
-      if(left != null)
-         left.updateWith(t);
-      if(right != null)
-         right.updateWith(t);
+  public void updateWith(Tuple t) {
 
-      switch (type) {
-         case NOT:
-            //TODO
-            break;
-         case AND: {
+    if (left != null) {
+      left.updateWith(t);
+    }
+    if (right != null) {
+      right.updateWith(t);
+    }
+
+    switch (type) {
+      case NOT:
+        //TODO
+        break;
+      case AND: {
 //            boolean leftValue = left.getValueAsBoolean();
 //            boolean rightValue = right.getValueAsBoolean();
 //            result =  leftValue && rightValue;
-         }
-         break;
-         case OR: {
+      }
+      break;
+      case OR: {
 //            boolean leftValue = left.getValueAsBoolean();
 //            boolean rightValue = right.getValueAsBoolean();
 //
 //            result =  leftValue || rightValue;
-         }
-         break;
-         case EQUAL:
+      }
+      break;
+      case EQUAL:
 //            result = MathUtils.equals(left.getValueAsJson(),right.getValueAsJson());
-            break;
-         case IS_NULL:
+        break;
+      case IS_NULL:
 //            result = left.isValueNull();
-            break;
-         case NOT_EQUAL:
+        break;
+      case NOT_EQUAL:
 //            result = !(MathUtils.equals(left.getValueAsJson(),right.getValueAsJson()));
-            break;
-         case LTH:
+        break;
+      case LTH:
 //            result = MathUtils.lessThan(left.getValueAsJson(),right.getValueAsJson());
-            break;
-         case LEQ:
+        break;
+      case LEQ:
 //            result = MathUtils.lessEqualThan(left.getValueAsJson(),right.getValueAsJson());
-            break;
-         case GTH:
+        break;
+      case GTH:
 //            result = MathUtils.greaterThan(left.getValueAsJson(),right.getValueAsJson());
-            break;
-         case GEQ:
+        break;
+      case GEQ:
 //            result = MathUtils.greaterEqualThan(left.getValueAsJson(),right.getValueAsJson());
-            break;
-         case AGG_FUNCTION:
-            break;
-         case FUNCTION:
-            break;
-         case LIKE:
+        break;
+      case AGG_FUNCTION:
+        break;
+      case FUNCTION:
+        break;
+      case LIKE:
 //            result = MathUtils.like(left.getValueAsJson(),right.getValueAsJson(),value);
-            break;
-         case IN:
+        break;
+      case IN:
 //            //TODO
 //            JsonObject val = null;
 //            JsonObject set = null;
@@ -201,149 +207,156 @@ public class FilterOperatorNode {
 //               set= left.getValueAsJson();
 //            }
 //            result = MathUtils.checkIfIn(val,set);
-         // check conditino
-         // rerturn field in set
-         case ROW_CONSTANT:
-            //TODO
-            break;
-         case FIELD:
-            JsonObject datum = computeDatum(t);
-            if(datum != null) {
-               this.value.getObject("body").putObject("datum",datum);
-            }
+        // check conditino
+        // rerturn field in set
+      case ROW_CONSTANT:
+        //TODO
+        break;
+      case FIELD:
+        JsonObject datum = computeDatum(t);
+        if (datum != null) {
+          this.value.getObject("body").putObject("datum", datum);
+        }
 //            result = true;
 //            return result;
-         case CONST:
+      case CONST:
 //            result = true;
 //            return result;
 
-      }
+    }
 //      putBooleanDatum(result);
 //      return result;
-   }
+  }
 
 
-   private boolean getValueAsBoolean() {
-      Object object =  value.getObject("body").getObject("datum").getObject("body").getValue("val");
-      if(object instanceof Boolean)
-         return (Boolean)object;
-      else{
-         if(object.toString().equals("") || object.toString().equals("0"))
-            return false;
-         else
-            return true;
+  private boolean getValueAsBoolean() {
+    Object object = value.getObject("body").getObject("datum").getObject("body").getValue("val");
+    if (object instanceof Boolean) {
+      return (Boolean) object;
+    } else {
+      if (object.toString().equals("") || object.toString().equals("0")) {
+        return false;
+      } else {
+        return true;
       }
-   }
+    }
+  }
 
-   private boolean isValueNull() {
-      return value.getObject("body").getObject("datum").getObject("body").containsField("val");
-   }
+  private boolean isValueNull() {
+    return value.getObject("body").getObject("datum").getObject("body").containsField("val");
+  }
 
-   private String getValue() {
-      return value.getObject("body").getObject("datum").getObject("body").getValue("val").toString();
-   }
+  private String getValue() {
+    return value.getObject("body").getObject("datum").getObject("body").getValue("val").toString();
+  }
 
-   private JsonObject getValueAsJson() {
-      return value;
-   }
+  private JsonObject getValueAsJson() {
+    return value;
+  }
 
-   private void putBooleanDatum(boolean val) {
-      JsonObject result = new JsonObject();
-      result.putString("type","BOOLEAN");
-      result.putObject("body",new JsonObject());
-      result.getObject("body").putString("type", result.getString("type"));
-      result.getObject("body").putBoolean("val", val);
-      value.getObject("body").putObject("datum", result);
+  private void putBooleanDatum(boolean val) {
+    JsonObject result = new JsonObject();
+    result.putString("type", "BOOLEAN");
+    result.putObject("body", new JsonObject());
+    result.getObject("body").putString("type", result.getString("type"));
+    result.getObject("body").putBoolean("val", val);
+    value.getObject("body").putObject("datum", result);
 
-   }
+  }
 
-   private JsonObject computeDatum(Tuple t) {
-      if(!t.hasField(value.getObject("body").getObject("column").getString("name")))
-         return null;
-      JsonObject result = new JsonObject();
-      result.putString("type",
-          value.getObject("body").getObject("column").getObject("dataType").getString("type"));
-      result.putObject("body", new JsonObject());
-      result.getObject("body").putString("type", result.getString("type"));
-      result.getObject("body").putValue("val",
-          t.getGenericAttribute(value.getObject("body").getObject("column").getString("name")));
-      return result;
-   }
+  private JsonObject computeDatum(Tuple t) {
+    if (!t.hasField(value.getObject("body").getObject("column").getString("name"))) {
+      return null;
+    }
+    JsonObject result = new JsonObject();
+    result.putString("type",
+                     value.getObject("body").getObject("column").getObject("dataType")
+                         .getString("type"));
+    result.putObject("body", new JsonObject());
+    result.getObject("body").putString("type", result.getString("type"));
+    result.getObject("body").putValue("val",
+                                      t.getGenericAttribute(
+                                          value.getObject("body").getObject("column")
+                                              .getString("name")));
+    return result;
+  }
 
-   public JsonObject toJson(JsonObject result) {
+  public JsonObject toJson(JsonObject result) {
 //      FilterOpType type;
 //      FilterOperatorNode left;
 //      FilterOperatorNode right;
 //      JsonObject value;
-      result.putString("type", type.toString());
-      result.putObject("value", value);
-      if(left != null){
-         JsonObject leftOb = new JsonObject();
-         leftOb = left.toJson(leftOb);
-         result.putObject("left",leftOb);
-      }
-      if(right != null){
-         JsonObject rightOb = new JsonObject();
-         rightOb = right.toJson(rightOb);
-         result.putObject("right",rightOb);
-      }
-      return result;
-   }
+    result.putString("type", type.toString());
+    result.putObject("value", value);
+    if (left != null) {
+      JsonObject leftOb = new JsonObject();
+      leftOb = left.toJson(leftOb);
+      result.putObject("left", leftOb);
+    }
+    if (right != null) {
+      JsonObject rightOb = new JsonObject();
+      rightOb = right.toJson(rightOb);
+      result.putObject("right", rightOb);
+    }
+    return result;
+  }
 
-   public void fromJson(JsonObject treeAsJson) {
-      type = FilterOpType.valueOf(treeAsJson.getString("type"));
-      value = treeAsJson.getObject("value");
-      if(treeAsJson.containsField("left")){
-         left = new FilterOperatorNode();
-         left.fromJson(treeAsJson.getObject("left"));
-      }
-      if(treeAsJson.containsField("right")){
-         right = new FilterOperatorNode();
-         right.fromJson(treeAsJson.getObject("right"));
-      }
-   }
+  public void fromJson(JsonObject treeAsJson) {
+    type = FilterOpType.valueOf(treeAsJson.getString("type"));
+    value = treeAsJson.getObject("value");
+    if (treeAsJson.containsField("left")) {
+      left = new FilterOperatorNode();
+      left.fromJson(treeAsJson.getObject("left"));
+    }
+    if (treeAsJson.containsField("right")) {
+      right = new FilterOperatorNode();
+      right.fromJson(treeAsJson.getObject("right"));
+    }
+  }
 
-   public Map<String, List<String>> getAllFieldsByTable(Map<String, List<String>> map) {
-      Map<String, List<String>> result = map;
-      if(left != null)
-         result = left.getAllFieldsByTable(map);
-      if(right != null)
-         result = right.getAllFieldsByTable(map);
-      switch (type) {
-         case FIELD:
-           String columnName = value.getObject("body").getObject("column").getString("name");
-            String table = columnName.substring(0, columnName.lastIndexOf("."));
-            List<String> columns = result.get(table);
-            if(columns == null)
-            {
-               columns = new ArrayList<>();
-            }
-            columns.add(columnName);
-            result.put(table,columns);
-            break;
-         default:
-            break;
-      }
-      return result;
+  public Map<String, List<String>> getAllFieldsByTable(Map<String, List<String>> map) {
+    Map<String, List<String>> result = map;
+    if (left != null) {
+      result = left.getAllFieldsByTable(map);
+    }
+    if (right != null) {
+      result = right.getAllFieldsByTable(map);
+    }
+    switch (type) {
+      case FIELD:
+        String columnName = value.getObject("body").getObject("column").getString("name");
+        String table = columnName.substring(0, columnName.lastIndexOf("."));
+        List<String> columns = result.get(table);
+        if (columns == null) {
+          columns = new ArrayList<>();
+        }
+        columns.add(columnName);
+        result.put(table, columns);
+        break;
+      default:
+        break;
+    }
+    return result;
 
-   }
+  }
 
-   public void renameTableReference(String tableName, String toRename) {
-      if(left != null)
-         left.renameTableReference(tableName, toRename);
-      if(right != null)
-         right.renameTableReference(tableName, toRename);
-      switch (type) {
-         case FIELD:
-            String columnName = value.getObject("body").getObject("column").getString("name");
-            if(columnName.contains("."+toRename+"."))
-            {
-               columnName = columnName.replace("."+toRename+".","."+tableName+".");
-               value.getObject("body").getObject("column").putString("name",columnName);
-            }
-            break;
-         default:
-            break;
-      }
-   }
+  public void renameTableReference(String tableName, String toRename) {
+    if (left != null) {
+      left.renameTableReference(tableName, toRename);
+    }
+    if (right != null) {
+      right.renameTableReference(tableName, toRename);
+    }
+    switch (type) {
+      case FIELD:
+        String columnName = value.getObject("body").getObject("column").getString("name");
+        if (columnName.contains("." + toRename + ".")) {
+          columnName = columnName.replace("." + toRename + ".", "." + tableName + ".");
+          value.getObject("body").getObject("column").putString("name", columnName);
+        }
+        break;
+      default:
+        break;
+    }
+  }
 }

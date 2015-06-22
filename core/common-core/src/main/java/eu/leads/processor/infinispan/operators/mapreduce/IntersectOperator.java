@@ -10,7 +10,8 @@ import eu.leads.processor.infinispan.operators.MapReduceOperator;
  * Created by vagvaz on 9/22/14.
  */
 public class IntersectOperator extends MapReduceOperator {
-   public IntersectOperator(Node com, InfinispanManager persistence,LogProxy log, Action action) {
-      super(com, persistence,log, action);
-   }
+
+  public IntersectOperator(Node com, InfinispanManager persistence, LogProxy log, Action action) {
+    super(com, persistence, log, action);
+  }
 }

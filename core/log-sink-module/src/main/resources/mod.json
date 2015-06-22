@@ -1,7 +1,7 @@
 {
 
   // Java verticle
-  "main":"eu.leads.processor.core.LogSink",
+  "main": "eu.leads.processor.core.LogSink",
 
   // In this example we also provide various other versions of the main verticle, you can uncomment this and
   // play around:
@@ -27,13 +27,25 @@
 
   // If your module is going to be registered in the Vert.x module registry you will also need the following
   // mandatory fields
-  "description":"Put description of your module here",
-  "licenses": ["The Apache Software License Version 2.0"],
+  "description": "Put description of your module here",
+  "licenses": [
+    "The Apache Software License Version 2.0"
+  ],
   "author": "Joe Bloggs",
 
   // Optional fields
-  "developers": ["Other Dev 1", "Other Dev 2"],
-  "keywords": ["gerbils", "cars", "cheese", "chocolate", "underpants", "herring"],
+  "developers": [
+    "Other Dev 1",
+    "Other Dev 2"
+  ],
+  "keywords": [
+    "gerbils",
+    "cars",
+    "cheese",
+    "chocolate",
+    "underpants",
+    "herring"
+  ],
   "homepage": "url to your project page",
 
   "auto-redeploy": false

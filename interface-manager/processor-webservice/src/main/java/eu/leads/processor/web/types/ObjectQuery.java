@@ -14,42 +14,43 @@ import java.util.List;
  */
 @JsonAutoDetect
 public class ObjectQuery {
-    private String table;
-    private String key;
-    private List<String> attributes;
 
-    public String getTable() {
-        return table;
-    }
+  private String table;
+  private String key;
+  private List<String> attributes;
 
-    public void setTable(String table) {
-        this.table = table;
-    }
+  public String getTable() {
+    return table;
+  }
 
-    public String getKey() {
-        return key;
-    }
+  public void setTable(String table) {
+    this.table = table;
+  }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public List<String> getAttributes() {
-        return attributes;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public void setAttributes(List<String> attributes) {
-        this.attributes = attributes;
-    }
+  public List<String> getAttributes() {
+    return attributes;
+  }
 
-    @Override
-    public String toString() {
-        String result = table + ":" + key + " [ ";
-        StringBuilder builder = new StringBuilder();
-        for (String attribute : attributes) {
-            builder.append(attribute + ", ");
-        }
-        return result + builder.toString() + " ]";
+  public void setAttributes(List<String> attributes) {
+    this.attributes = attributes;
+  }
+
+  @Override
+  public String toString() {
+    String result = table + ":" + key + " [ ";
+    StringBuilder builder = new StringBuilder();
+    for (String attribute : attributes) {
+      builder.append(attribute + ", ");
     }
+    return result + builder.toString() + " ]";
+  }
 }
 

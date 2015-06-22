@@ -5,12 +5,12 @@ package eu.leads.processor.core.comp;
  */
 public class ProcessorFactory {
 
-    public ProcessorFactory() {
-    }
+  public ProcessorFactory() {
+  }
 
 
-    public static String getProcessorClassName(String componentType) {
-        String result = "eu.leads.processor.core.DefaultProcessor";
-        return result;
-    }
+  public static String getProcessorClassName(String componentType) {
+    String result = "eu.leads.processor.core.DefaultProcessor";
+    return result;
+  }
 }

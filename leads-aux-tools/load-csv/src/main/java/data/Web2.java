@@ -1,21 +1,15 @@
 package data;
 
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
-
 public class Web2 {
 
-    /**
-     * @param domain - (String)
-     *
-     * @return PR rating (int) or -1 if unavailable or internal error happened.
-     */
-    public static int pagerank(String domain) {
+  /**
+   * @param domain - (String)
+   * @return PR rating (int) or -1 if unavailable or internal error happened.
+   */
+  public static int pagerank(String domain) {
 
-        String result = "";
+    String result = "";
 
 //        JenkinsHash jenkinsHash = new JenkinsHash();
 //        long hash = jenkinsHash.hash(("info:" + domain).getBytes());
@@ -36,12 +30,12 @@ public class Web2 {
 //            System.err.println(" " +e.getMessage());
 //        }
 
-        if ("".equals(result)) {
-            return -1;
-        } else {
-            return Integer.valueOf(result);
-        }
-
+    if ("".equals(result)) {
+      return -1;
+    } else {
+      return Integer.valueOf(result);
     }
+
+  }
 
 }

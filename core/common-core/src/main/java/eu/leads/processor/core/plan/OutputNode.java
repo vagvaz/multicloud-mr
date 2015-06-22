@@ -7,11 +7,11 @@ import org.apache.tajo.plan.logical.LogicalRootNode;
  */
 public class OutputNode extends LogicalRootNode {
 
-    public OutputNode(int pid) {
-        super(pid);
-    }
+  public OutputNode(int pid) {
+    super(pid);
+  }
 
-    LeadsNodeType getNodeType() {
-        return LeadsNodeType.OUTPUT_NODE;
-    }
+  LeadsNodeType getNodeType() {
+    return LeadsNodeType.OUTPUT_NODE;
+  }
 }

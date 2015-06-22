@@ -2,6 +2,7 @@ package eu.leads.processor.infinispan;
 
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.core.Tuple;
+
 import org.apache.commons.configuration.XMLConfiguration;
 import org.infinispan.distexec.mapreduce.Mapper;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -9,16 +10,19 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
- * User: vagvaz
- * Date: 11/4/13
- * Time: 5:58 AM
- * To change this template use File | Settings | File Templates.
+ * Created with IntelliJ IDEA. User: vagvaz Date: 11/4/13 Time: 5:58 AM To change this template use
+ * File | Settings | File Templates.
  */
-public abstract class LeadsMapper<kIN, vIN, kOut, vOut> implements Mapper<kIN, vIN, kOut, vOut>,Serializable {
+public abstract class LeadsMapper<kIN, vIN, kOut, vOut>
+    implements Mapper<kIN, vIN, kOut, vOut>, Serializable {
+
   /**
    *
    */
@@ -31,10 +35,10 @@ public abstract class LeadsMapper<kIN, vIN, kOut, vOut> implements Mapper<kIN, v
   //    transient protected long overall;
   //    transient  protected Timer timer;
   //   transient  protected ProgressReport report;
-  transient  protected JsonObject inputSchema;
-  transient  protected JsonObject outputSchema;
-  transient  protected Map<String,String> outputMap;
-  transient  protected Map<String,List<JsonObject>> targetsMap;
+  transient protected JsonObject inputSchema;
+  transient protected JsonObject outputSchema;
+  transient protected Map<String, String> outputMap;
+  transient protected Map<String, List<JsonObject>> targetsMap;
   transient protected EmbeddedCacheManager manager;
   transient protected XMLConfiguration xmlConfiguration;
 
@@ -45,9 +49,12 @@ public abstract class LeadsMapper<kIN, vIN, kOut, vOut> implements Mapper<kIN, v
   public LeadsMapper(JsonObject configuration) {
     this.conf = configuration;
   }
-  public LeadsMapper(String configString){this.configString = configString;}
 
-  public void  setCacheManager(EmbeddedCacheManager manager){
+  public LeadsMapper(String configString) {
+    this.configString = configString;
+  }
+
+  public void setCacheManager(EmbeddedCacheManager manager) {
     this.manager = manager;
   }
 
@@ -59,7 +66,7 @@ public abstract class LeadsMapper<kIN, vIN, kOut, vOut> implements Mapper<kIN, v
   public void initialize() {
 
     conf = new JsonObject(configString);
-    if(conf.containsField("body") && conf.getObject("body").containsField("outputSchema")) {
+    if (conf.containsField("body") && conf.getObject("body").containsField("outputSchema")) {
       outputSchema = conf.getObject("body").getObject("outputSchema");
       inputSchema = conf.getObject("body").getObject("inputSchema");
       targetsMap = new HashMap();
@@ -68,12 +75,17 @@ public abstract class LeadsMapper<kIN, vIN, kOut, vOut> implements Mapper<kIN, v
       Iterator<Object> targetIterator = targets.iterator();
       while (targetIterator.hasNext()) {
         JsonObject target = (JsonObject) targetIterator.next();
-        List<JsonObject> tars = targetsMap.get(target.getObject("expr").getObject("body").getObject("column").getString("name"));
+        List<JsonObject>
+            tars =
+            targetsMap.get(
+                target.getObject("expr").getObject("body").getObject("column").getString("name"));
         if (tars == null) {
           tars = new ArrayList<>();
         }
         tars.add(target);
-        targetsMap.put(target.getObject("expr").getObject("body").getObject("column").getString("name"),tars);
+        targetsMap
+            .put(target.getObject("expr").getObject("body").getObject("column").getString("name"),
+                 tars);
       }
     }
 
@@ -111,7 +123,7 @@ public abstract class LeadsMapper<kIN, vIN, kOut, vOut> implements Mapper<kIN, v
   //        return report.getReport();
   //    }
 
-//  protected Tuple prepareOutput(Tuple tuple) {
+  //  protected Tuple prepareOutput(Tuple tuple) {
 //    if (outputSchema.toString().equals(inputSchema.toString())) {
 //      return tuple;
 //    }
@@ -152,11 +164,12 @@ public abstract class LeadsMapper<kIN, vIN, kOut, vOut> implements Mapper<kIN, v
 //    tuple.renameAttributes(toRename);
 //    return tuple;
 //  }
-  protected  void handlePagerank(Tuple t) {
+  protected void handlePagerank(Tuple t) {
 
     if (t.hasField("default.webpages.pagerank")) {
-      if (!t.hasField("url"))
+      if (!t.hasField("url")) {
         return;
+      }
       String pagerankStr = t.getAttribute("pagerank");
       //            Double d = Double.parseDouble(pagerankStr);
       //            if (d < 0.0) {
