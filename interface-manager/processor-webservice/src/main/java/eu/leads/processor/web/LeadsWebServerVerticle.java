@@ -57,6 +57,8 @@ public class LeadsWebServerVerticle extends Verticle implements LeadsMessageHand
     Handler<HttpServerRequest> privacyPointQueryHandler = new PrivacyPointQueryHandler(com, log);
     Handler<HttpServerRequest> executeMRHandler = new ExecuteMRHandler(com, log);
     Handler<HttpServerRequest> completedMRHandler = new CompletedMRHandler(com, log);
+    Handler<HttpServerRequest> executeMapReduceJobHandler = new ExecuteMapReduceJobHandler(com,
+                                                                                           log);
     //object
     failHandler = new Handler<HttpServerRequest>() {
       @Override
@@ -114,6 +116,9 @@ public class LeadsWebServerVerticle extends Verticle implements LeadsMessageHand
     });
     matcher.post("/rest/upload/encData", uploadEncryptedData);
     matcher.post("/rest/query/encrypted/ppq", privacyPointQueryHandler);
+
+    matcher.post("/rest/mrjob/submit/", executeMapReduceJobHandler);  // TODO(ap0n): Change the API
+
     vertx.createHttpServer().requestHandler(matcher)
         .listen((Integer) config.getNumber("port", 8080));
 

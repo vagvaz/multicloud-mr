@@ -726,7 +726,7 @@ public abstract class BasicOperator extends Thread implements Operator {
         replyForFailExecution(action);
       }
     }
-    replyForSuccessfulExecution(action);  // todo(ap0n): This gets back to nqe-logic-mod?
+    replyForSuccessfulExecution(action);  // TODO(ap0n): This gets back to nqe-logic-mod?
   }
 
   public void setMapperCallableEnsembleHost() {

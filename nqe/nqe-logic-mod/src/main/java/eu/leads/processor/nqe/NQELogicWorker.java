@@ -44,8 +44,6 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
     com = new DefaultNode();
     com.initialize(id, nqeGroup, null, this, null, vertx);
     log = new LogProxy(config.getString("log"), com);
-
-
   }
 
   @Override
@@ -60,6 +58,8 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
     String from = msg.getString(MessageUtils.FROM);
     String to = msg.getString(MessageUtils.TO);
 
+    log.info("in NQELogicWorker.handle");
+
     if (type.equals("action")) {
       Action action = new Action(msg);
       String label = action.getLabel();
@@ -73,13 +73,21 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             action.getData().putString("replyTo", action.getData().getString("monitor"));
             action.setStatus(ActionStatus.INPROCESS.toString());
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
-          } else if ((label.equals(NQEConstants.DEPLOY_PLUGIN)) || (label.equals(
-              NQEConstants.UNDEPLOY_PLUGIN))) {
+          } else if ((label.equals(NQEConstants.DEPLOY_PLUGIN))
+                     || (label.equals(NQEConstants.UNDEPLOY_PLUGIN))) {
             action.setStatus(ActionStatus.INPROCESS.toString());
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else if (label.equals(NQEConstants.DEPLOY_REMOTE_OPERATOR)) {
             System.err.println("RECEVEIVED REMOTE DEPLOY!!!!!!!!!!");
             action.setStatus(ActionStatus.INPROCESS.toString());
+            com.sendWithEventBus(workQueueAddress, action.asJsonObject());
+          } else if (label.equals(NQEConstants.EXECUTE_MAP_REDUCE_JOB)) {
+            String actionId = UUID.randomUUID().toString();
+            action.setId(actionId);
+
+            // TODO(ap0n): save id to the job caches we must add it here
+
+            com.sendTo(from, new JsonObject().putString("message", actionId));
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else {
             log.error("Unknown PENDING Action received " + action.toString());

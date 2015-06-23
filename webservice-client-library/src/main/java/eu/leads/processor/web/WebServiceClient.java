@@ -148,6 +148,16 @@ public class WebServiceClient {
     os.close();
   }
 
+  public static ActionResult executeMapReduceJob(JsonObject job, String uri) throws IOException {
+    address = new URL(uri + "/rest/mrjob/submit/");
+    HttpURLConnection connection = (HttpURLConnection) address.openConnection();
+    // TODO(ap0n): Check the last 2 args of setUp
+    connection = setUp(connection, "POST", MediaType.APPLICATION_JSON, true, true);
+    setBody(connection, job);
+    String response = getResult(connection);
+    ActionResult result = mapper.readValue(response, ActionResult.class);
+    return result;  // TODO(ap0n): is this necessary?
+  }
 
   public static ActionResult executeMapReduce(JsonObject newAction, String uri) throws IOException {
     address = new URL(uri + "/rest/internal/executemr");
@@ -228,6 +238,7 @@ public class WebServiceClient {
     return result;
   }
 
+  // TODO(ap0n): Will help for the result
   public static QueryStatus getQueryStatus(String id) throws IOException {
     QueryStatus result = new QueryStatus();
     address = new URL(host + ":" + port + prefix + "query/status/" + id);

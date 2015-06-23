@@ -12,6 +12,7 @@ import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.DefaultNode;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.nqe.handlers.DeployRemoteOpActionHandler;
+import eu.leads.processor.nqe.handlers.ExecuteMapReduceJobActionHandler;
 import eu.leads.processor.nqe.handlers.OperatorActionHandler;
 import eu.leads.processor.web.WebServiceClient;
 
@@ -157,10 +158,11 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     LQPConfiguration.initialize();
     LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component", "nqe");
 
-    String publicIP = ConfigurationUtilities
-        .getPublicIPFromGlobal(LQPConfiguration.getInstance().getMicroClusterName(), globalConfig);
-    LQPConfiguration.getInstance().getConfiguration()
-        .setProperty(StringConstants.PUBLIC_IP, publicIP);
+    String publicIP = ConfigurationUtilities.getPublicIPFromGlobal(LQPConfiguration.getInstance()
+                                                                       .getMicroClusterName(),
+                                                                   globalConfig);
+    LQPConfiguration.getInstance().getConfiguration().setProperty(StringConstants.PUBLIC_IP,
+                                                                  publicIP);
     currentCluster = LQPConfiguration.getInstance().getMicroClusterName();
     persistence = InfinispanClusterSingleton.getInstance().getManager();
     JsonObject msg = new JsonObject();
@@ -168,13 +170,16 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     log = new LogProxy(config.getString("log"), com);
     handlers = new HashMap<String, ActionHandler>();
 //     ActionHandler pluginHandler = new DeployPluginActionHandler(com, log, persistence, id, globalConfig);
-    handlers
-        .put(NQEConstants.DEPLOY_OPERATOR, new OperatorActionHandler(com, log, persistence, id));
+    handlers.put(NQEConstants.DEPLOY_OPERATOR,
+                 new OperatorActionHandler(com, log, persistence, id));
 //      handlers.put(NQEConstants.DEPLOY_PLUGIN,pluginHandler );
 //      handlers.put(NQEConstants.UNDEPLOY_PLUGIN,pluginHandler);
     handlers.put(NQEConstants.DEPLOY_REMOTE_OPERATOR,
                  new DeployRemoteOpActionHandler(com, log, persistence, id, globalConfig));
 //
+    handlers.put(NQEConstants.EXECUTE_MAP_REDUCE_JOB,
+                 new ExecuteMapReduceJobActionHandler(com, log, persistence, id));
+
     bus.send(workqueue + ".register", msg, new Handler<Message<JsonObject>>() {
       @Override
       public void handle(Message<JsonObject> event) {
@@ -223,17 +228,16 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
           Action result = ac.process(action);
 //               result.setStatus(ActionStatus.COMPLETED.toString());
 //               com.sendTo(logic,result.asJsonObject());
-          message.reply();
+          message.reply();  // TODO(ap0n): How does this work?
         }
       } else {
-        log.error(
-            id + " received message from eventbus that does not contain type field  \n" + message
-                .toString());
+        log.error(id
+                  + " received message from eventbus that does not contain type field  \n"
+                  + message.toString());
       }
     } catch (Exception e) {
       log.error(e.getClass().toString());
       log.error(e.getMessage());
     }
   }
-
 }
