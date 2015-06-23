@@ -1,0 +1,29 @@
+package eu.leads.processor.nqe.handlers;
+
+import eu.leads.processor.common.infinispan.InfinispanManager;
+import eu.leads.processor.core.Action;
+import eu.leads.processor.core.comp.LogProxy;
+import eu.leads.processor.core.net.Node;
+import eu.leads.processor.infinispan.MapReduceJob;
+import eu.leads.processor.infinispan.operators.Operator;
+import eu.leads.processor.infinispan.operators.WordCountOperator;
+
+import org.vertx.java.core.json.JsonObject;
+
+/**
+ * Created by Apostolos Nydriotis on 2015/06/23.
+ */
+public class MapReduceOperatorFactory {
+  public static Operator createOperator(Node com, InfinispanManager persistence, LogProxy log,
+                                        Action action) {
+    JsonObject object = action.getData();
+    MapReduceJob job = new MapReduceJob(object);
+    String name = job.getName();  // TODO(ap0n): There has to be a better way to get the name...
+    if (name.equals("wordCount")) {
+      return new WordCountOperator(com, persistence, log, action);
+    } else {
+      System.err.println("No operator for application \"" + name + "\" found!");
+    }
+    return null;
+  }
+}

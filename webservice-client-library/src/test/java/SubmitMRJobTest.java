@@ -31,6 +31,7 @@ public class SubmitMRJobTest {
     }
 
     JsonObject jsonObject = new JsonObject();
+    jsonObject.putString("name", "wordCount");
 
     try {
       ActionResult res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);

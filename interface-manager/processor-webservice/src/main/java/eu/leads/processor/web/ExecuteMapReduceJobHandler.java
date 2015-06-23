@@ -74,8 +74,6 @@ public class ExecuteMapReduceJobHandler implements Handler<HttpServerRequest> {
 
     @Override
     public void handle(JsonObject message) {
-      System.out.println("IN " + getClass().getName() + ".handle");
-      System.out.println(message.toString());
       if (message.containsField("error")) {
         replyForError(message);
         return;
