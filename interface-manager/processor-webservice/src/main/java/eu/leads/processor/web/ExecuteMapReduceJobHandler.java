@@ -8,6 +8,7 @@ import eu.leads.processor.core.ActionStatus;
 import eu.leads.processor.core.comp.LeadsMessageHandler;
 import eu.leads.processor.core.net.MessageUtils;
 import eu.leads.processor.core.net.Node;
+import eu.leads.processor.infinispan.MapReduceJob;
 import eu.leads.processor.nqe.NQEConstants;
 
 import org.vertx.java.core.Handler;
@@ -125,8 +126,8 @@ public class ExecuteMapReduceJobHandler implements Handler<HttpServerRequest> {
       action.setComponentType("webservice");
       action.setTriggered("");
       action.setTriggers(new JsonArray());
-      JsonObject jobRequest = new JsonObject(job);
-      action.setData(jobRequest);
+      MapReduceJob jobRequest = new MapReduceJob(job);
+      action.setData(jobRequest.asJsonObject());
       action.setDestination(IMANAGERQUEUE);
       action.setStatus(ActionStatus.PENDING.toString());
       com.sendRequestTo(StringConstants.NODEEXECUTORQUEUE, action.asJsonObject(), replyHandler);
