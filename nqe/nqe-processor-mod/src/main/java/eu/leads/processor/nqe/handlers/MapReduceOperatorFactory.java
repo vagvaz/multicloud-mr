@@ -19,10 +19,14 @@ public class MapReduceOperatorFactory {
     JsonObject object = action.getData();
     MapReduceJob job = new MapReduceJob(object);
     String name = job.getName();  // TODO(ap0n): There has to be a better way to get the name...
-    if (name.equals("wordCount")) {
-      return new WordCountOperator(com, persistence, log, action);
+    if (name == null) {
+      System.err.println("name == null!");
     } else {
-      System.err.println("No operator for application \"" + name + "\" found!");
+      if (name.equals("wordCount")) {
+        return new WordCountOperator(com, persistence, log, action);
+      } else {
+        System.err.println("No operator for application \"" + name + "\" found!");
+      }
     }
     return null;
   }

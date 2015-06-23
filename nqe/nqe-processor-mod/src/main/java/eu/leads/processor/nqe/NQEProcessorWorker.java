@@ -244,6 +244,7 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
                   + message.toString());
       }
     } catch (Exception e) {
+      e.printStackTrace();
       log.error(e.getClass().toString());
       log.error(e.getMessage());
     }

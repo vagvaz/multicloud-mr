@@ -1,6 +1,8 @@
 import eu.leads.processor.web.ActionResult;
+import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
 
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.net.MalformedURLException;
@@ -31,11 +33,22 @@ public class SubmitMRJobTest {
     }
 
     JsonObject jsonObject = new JsonObject();
-    jsonObject.putString("name", "wordCount");
+    jsonObject.putObject("operator", new JsonObject());
+    jsonObject.getObject("operator").putObject("configuration", new JsonObject());
+    jsonObject.getObject("operator").getObject("configuration").putString("name", "wordCount");
+    jsonObject.getObject("operator").putArray("inputs", new JsonArray().add("clustered"));
+    jsonObject.getObject("operator").putString("output", "testOutputCache");
+    jsonObject.getObject("operator").putArray("inputMicroClouds",
+                                              new JsonArray().add("localcluster"));
+    jsonObject.getObject("operator").putArray("outputMicroClouds",
+                                              new JsonArray().add("localcluster"));
 
     try {
-      ActionResult res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
-      System.out.println(res.getMessage());
+      QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
+      System.out.println("id: " + res.getId());
+      System.out.println("status: " + res.getStatus());
+      System.out.println("msg: " + res.getErrorMessage());
+
     } catch (Exception e) {
       e.printStackTrace();
     }

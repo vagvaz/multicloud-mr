@@ -27,25 +27,27 @@ public class MapReduceJob extends DataType {
 
   public MapReduceJob(String jsonString) {
     super(jsonString);
-    if(data.containsField("operator")){
-      if(getInternalConf() == null){
+    if (data.containsField("operator")) {
+      if (getInternalConf() == null) {
         data.getObject("operator").putObject("configuration", new JsonObject());
       }
+    } else {
+      createRequiredLeadsData();
     }
-
   }
 
-  private JsonObject getInternalConf(){
-    return data.getObject("operator").getObject("configuration");
-  }
   public MapReduceJob() {
     super();
     createRequiredLeadsData();
   }
 
+  private JsonObject getInternalConf() {
+    return data.getObject("operator").getObject("configuration");
+  }
+
   private void createRequiredLeadsData() {
     data.putObject("operator", new JsonObject());
-    data.getObject("operator").putObject("configuration",new JsonObject());
+    data.getObject("operator").putObject("configuration", new JsonObject());
   }
 
   public String getName() {
