@@ -27,36 +27,51 @@ public class MapReduceJob extends DataType {
 
   public MapReduceJob(String jsonString) {
     super(jsonString);
+    if(data.containsField("operator")){
+      if(getInternalConf() == null){
+        data.getObject("operator").putObject("configuration", new JsonObject());
+      }
+    }
+
   }
 
+  private JsonObject getInternalConf(){
+    return data.getObject("operator").getObject("configuration");
+  }
   public MapReduceJob() {
     super();
+    createRequiredLeadsData();
+  }
+
+  private void createRequiredLeadsData() {
+    data.putObject("operator", new JsonObject());
+    data.getObject("operator").putObject("configuration",new JsonObject());
   }
 
   public String getName() {
-    return data.getString("name");
+    return getInternalConf().getString("name");
   }
 
   public void setName(String name) {
-    data.putString("name", name);
+    getInternalConf().putString("name", name);
   }
 
   public String getId() {
-    return data.getString("id");
+    return getInternalConf().getString("id");
   }
 
   public void setId(String id) {
-    data.putString("id", id);
+    getInternalConf().putString("id", id);
   }
 
 
   public JsonObject getConfiguration() {
-    JsonObject result = data.getObject("configuration");
+    JsonObject result = getInternalConf().getObject("configuration");
     return result;
   }
 
   public void setConfiguration(JsonObject configuration) {
-    data.putObject("configuration", configuration);
+    getInternalConf().putObject("configuration", configuration);
   }
 
   public List<String> getInputs() {
