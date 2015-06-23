@@ -7,18 +7,23 @@ import eu.leads.processor.conf.ConfigurationUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Action;
 import eu.leads.processor.core.ActionHandler;
+import eu.leads.processor.core.ActionStatus;
 import eu.leads.processor.core.comp.LeadsMessageHandler;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.DefaultNode;
 import eu.leads.processor.core.net.Node;
+import eu.leads.processor.core.plan.QueryState;
+import eu.leads.processor.core.plan.QueryStatus;
 import eu.leads.processor.imanager.IManagerConstants;
 import eu.leads.processor.nqe.handlers.CompletedMRActionHandler;
 import eu.leads.processor.nqe.handlers.DeployRemoteOpActionHandler;
 import eu.leads.processor.nqe.handlers.ExecuteMRActionHandler;
 import eu.leads.processor.nqe.handlers.ExecuteMapReduceJobActionHandler;
 import eu.leads.processor.nqe.handlers.OperatorActionHandler;
+import eu.leads.processor.nqe.handlers.PutObjectActionHandler;
 import eu.leads.processor.web.WebServiceClient;
 
+import org.infinispan.Cache;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
@@ -51,6 +56,7 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
   Map<String, Action> activeActions;
   String currentCluster;
   JsonObject globalConfig;
+  private Cache jobsCache;
 
   @Override
   public void start() {
@@ -92,6 +98,12 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
 //                       System.err.println("Remote DEPLOY of " + action.getData().getObject("operator").getObject
 //                                                                                                         ("configuration").toString() + " was successful");
                 log.error("Remote DEPLOY of " + action.getId() + " was successful");
+              } else if (action.getLabel().equals(NQEConstants.EXECUTE_MAP_REDUCE_JOB)) {
+                String id = action.getData().getObject("operator").getString("id");
+                String s = (String) jobsCache.get(id);
+                QueryStatus queryStatus = new QueryStatus(new JsonObject(s));
+                queryStatus.setStatus(QueryState.COMPLETED);
+                jobsCache.put(id, queryStatus);
               } else {
                 log.error("COMPLETED Action " + action.toString()
                           + "Received by NQEProcessor but cannot be handled");
@@ -168,6 +180,7 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
                                                                   publicIP);
     currentCluster = LQPConfiguration.getInstance().getMicroClusterName();
     persistence = InfinispanClusterSingleton.getInstance().getManager();
+    jobsCache = (Cache) persistence.getPersisentCache(StringConstants.QUERIESCACHE);
     JsonObject msg = new JsonObject();
     msg.putString("processor", id + ".process");
     log = new LogProxy(config.getString("log"), com);
@@ -187,6 +200,8 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
                  new ExecuteMRActionHandler(com, log, persistence, id));
     handlers.put(IManagerConstants.COMPLETED_MAPREDUCE,
                  new CompletedMRActionHandler(com, log, persistence, id));
+    handlers.put(IManagerConstants.PUT_OBJECT,
+                 new PutObjectActionHandler(com, log, persistence, id));
 
     bus.send(workqueue + ".register", msg, new Handler<Message<JsonObject>>() {
       @Override
@@ -234,8 +249,8 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
           action.setGlobalConf(globalConfig);
           ActionHandler ac = handlers.get(action.getLabel());
           Action result = ac.process(action);
-//               result.setStatus(ActionStatus.COMPLETED.toString());
-//               com.sendTo(logic,result.asJsonObject());
+          result.setStatus(ActionStatus.COMPLETED.toString());
+          com.sendTo(logic,result.asJsonObject());
           message.reply();  // TODO(ap0n): How does this work?
         }
       } else {

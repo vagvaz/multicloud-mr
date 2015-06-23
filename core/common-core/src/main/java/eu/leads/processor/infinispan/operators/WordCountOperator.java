@@ -26,6 +26,18 @@ public class WordCountOperator extends MapReduceOperator {
     init_statistics(this.getClass().getCanonicalName());
   }
 
-  // TODO(ap0n): Should I override setupMapCallable & setupReduceCallable? Why GroupByOperator
-  //             Overrides execute() & cleanup()?
+  @Override
+  public void setupMapCallable() {
+//      init(conf);
+    setMapper(new WordCountMapper(conf.toString()));
+    super.setupMapCallable();
+  }
+
+  @Override
+  public void setupReduceCallable() {
+    setReducer(new WordCountReducer(conf.toString()));
+    super.setupReduceCallable();
+  }
+
+  // TODO(ap0n):  Why GroupByOperator Overrides execute() & cleanup()?
 }

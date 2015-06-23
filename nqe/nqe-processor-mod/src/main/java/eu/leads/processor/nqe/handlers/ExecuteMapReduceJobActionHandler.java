@@ -39,10 +39,10 @@ public class ExecuteMapReduceJobActionHandler implements ActionHandler {
   @Override
   public Action process(Action action) {
     Action result = new Action(action);
-    result.getData().putString("owner", id);
     result.setLabel(NQEConstants.EXECUTE_MAP_REDUCE_JOB);
-
+    result.getData().putString("owner", id);
     String jobId = UUID.randomUUID().toString();
+    result.getData().getObject("operator").putString("id", jobId);
     QueryStatus queryStatus = new QueryStatus();
     queryStatus.setId(jobId);
     queryStatus.setStatus(QueryState.PENDING);

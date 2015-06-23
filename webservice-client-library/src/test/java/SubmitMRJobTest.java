@@ -1,4 +1,4 @@
-import eu.leads.processor.web.ActionResult;
+import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
 
@@ -32,16 +32,31 @@ public class SubmitMRJobTest {
       e.printStackTrace();
     }
 
+    LQPConfiguration.initialize();
+
     JsonObject jsonObject = new JsonObject();
     jsonObject.putObject("operator", new JsonObject());
     jsonObject.getObject("operator").putObject("configuration", new JsonObject());
-    jsonObject.getObject("operator").getObject("configuration").putString("name", "wordCount");
+    jsonObject.getObject("operator").putString("name", "wordCount");
     jsonObject.getObject("operator").putArray("inputs", new JsonArray().add("clustered"));
     jsonObject.getObject("operator").putString("output", "testOutputCache");
-    jsonObject.getObject("operator").putArray("inputMicroClouds",
-                                              new JsonArray().add("localcluster"));
-    jsonObject.getObject("operator").putArray("outputMicroClouds",
-                                              new JsonArray().add("localcluster"));
+//    jsonObject.getObject("operator").putArray("inputMicroClouds",
+//                                              new JsonArray().add("localcluster"));
+//    jsonObject.getObject("operator").putArray("outputMicroClouds",
+//                                              new JsonArray().add("localcluster"));
+    jsonObject.getObject("operator")
+        .putObject("scheduling", new JsonObject().putString("localcluster",
+                                                            LQPConfiguration
+                                                                .getInstance()
+                                                                .getConfiguration()
+                                                                .getString("node.ip")));
+    jsonObject.getObject("operator").putObject("targetEndpoints",
+                                               new JsonObject().putString("localcluster",
+                                                                          LQPConfiguration
+                                                                              .getInstance()
+                                                                              .getConfiguration()
+                                                                              .getString(
+                                                                                  "node.ip")));
 
     try {
       QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);

@@ -60,8 +60,6 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
     String from = msg.getString(MessageUtils.FROM);
     String to = msg.getString(MessageUtils.TO);
 
-    log.info("in NQELogicWorker.handle");
-
     if (type.equals("action")) {
       Action action = new Action(msg);
       String label = action.getLabel();
@@ -108,6 +106,9 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             newAction.setData(action.getResult().getObject("result"));
             newAction.setStatus(ActionStatus.COMPLETED.toString());
             com.sendTo(newAction.getDestination(), newAction.asJsonObject());
+          } else if (label.equals(IManagerConstants.PUT_OBJECT)) {
+            action.getData().putString("replyTo", msg.getString("from"));
+            com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else {
             log.error("Unknown PENDING Action received " + action.toString());
             return;
@@ -154,6 +155,11 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             newAction.setData(action.getResult().getObject("result"));
             newAction.setStatus(ActionStatus.COMPLETED.toString());
             com.sendTo(newAction.getDestination(), newAction.asJsonObject());
+          } else if (label.equals(IManagerConstants.PUT_OBJECT)) {
+            if (!action.getResult().containsField("message")) {
+              action.getResult().putString("message", "");
+            }
+            com.sendTo(action.getData().getString("replyTo"), action.getResult());
           } else {
             log.error(
                 "Unknown COMPLETED OR INPROCESS Action received " + action.toString());
