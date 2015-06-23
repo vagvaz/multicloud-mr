@@ -151,12 +151,12 @@ public class WebServiceClient {
   public static ActionResult executeMapReduceJob(JsonObject job, String uri) throws IOException {
     address = new URL(uri + "/rest/mrjob/submit/");
     HttpURLConnection connection = (HttpURLConnection) address.openConnection();
-    // TODO(ap0n): Check the last 2 args of setUp
+    //  TODO(ap0n): Check the last 2 args of setUp
     connection = setUp(connection, "POST", MediaType.APPLICATION_JSON, true, true);
     setBody(connection, job);
     String response = getResult(connection);
     ActionResult result = mapper.readValue(response, ActionResult.class);
-    return result;  // TODO(ap0n): is this necessary?
+    return result;  // TODO(ap0n): is this necessary? //yes it should contain the ID of the job
   }
 
   public static ActionResult executeMapReduce(JsonObject newAction, String uri) throws IOException {
