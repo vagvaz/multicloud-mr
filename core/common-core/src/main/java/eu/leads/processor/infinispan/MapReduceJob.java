@@ -51,34 +51,34 @@ public class MapReduceJob extends DataType {
   }
 
   public String getName() {
-    return getInternalConf().getString("name");
+    return data.getObject("operator").getString("name");
   }
 
   public void setName(String name) {
-    getInternalConf().putString("name", name);
+    data.getObject("operator").putString("name", name);
   }
 
   public String getId() {
-    return getInternalConf().getString("id");
+    return data.getObject("operator").getString("id");
   }
 
   public void setId(String id) {
-    getInternalConf().putString("id", id);
+    data.getObject("operator").putString("id", id);
   }
 
 
   public JsonObject getConfiguration() {
-    JsonObject result = getInternalConf().getObject("configuration");
+    JsonObject result = data.getObject("operator").getObject("configuration");
     return result;
   }
 
   public void setConfiguration(JsonObject configuration) {
-    getInternalConf().putObject("configuration", configuration);
+    data.getObject("operator").putObject("configuration", configuration);
   }
 
   public List<String> getInputs() {
     ArrayList<String> result = new ArrayList<String>();
-    JsonArray array = data.getArray("inputs");
+    JsonArray array = data.getObject("operator").getArray("inputs");
     if (array != null && array.size() > 0) {
       Iterator<Object> inputIterator = array.iterator();
       while (inputIterator.hasNext()) {
@@ -93,30 +93,30 @@ public class MapReduceJob extends DataType {
     for (String input : inputs) {
       array.add(input);
     }
-    data.putArray("inputs", array);
+    data.getObject("operator").putArray("inputs", array);
   }
 
   public void addInput(String input) {
-    JsonArray array = data.getArray("inputs");
+    JsonArray array = data.getObject("operator").getArray("inputs");
     if (array == null) {
       array = new JsonArray();
     }
     array.add(input);
-    data.putArray("inputs", array);
+    data.getObject("operator").putArray("inputs", array);
   }
 
   public String getOutput() {
-    String result = data.getString("output");
+    String result = data.getObject("operator").getString("output");
     return result;
   }
 
   public void setOutput(String output) {
-    data.putString("output", output);
+    data.getObject("operator").putString("output", output);
   }
 
   public List<String> getInputMicroCloudss() {
     ArrayList<String> result = new ArrayList<String>();
-    JsonArray array = data.getArray("inputMicroClouds");
+    JsonArray array = data.getObject("operator").getArray("inputMicroClouds");
     if (array != null && array.size() > 0) {
       Iterator<Object> inputIterator = array.iterator();
       while (inputIterator.hasNext()) {
@@ -131,21 +131,21 @@ public class MapReduceJob extends DataType {
     for (String input : microClouds) {
       array.add(input);
     }
-    data.putArray("inputMicroClouds", array);
+    data.getObject("operator").putArray("inputMicroClouds", array);
   }
 
   public void addInputMicroCloud(String microCloud) {
-    JsonArray array = data.getArray("inputMicroClouds");
+    JsonArray array = data.getObject("operator").getArray("inputMicroClouds");
     if (array == null) {
       array = new JsonArray();
     }
     array.add(microCloud);
-    data.putArray("inputMicroClouds", array);
+    data.getObject("operator").putArray("inputMicroClouds", array);
   }
 
   public ArrayList<String> getOutputMicroClouds() {
     ArrayList<String> result = new ArrayList<String>();
-    JsonArray array = data.getArray("outputMicroClouds");
+    JsonArray array = data.getObject("operator").getArray("outputMicroClouds");
     if (array != null && array.size() > 0) {
       Iterator<Object> inputIterator = array.iterator();
       while (inputIterator.hasNext()) {
@@ -160,11 +160,11 @@ public class MapReduceJob extends DataType {
     for (String input : microClouds) {
       array.add(input);
     }
-    data.putArray("outputMicroClouds", array);
+    data.getObject("operator").putArray("outputMicroClouds", array);
   }
 
   public void addOutputMicroCloud(String microCloud) {
-    JsonArray array = data.getArray("outputMicroClouds");
+    JsonArray array = data.getObject("operator").getArray("outputMicroClouds");
     if (array == null) {
       array = new JsonArray();
     }
@@ -173,14 +173,14 @@ public class MapReduceJob extends DataType {
   }
 
   public boolean hasReduceLocal() {
-    return data.containsField("reduceLocal");
+    return data.getObject("operator").containsField("reduceLocal");
   }
 
   public void setReduceLocal(boolean runReduceLocal) {
     if (runReduceLocal) {
-      data.putString("reduceLocal", "1");
+      data.getObject("operator").putString("reduceLocal", "1");
     } else {
-      data.removeField("reduceLocal");
+      data.getObject("operator").removeField("reduceLocal");
     }
   }
 
