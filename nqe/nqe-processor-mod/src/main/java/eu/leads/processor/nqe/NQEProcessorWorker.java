@@ -11,7 +11,10 @@ import eu.leads.processor.core.comp.LeadsMessageHandler;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.DefaultNode;
 import eu.leads.processor.core.net.Node;
+import eu.leads.processor.imanager.IManagerConstants;
+import eu.leads.processor.nqe.handlers.CompletedMRActionHandler;
 import eu.leads.processor.nqe.handlers.DeployRemoteOpActionHandler;
+import eu.leads.processor.nqe.handlers.ExecuteMRActionHandler;
 import eu.leads.processor.nqe.handlers.ExecuteMapReduceJobActionHandler;
 import eu.leads.processor.nqe.handlers.OperatorActionHandler;
 import eu.leads.processor.web.WebServiceClient;
@@ -179,6 +182,11 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
 //
     handlers.put(NQEConstants.EXECUTE_MAP_REDUCE_JOB,
                  new ExecuteMapReduceJobActionHandler(com, log, persistence, id));
+
+    handlers.put(IManagerConstants.EXECUTE_MAPREDUCE,
+                 new ExecuteMRActionHandler(com, log, persistence, id));
+    handlers.put(IManagerConstants.COMPLETED_MAPREDUCE,
+                 new CompletedMRActionHandler(com, log, persistence, id));
 
     bus.send(workqueue + ".register", msg, new Handler<Message<JsonObject>>() {
       @Override

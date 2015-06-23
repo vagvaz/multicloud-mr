@@ -88,7 +88,7 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
                         // TODO(ap0n): save id to the job caches we must add it here
                         // not here but yes this should be done
                         //this is not correct
-                        com.sendTo(from, new JsonObject().putString("message", actionId));
+//                        com.sendTo(from, new JsonObject().putString("message", actionId));
                         com.sendWithEventBus(workQueueAddress, action.asJsonObject());
                     } else if (label.equals(IManagerConstants.EXECUTE_MAPREDUCE)) {
                         //handle the complted mapreduce
