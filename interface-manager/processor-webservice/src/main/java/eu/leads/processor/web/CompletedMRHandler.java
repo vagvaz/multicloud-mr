@@ -133,9 +133,9 @@ public class CompletedMRHandler implements Handler<HttpServerRequest> {
       action.setTriggers(new JsonArray());
       JsonObject object = new JsonObject(mrActionString);
       action.setData(object);
-      action.setDestination(StringConstants.IMANAGERQUEUE);
+      action.setDestination(StringConstants.NODEEXECUTORQUEUE);
       action.setStatus(ActionStatus.PENDING.toString());
-      com.sendRequestTo(StringConstants.IMANAGERQUEUE, action.asJsonObject(), replyHandler);
+      com.sendRequestTo(StringConstants.NODEEXECUTORQUEUE, action.asJsonObject(), replyHandler);
     }
   }
 }
