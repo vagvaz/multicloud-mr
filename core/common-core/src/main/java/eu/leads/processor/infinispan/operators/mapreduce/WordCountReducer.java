@@ -1,6 +1,7 @@
 package eu.leads.processor.infinispan.operators.mapreduce;
 
 import eu.leads.processor.core.Tuple;
+import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsReducer;
 
 import org.vertx.java.core.json.JsonObject;
@@ -21,7 +22,7 @@ public class WordCountReducer extends LeadsReducer<String, Tuple> {
   }
 
   @Override
-  public Tuple reduce(String reducedKey, Iterator<Tuple> iter) {
+  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     System.out.println(getClass().getName() + ".reduce!");
     int sum = 0;
     while (iter.hasNext()) {
@@ -29,8 +30,8 @@ public class WordCountReducer extends LeadsReducer<String, Tuple> {
       int count = Integer.valueOf(input.getAttribute("count"));
       sum += count;
     }
-    Tuple output = new Tuple();
-    output.setAttribute("count", sum);
-    return output;
+//    Tuple output = new Tuple();
+//    output.setAttribute("count", sum);
+    collector.emit(reducedKey, sum);
   }
 }

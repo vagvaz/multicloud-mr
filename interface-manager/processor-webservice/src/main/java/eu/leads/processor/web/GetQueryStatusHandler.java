@@ -9,6 +9,7 @@ import eu.leads.processor.core.comp.LeadsMessageHandler;
 import eu.leads.processor.core.net.MessageUtils;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.imanager.IManagerConstants;
+import eu.leads.processor.nqe.NQEConstants;
 
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.HttpServerRequest;
@@ -63,7 +64,7 @@ public class GetQueryStatusHandler implements Handler<HttpServerRequest> {
     queryRequest.putString("queryId", queryId);
     action.setData(queryRequest);
     replyHandlers.put(action.getId(), replyHandler);
-    com.sendRequestTo(StringConstants.IMANAGERQUEUE, action.asJsonObject(), replyHandler);
+    com.sendRequestTo(StringConstants.NODEEXECUTORQUEUE, action.asJsonObject(), replyHandler);
   }
 
   public void cleanup(String id) {

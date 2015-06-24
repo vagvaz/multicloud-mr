@@ -1,3 +1,4 @@
+import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
@@ -34,14 +35,6 @@ public class SubmitMRJobTest {
 
     LQPConfiguration.initialize();
 
-    JsonObject data = new JsonObject();
-    data.putString("1", "this is a line");
-    data.putString("2", "arnaki aspro kai paxy");
-    data.putString("3", "ths manas to kamari");
-    data.putString("4", "this another line is yoda said");
-    data.putString("5", "rudolf to elafaki");
-    data.putString("6", "na fame pilafaki");
-
     JsonObject jsonObject = new JsonObject();
     jsonObject.putObject("operator", new JsonObject());
     jsonObject.getObject("operator").putObject("configuration", new JsonObject());
@@ -65,12 +58,29 @@ public class SubmitMRJobTest {
                                                                               .getConfiguration()
                                                                               .getString(
                                                                                   "node.ip")));
-
     try {
-      WebServiceClient.putObject("clustered", "id", data);
+      String[] lines = {"this is a line",
+                        "arnaki aspro kai paxy",
+                        "ths manas to kamari",
+                        "this another line is yoda said",
+                        "rudolf to elafaki",
+                        "na fame pilafaki"};
+
+      JsonObject data = new JsonObject();
+      for (int i = 0; i < 1000; i++) {
+        data.putString(String.valueOf(i), lines[i % lines.length]);
+      }
+      WebServiceClient.putObject("clustered", "id", data);  // Add data to the input cache
 
       QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
-      System.out.println("id: " + res.getId());
+      String id = res.getId();
+      System.out.println("id: " + id);
+
+      while (!WebServiceClient.getQueryStatus(id).getStatus().equals("COMPLETED")) {
+        System.out.println("Sleeping");
+        Thread.sleep(100);
+      }
+
       System.out.println("status: " + res.getStatus());
       System.out.println("msg: " + res.getErrorMessage());
 

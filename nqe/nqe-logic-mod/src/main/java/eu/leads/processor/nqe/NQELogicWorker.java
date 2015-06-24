@@ -96,7 +96,6 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             newAction.setDestination((StringConstants.NODEEXECUTORQUEUE));
             newAction.setData(action.getResult().getObject("result"));
             com.sendTo(newAction.getDestination(), newAction.asJsonObject());
-
           } else if (label.equals(IManagerConstants.COMPLETED_MAPREDUCE)) {
             JsonObject webServiceReply = action.getResult().getObject("status");
             com.sendTo(action.getData().getString("replyTo"), webServiceReply);
@@ -107,6 +106,10 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             newAction.setStatus(ActionStatus.COMPLETED.toString());
             com.sendTo(newAction.getDestination(), newAction.asJsonObject());
           } else if (label.equals(IManagerConstants.PUT_OBJECT)) {
+            action.getData().putString("replyTo", msg.getString("from"));
+            com.sendWithEventBus(workQueueAddress, action.asJsonObject());
+          } else if (label.equals(IManagerConstants.GET_QUERY_STATUS)) {
+            log.info("peding get query status");
             action.getData().putString("replyTo", msg.getString("from"));
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else {
@@ -159,6 +162,9 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             if (!action.getResult().containsField("message")) {
               action.getResult().putString("message", "");
             }
+            com.sendTo(action.getData().getString("replyTo"), action.getResult());
+          } else if (label.equals(IManagerConstants.GET_QUERY_STATUS)) {
+            log.info("completed reply get query status");
             com.sendTo(action.getData().getString("replyTo"), action.getResult());
           } else {
             log.error(

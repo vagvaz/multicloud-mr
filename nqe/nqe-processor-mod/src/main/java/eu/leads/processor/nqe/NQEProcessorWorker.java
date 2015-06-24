@@ -19,6 +19,7 @@ import eu.leads.processor.nqe.handlers.CompletedMRActionHandler;
 import eu.leads.processor.nqe.handlers.DeployRemoteOpActionHandler;
 import eu.leads.processor.nqe.handlers.ExecuteMRActionHandler;
 import eu.leads.processor.nqe.handlers.ExecuteMapReduceJobActionHandler;
+import eu.leads.processor.nqe.handlers.GetQueryStatusActionHandler;
 import eu.leads.processor.nqe.handlers.OperatorActionHandler;
 import eu.leads.processor.nqe.handlers.PutObjectActionHandler;
 import eu.leads.processor.web.WebServiceClient;
@@ -202,6 +203,8 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
                  new CompletedMRActionHandler(com, log, persistence, id));
     handlers.put(IManagerConstants.PUT_OBJECT,
                  new PutObjectActionHandler(com, log, persistence, id));
+    handlers.put(IManagerConstants.GET_QUERY_STATUS,
+                 new GetQueryStatusActionHandler(com, log, persistence, id));
 
     bus.send(workqueue + ".register", msg, new Handler<Message<JsonObject>>() {
       @Override
