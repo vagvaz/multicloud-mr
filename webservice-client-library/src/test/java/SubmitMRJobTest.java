@@ -34,6 +34,14 @@ public class SubmitMRJobTest {
 
     LQPConfiguration.initialize();
 
+    JsonObject data = new JsonObject();
+    data.putString("1", "this is a line");
+    data.putString("2", "arnaki aspro kai paxy");
+    data.putString("3", "ths manas to kamari");
+    data.putString("4", "this another line is yoda said");
+    data.putString("5", "rudolf to elafaki");
+    data.putString("6", "na fame pilafaki");
+
     JsonObject jsonObject = new JsonObject();
     jsonObject.putObject("operator", new JsonObject());
     jsonObject.getObject("operator").putObject("configuration", new JsonObject());
@@ -59,6 +67,8 @@ public class SubmitMRJobTest {
                                                                                   "node.ip")));
 
     try {
+      WebServiceClient.putObject("clustered", "id", data);
+
       QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
       System.out.println("id: " + res.getId());
       System.out.println("status: " + res.getStatus());

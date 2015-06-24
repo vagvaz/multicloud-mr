@@ -22,5 +22,14 @@ public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
   @Override
   public void map(String key, Tuple value, Collector<String, Tuple> collector) {
     System.out.println(getClass().getName() + ".map!");
+    for (String attribute : value.getFieldNames()) {
+      for (String word : value.getAttribute(attribute).split(" ")) {
+        if (word != null && word.length() > 0) {
+          Tuple outputTuple = new Tuple();
+          outputTuple.setAttribute("count", 1);
+          collector.emit(word, outputTuple);
+        }
+      }
+    }
   }
 }

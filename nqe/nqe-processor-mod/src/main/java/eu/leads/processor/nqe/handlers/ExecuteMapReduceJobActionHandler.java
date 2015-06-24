@@ -52,6 +52,8 @@ public class ExecuteMapReduceJobActionHandler implements ActionHandler {
 
     // TODO(ap0n): Maybe use OperatorFactory (and encompass MapReduceOperatorFactory's functionality
     //             there.
+    //             - Won't proceed with this (at least for now)as OperatorFactory uses
+    //               "operatorType" as a flag while MapReduceOperatorFactory uses job's "name"
     Operator operator = MapReduceOperatorFactory.createOperator(com, persistence, log, result);
     if (operator != null) {
       operator.init(result.getData());

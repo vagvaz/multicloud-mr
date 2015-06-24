@@ -4,6 +4,7 @@ import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.core.Action;
 import eu.leads.processor.core.ActionHandler;
 import eu.leads.processor.core.ActionStatus;
+import eu.leads.processor.core.Tuple;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
 
@@ -35,11 +36,10 @@ public class PutObjectActionHandler implements ActionHandler {
       String cacheName = action.getData().getString("table");
       String key = action.getData().getString("key");
       JsonObject value = new JsonObject(action.getData().getString("object"));
-      Cache<String, String>
-          cache =
-          (Cache<String, String>) persistence.getPersisentCache(cacheName);
+      Cache cache = (Cache) persistence.getPersisentCache(cacheName);
       if (!key.equals("") && !value.equals("{}")) {
-        cache.put(key, value.toString());
+        Tuple t  = new Tuple(value.toString());
+        cache.put(key, t);
       } else {
         log.error("put object used for creating cache");
         persistence.getPersisentCache(cacheName);
