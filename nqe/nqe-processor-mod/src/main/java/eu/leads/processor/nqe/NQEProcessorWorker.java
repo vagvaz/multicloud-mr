@@ -104,7 +104,7 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
                 String s = (String) jobsCache.get(id);
                 QueryStatus queryStatus = new QueryStatus(new JsonObject(s));
                 queryStatus.setStatus(QueryState.COMPLETED);
-                jobsCache.put(id, queryStatus);
+                jobsCache.put(id, queryStatus.toString());
               } else {
                 log.error("COMPLETED Action " + action.toString()
                           + "Received by NQEProcessor but cannot be handled");

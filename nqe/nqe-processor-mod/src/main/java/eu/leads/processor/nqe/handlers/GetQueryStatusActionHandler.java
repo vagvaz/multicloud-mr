@@ -38,20 +38,17 @@ public class GetQueryStatusActionHandler implements ActionHandler {
     try {
       String queryId = action.getData().getString("queryId");
 //            JsonObject actionResult = persistence.get(StringConstants.QUERIESCACHE, queryId);
-      log.info("read query");
       String queryJson = queriesCache.get(queryId);
 
       JsonObject query = new JsonObject(queryJson);
       result.setResult(query);
 
     } catch (Exception e) {
-      log.info("exception in read");
       actionResult.putString("error", e.getMessage());
       result.setResult(actionResult);
       e.printStackTrace();
     }
     result.setStatus(ActionStatus.COMPLETED.toString());
-    log.info("preturn query status");
     return result;
   }
 }

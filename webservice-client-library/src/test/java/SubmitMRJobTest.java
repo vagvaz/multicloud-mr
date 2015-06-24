@@ -74,15 +74,23 @@ public class SubmitMRJobTest {
 
       QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
       String id = res.getId();
-      System.out.println("id: " + id);
+      System.out.println("Submitted job. id: " + id);
+      System.out.print("Executing");
 
-      while (!WebServiceClient.getQueryStatus(id).getStatus().equals("COMPLETED")) {
-        System.out.println("Sleeping");
-        Thread.sleep(100);
+      while (true) {
+        QueryStatus status = WebServiceClient.getQueryStatus(id);
+        if (status.getStatus().equals("COMPLETED")) {
+          break;
+        } else if (status.getErrorMessage() != null && status.getErrorMessage().length() > 0) {
+          System.out.println(status.getErrorMessage());
+          break;
+        } else {
+          System.out.print(".");
+          Thread.sleep(500);
+        }
       }
 
-      System.out.println("status: " + res.getStatus());
-      System.out.println("msg: " + res.getErrorMessage());
+      System.out.println("\nDONE");
 
     } catch (Exception e) {
       e.printStackTrace();
