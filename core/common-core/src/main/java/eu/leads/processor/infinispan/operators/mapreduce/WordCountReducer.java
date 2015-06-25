@@ -30,8 +30,8 @@ public class WordCountReducer extends LeadsReducer<String, Tuple> {
       int count = Integer.valueOf(input.getAttribute("count"));
       sum += count;
     }
-//    Tuple output = new Tuple();
-//    output.setAttribute("count", sum);
-    collector.emit(reducedKey, sum);
+    Tuple output = new Tuple();
+    output.setAttribute("count", sum);
+    collector.emit(reducedKey, output);
   }
 }

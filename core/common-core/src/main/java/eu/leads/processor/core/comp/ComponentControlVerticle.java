@@ -16,6 +16,7 @@ import org.vertx.java.platform.Verticle;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Created by vagvaz on 7/28/14.
@@ -77,7 +78,9 @@ public class ComponentControlVerticle extends Verticle implements Component {
   public void start() {
     super.start();
     config = container.config();
-    id = config.getString("id");
+//    id = config.getString("id");
+    id = UUID.randomUUID().toString();
+    config.putString("id", id);
     group = config.getString("group");
     componentType = config.getString("componentType");
     numberOfprocessors = Integer.valueOf(config.getString("processors", "1"));

@@ -94,9 +94,9 @@ public class SubmitMRJobTest {
           Thread.sleep(500);
         }
       }
-        RemoteCacheManager remoteCacheManager = createRemoteCacheManager();
-        RemoteCache results = remoteCacheManager.getCache(id);
-        PrintUtilities.printMap(results);
+      RemoteCacheManager remoteCacheManager = createRemoteCacheManager();
+      RemoteCache results = remoteCacheManager.getCache(id);
+      PrintUtilities.printMap(results);
       System.out.println("\nDONE");
 
     } catch (Exception e) {
@@ -104,10 +104,10 @@ public class SubmitMRJobTest {
     }
   }
 
-    private static RemoteCacheManager createRemoteCacheManager() {
-        ConfigurationBuilder builder = new ConfigurationBuilder();
-        builder.addServer().host(LQPConfiguration.getConf().getString("node.ip")).port(11222);
-        return new RemoteCacheManager(builder.build());
-    }
+  private static RemoteCacheManager createRemoteCacheManager() {
+    ConfigurationBuilder builder = new ConfigurationBuilder();
+    builder.addServer().host(LQPConfiguration.getConf().getString("node.ip")).port(11222);
+    return new RemoteCacheManager(builder.build());
+  }
 
 }
