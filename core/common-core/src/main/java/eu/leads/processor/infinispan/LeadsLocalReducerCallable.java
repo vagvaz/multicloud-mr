@@ -38,7 +38,7 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
     collector.setOnMap(true);
     collector.setEmanager(emanager);
     collector.setSite(site);
-
+    collector.setManager(embeddedCacheManager);
     collector.initializeCache(inputCache.getName(), imanager);
 
     this.reducer.initialize();
