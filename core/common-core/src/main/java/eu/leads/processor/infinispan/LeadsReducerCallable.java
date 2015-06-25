@@ -11,10 +11,9 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
   private LeadsReducer<kOut, vOut> reducer = null;
   private LeadsCollector collector;
   private String prefix;
+  String site;
 
-
-  public LeadsReducerCallable(String cacheName,
-                              LeadsReducer<kOut, vOut> reducer, String prefix) {
+  public LeadsReducerCallable(String cacheName, LeadsReducer<kOut, vOut> reducer, String prefix) {
     super("{}", cacheName);
     this.reducer = reducer;
     collector = new LeadsCollector(1000, cacheName);
@@ -34,7 +33,6 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
     super.initialize();
     collector.setOnMap(false);
     collector.setEmanager(emanager);
-
     collector.initializeCache(inputCache.getName(), imanager);
 
     this.reducer.initialize();

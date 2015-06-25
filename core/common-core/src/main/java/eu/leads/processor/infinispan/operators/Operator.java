@@ -41,8 +41,6 @@ public interface Operator {
   //    public void setupExecution();
   public void setupMapCallable();
 
-  // TODO(ap0n): add setupReduceLocalCallable method
-
   public void setupReduceCallable();
 
   public void executeMap();

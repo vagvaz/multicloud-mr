@@ -254,7 +254,7 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
           Action result = ac.process(action);
           result.setStatus(ActionStatus.COMPLETED.toString());
           com.sendTo(logic,result.asJsonObject());
-          message.reply();  // TODO(ap0n): How does this work?
+          message.reply();
         }
       } else {
         log.error(id

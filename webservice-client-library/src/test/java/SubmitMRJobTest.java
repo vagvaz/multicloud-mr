@@ -1,4 +1,3 @@
-import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
@@ -50,7 +49,9 @@ public class SubmitMRJobTest {
                                                             LQPConfiguration
                                                                 .getInstance()
                                                                 .getConfiguration()
-                                                                .getString("node.ip")));
+                                                                .getString("node.ip")))
+        .putString("reduceLocal", "true")
+    ;
     jsonObject.getObject("operator").putObject("targetEndpoints",
                                                new JsonObject().putString("localcluster",
                                                                           LQPConfiguration

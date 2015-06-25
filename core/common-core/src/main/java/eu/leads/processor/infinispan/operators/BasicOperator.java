@@ -59,9 +59,11 @@ public abstract class BasicOperator extends Thread implements Operator {
   protected String currentCluster;
   protected LeadsBaseCallable mapperCallable;
   protected LeadsBaseCallable reducerCallable;
+  protected LeadsBaseCallable reducerLocalCallable;
   protected Cache inputCache;
   protected BasicCache outputCache;
   protected Cache reduceInputCache;
+  protected Cache reduceLocalInputCache;
   protected String finalOperatorName, statInputSizeKey, statOutputSizeKey, statExecTimeKey;
   protected boolean isRemote = false;
   protected boolean executeOnlyMap = false;
@@ -72,6 +74,7 @@ public abstract class BasicOperator extends Thread implements Operator {
   protected Map<String, String> mcResults;
   protected Logger profilerLog = LoggerFactory.getLogger("###PROF###" + this.getClass().toString());
   protected ProfileEvent profOperator;
+  protected Boolean reduceLocal;
   long startTime;
   private volatile Object rmcMutex = new Object();
 
@@ -79,6 +82,7 @@ public abstract class BasicOperator extends Thread implements Operator {
     conf = action.getData();
     this.action = action;
     profOperator = new ProfileEvent("Operator- " + this.getClass().toString(), profilerLog);
+    reduceLocal = action.getData().getObject("operator").containsField("reduceLocal");
   }
 
   protected BasicOperator(Node com, InfinispanManager manager, LogProxy log, Action action) {
@@ -109,6 +113,7 @@ public abstract class BasicOperator extends Thread implements Operator {
     this.init_statistics(this.getClass().getCanonicalName());
     startTime = System.currentTimeMillis();
     profOperator = new ProfileEvent("Operator " + this.getClass().toString(), profilerLog);
+    reduceLocal = action.getData().getObject("operator").containsField("reduceLocal");
   }
 
   public JsonObject getConf() {
@@ -264,7 +269,7 @@ public abstract class BasicOperator extends Thread implements Operator {
   }
 
   @Override
-  public void execute() {  // TODO(ap0n): Is this ever called?
+  public void execute() {
     profOperator.end("execute");
     startTime = System.currentTimeMillis();
     System.out.println("Execution Start! ");
@@ -446,7 +451,6 @@ public abstract class BasicOperator extends Thread implements Operator {
       runProf.start("executeMap()");
       executeMap();
       runProf.end();
-      // TODO(ap0n): Add reduce local phase
     }
     if (!failed) {
       if (executeOnlyReduce) {
@@ -726,7 +730,13 @@ public abstract class BasicOperator extends Thread implements Operator {
         replyForFailExecution(action);
       }
     }
-    replyForSuccessfulExecution(action);  // TODO(ap0n): This gets back to nqe-logic-mod?
+
+    if (reduceLocal) {
+      setupReduceLocalCallable();
+      executeReduceLocal();
+    }
+
+    replyForSuccessfulExecution(action);
   }
 
   public void setMapperCallableEnsembleHost() {
@@ -737,24 +747,35 @@ public abstract class BasicOperator extends Thread implements Operator {
     reducerCallable.setEnsembleHost(computeEnsembleHost());
   }
 
+  public void setReducerLocaleEnsembleHost() {
+    reducerLocalCallable.setEnsembleHost(computeEnsembleHost());
+  }
+
   public String computeEnsembleHost() {
     String result = "";
-    JsonObject
-        targetEndpoints =
-        action.getData().getObject("operator").getObject("targetEndpoints");
+    JsonObject targetEndpoints = action.getData().getObject("operator")
+        .getObject("targetEndpoints");
     List<String> sites = new ArrayList<>();
+
     for (String targetMC : targetEndpoints.getFieldNames()) {
       //         JsonObject mc = targetEndpoints.getObject(targetMC);
       sites.add(targetMC);
       //
     }
+
     Collections.sort(sites);
+
     for (String site : sites) {
-      result +=
-          globalConfig.getObject("componentsAddrs").getArray(site).get(0).toString() + ":11222|";
+      if (!reduceLocal
+          || (reduceLocal && site.equals(LQPConfiguration.getInstance().getMicroClusterName()))) {
+        // If reduceLocal, we only need the local micro-cloud
+        result += globalConfig.getObject("componentsAddrs").getArray(site).get(0).toString()
+                  + ":11222|";
+      }
     }
     result = result.substring(0, result.length() - 1);
     log.error("EnsembleHost: " + result);
+
     return result;
   }
 
@@ -966,5 +987,69 @@ public abstract class BasicOperator extends Thread implements Operator {
       //
     }
     return result;
+  }
+
+  public void executeReduceLocal() {
+    if (reducerLocalCallable != null) {
+      DistributedExecutorService des = new DefaultExecutorService(reduceLocalInputCache);
+      setReducerLocaleEnsembleHost();
+      DistributedTaskBuilder builder = des.createDistributedTaskBuilder(reducerLocalCallable);
+      builder.timeout(1, TimeUnit.HOURS);
+      DistributedTask task = builder.build();
+      List<Future<String>> res = des.submitEverywhere(task);  // TODO(ap0n) Is this wrong?
+      List<String> addresses = new ArrayList<String>();
+      try {
+        if (res != null) {
+          for (Future<?> result : res) {
+            System.out.println(result.get());
+            addresses.add((String) result.get());
+          }
+          System.out.println("reduceLocal " + reducerLocalCallable.getClass().toString() +
+                             " Execution is done");
+          log.info("reduceLocal " + reducerLocalCallable.getClass().toString() +
+                   " Execution is done");
+        } else {
+          System.out.println("reduceLocal " + reducerLocalCallable.getClass().toString() +
+                             " Execution not done");
+          log.info("reduceLocal " + reducerLocalCallable.getClass().toString() +
+                   " Execution not done");
+          failed = true;
+          replyForFailExecution(action);
+        }
+      } catch (InterruptedException e) {
+        log.error(
+            "Exception in reduceLocal Execution " + "reduceLocal "
+            + reducerCallable.getClass().toString() + "\n" + e.getClass().toString());
+        log.error(e.getMessage());
+        System.err.println("Exception in reduceLocal Execution " + "reduceLocal "
+                           + reducerLocalCallable.getClass().toString() + "\n"
+                           + e.getClass().toString());
+        System.err.println(e.getMessage());
+        failed = true;
+        replyForFailExecution(action);
+        e.printStackTrace();
+      } catch (ExecutionException e) {
+        log.error(
+            "Exception in reduceLocal Execution " + "reduceLocal "
+            + reducerLocalCallable.getClass().toString() + "\n" + e.getClass().toString());
+        log.error(e.getMessage());
+        System.err.println(
+            "Exception in reduceLocal Execution " + "map "
+            + reducerLocalCallable.getClass().toString() + "\n" + e.getClass().toString());
+        System.err.println(e.getMessage());
+        failed = true;
+        replyForFailExecution(action);
+        e.printStackTrace();
+      }
+    }
+    replyForSuccessfulExecution(action);
+  }
+
+  public void setupReduceLocalCallable() {
+    try {
+      throw new Exception("Not implemented method!");
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

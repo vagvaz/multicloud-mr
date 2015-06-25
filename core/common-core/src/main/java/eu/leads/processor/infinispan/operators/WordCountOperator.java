@@ -20,7 +20,7 @@ public class WordCountOperator extends MapReduceOperator {
 
   @Override
   public void init(JsonObject config) {
-    super.init(conf);  // TODO(ap0n): Is this conf (as in GroupByOperator) or config?
+    super.init(conf);
     setMapper(new WordCountMapper(conf.toString()));
     setReducer(new WordCountReducer(conf.toString()));
     init_statistics(this.getClass().getCanonicalName());
@@ -34,10 +34,14 @@ public class WordCountOperator extends MapReduceOperator {
   }
 
   @Override
+  public void setupReduceLocalCallable() {
+
+    super.setupReduceLocalCallable();
+  }
+
+  @Override
   public void setupReduceCallable() {
     setReducer(new WordCountReducer(conf.toString()));
     super.setupReduceCallable();
   }
-
-  // TODO(ap0n):  Why GroupByOperator Overrides execute() & cleanup()?
 }
