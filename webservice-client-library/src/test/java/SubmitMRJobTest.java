@@ -1,7 +1,11 @@
+import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
 
+import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -90,11 +94,20 @@ public class SubmitMRJobTest {
           Thread.sleep(500);
         }
       }
-
+        RemoteCacheManager remoteCacheManager = createRemoteCacheManager();
+        RemoteCache results = remoteCacheManager.getCache(id);
+        PrintUtilities.printMap(results);
       System.out.println("\nDONE");
 
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
+
+    private static RemoteCacheManager createRemoteCacheManager() {
+        ConfigurationBuilder builder = new ConfigurationBuilder();
+        builder.addServer().host(LQPConfiguration.getConf().getString("node.ip")).port(11222);
+        return new RemoteCacheManager(builder.build());
+    }
+
 }
