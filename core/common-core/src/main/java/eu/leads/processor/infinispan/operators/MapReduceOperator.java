@@ -214,7 +214,7 @@ public abstract class MapReduceOperator extends BasicOperator {
     collector = new LeadsCollector(0, outputCache.getName());
     inputCache = (Cache) keysLocalCache;
     reducerLocalCallable = new LeadsLocalReducerCallable(outputCache.getName(), reducer,
-                                                         intermediateCacheName, LQPConfiguration
+                                                         intermediateLocalCacheName, LQPConfiguration
                                                              .getInstance().getMicroClusterName());
   }
 }
