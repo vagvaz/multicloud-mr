@@ -15,15 +15,15 @@ import java.io.Serializable;
 /**
  * Created by vagvaz on 3/7/15.
  */
-@Indexed
+//@Indexed
 public class IndexedComplexIntermediateKey implements Comparable, Serializable {
 
-  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES)
+//  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES)
   private String site;
 
-  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES)
+//  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES)
   private String node;
-  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES, name = "key")
+//  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES, name = "key")
   private String key;
 
 
@@ -51,23 +51,23 @@ public class IndexedComplexIntermediateKey implements Comparable, Serializable {
 
   }
 
-  private void readObject(ObjectInputStream in
-  ) throws ClassNotFoundException, IOException {
-    this.site = in.readUTF();
-    this.node = in.readUTF();
-    this.cache = in.readUTF();
-    this.key = in.readUTF();
-  }
-
-  /**
-   * This is the default implementation of writeObject. Customise if necessary.
-   */
-  private void writeObject(ObjectOutputStream out) throws IOException {
-    out.writeUTF(site);
-    out.writeUTF(node);
-    out.writeUTF(cache);
-    out.writeUTF(key);
-  }
+//  private void readObject(ObjectInputStream in
+//  ) throws ClassNotFoundException, IOException {
+//    this.site = in.readUTF();
+//    this.node = in.readUTF();
+//    this.cache = in.readUTF();
+//    this.key = in.readUTF();
+//  }
+//
+//  /**
+//   * This is the default implementation of writeObject. Customise if necessary.
+//   */
+//  private void writeObject(ObjectOutputStream out) throws IOException {
+//    out.writeUTF(site);
+//    out.writeUTF(node);
+//    out.writeUTF(cache);
+//    out.writeUTF(key);
+//  }
 
   public void unserialize(byte[] asbytes) throws IOException {
     ByteArrayInputStream input = new ByteArrayInputStream(asbytes);
