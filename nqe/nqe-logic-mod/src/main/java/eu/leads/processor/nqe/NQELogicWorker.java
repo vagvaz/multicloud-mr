@@ -9,8 +9,10 @@ import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.DefaultNode;
 import eu.leads.processor.core.net.MessageUtils;
 import eu.leads.processor.core.net.Node;
+import eu.leads.processor.core.plan.QueryState;
 import eu.leads.processor.imanager.IManagerConstants;
 
+import eu.leads.processor.web.ActionResult;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
@@ -88,14 +90,9 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             action.getData().putString("replyTo", from);
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else if (label.equals(IManagerConstants.EXECUTE_MAPREDUCE)) {
-            //handle the complted mapreduce
-            JsonObject webServiceReply = action.getResult().getObject("status");
-            com.sendTo(action.getData().getString("replyTo"), webServiceReply);
-            newAction = createNewAction(action);
-            newAction.setLabel(NQEConstants.DEPLOY_REMOTE_OPERATOR);
-            newAction.setDestination((StringConstants.NODEEXECUTORQUEUE));
-            newAction.setData(action.getResult().getObject("result"));
-            com.sendTo(newAction.getDestination(), newAction.asJsonObject());
+            //handle the remote execution mapreduce
+            action.getData().putString("replyTo", msg.getString("from"));
+            com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else if (label.equals(IManagerConstants.COMPLETED_MAPREDUCE)) {
             JsonObject webServiceReply = action.getResult().getObject("status");
             com.sendTo(action.getData().getString("replyTo"), webServiceReply);
@@ -145,8 +142,7 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             newAction = createNewAction(action);
             newAction.setLabel(NQEConstants.DEPLOY_REMOTE_OPERATOR);
             newAction.setDestination((StringConstants.NODEEXECUTORQUEUE));
-            newAction.setData(action.getResult().getObject("result"));
-            com.sendTo(newAction.getDestination(), newAction.asJsonObject());
+            com.sendTo(workQueueAddress, newAction.asJsonObject());
 
           } else if (label.equals(IManagerConstants.COMPLETED_MAPREDUCE)) {
             JsonObject webServiceReply = action.getResult().getObject("status");
