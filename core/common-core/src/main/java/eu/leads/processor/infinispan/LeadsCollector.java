@@ -196,7 +196,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
         currentCount = new Integer(0);
         baseIndexedKey.setKey(key.toString());
         EnsembleCacheUtils.putIfAbsentToCache(keysCache, key, key);
-        EnsembleCacheUtils.putToCache(indexSiteCache, baseIndexedKey.getUniqueKey(),
+        EnsembleCacheUtils.putToCache(indexSiteCache, baseIndexedKey,
                                       new IndexedComplexIntermediateKey(baseIndexedKey));
 //        Object o = indexSiteCache.get(baseIndexedKey.getUniqueKey());
 //        if(o == null)
