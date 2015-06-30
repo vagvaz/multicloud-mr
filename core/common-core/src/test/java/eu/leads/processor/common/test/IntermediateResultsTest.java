@@ -21,14 +21,14 @@ public class IntermediateResultsTest {
   static BasicCache indexedCache;
   static BasicCache dataCache;
   static BasicCache keysCache;
-  static String[] nodes= {"node0","node1","node2","node3","node00"};//,"node11","node22","node33"};
-  static String[] microClouds = {"mc0"};//,"mc1"};//,"mc2","mc01","mc11","mc21"};
+  static String[] nodes= null;//{"node0","node1","node2","node3","node00"};//,"node11","node22","node33"};
+  static String[] microClouds = null;//{"mc0"};//,"mc1"};//,"mc2","mc01","mc11","mc21"};
   static String[] keys;
   static String cacheName = "acache";
-  static int numOfkeys = 2;
-  static int numOfNodes = 1;
-  static int numOfMicroClouds = 500; //500
-  static int valuesPerKey = 2;
+  static int numOfkeys = 100; //10
+  static int numOfNodes = 100; //10
+  static int numOfMicroClouds = 5; //10
+  static int valuesPerKey = 4;
   static RemoteCacheManager rmanager;
   public static void main(String[] args) {
     LQPConfiguration.initialize();
@@ -99,7 +99,30 @@ public class IntermediateResultsTest {
         System.err.println("key " + k + " iteration size: " + keyCounter + " instead of " + valuesPerKey*numOfMicroClouds*numOfNodes + " number of missed iterations" + (valuesPerKey*numOfMicroClouds*numOfNodes -keyCounter)/valuesPerKey );
       }
     }
-    System.err.println("Total counted " + counter + " total " + keys.length* microClouds.length*nodes.length*valuesPerKey);
+    System.err.println("\nTotal counted " + counter + " total " + keys.length* microClouds.length*nodes.length*valuesPerKey);
+    int cc = 0;
+    for(String node : nodes){
+      for(String site : microClouds) {
+        for (String key : keys) {
+          IndexedComplexIntermediateKey ikey = new IndexedComplexIntermediateKey(site,node,cacheName,key);
+          IndexedComplexIntermediateKey ivalue =
+              (IndexedComplexIntermediateKey) indexedCache.get(ikey);
+          if(ivalue != null){
+            if(!ikey.equals(ivalue)){
+              System.out.println("Diff:ikey " + ikey.toString() +" ivalue " + ivalue.toString());
+            }else{
+              cc++;
+            }
+
+          }
+          else{
+            System.out.println("null for ikey " + ikey.toString() +" ivalue " + ivalue);
+          }
+        }
+      }
+    }
+    System.out.println("Found cc: " + cc);
+
     System.exit(0);
   }
 

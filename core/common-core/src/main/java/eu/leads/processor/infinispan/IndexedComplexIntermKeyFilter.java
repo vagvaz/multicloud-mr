@@ -17,14 +17,14 @@ public class IndexedComplexIntermKeyFilter implements KeyValueFilter,Serializabl
   @Override
   public boolean accept(Object key, Object value, Metadata metadata) {
     //      System.err.println("filter: " +key.toString() + " -> " + value.toString() + " with key " + filterKey);
-    if(! (value instanceof IndexedComplexIntermediateKey)){
-      if(value != null)
-        System.out.println(" class " + value.getClass().toString());
-      else
-        System.out.println("NULL");
-      return false;
-    }
-    IndexedComplexIntermediateKey val = (IndexedComplexIntermediateKey)value;
+//    if(! (value instanceof IndexedComplexIntermediateKey)){
+//      if(value != null)
+//        System.out.println(" class " + value.getClass().toString());
+////      else
+////        System.out.println("NULL");
+//      return false;
+//    }
+    IndexedComplexIntermediateKey val = (IndexedComplexIntermediateKey)key;
     if(val.getKey().equals(filterKey)){
       //       System.err.println("ACCEPTING");
       return true;
