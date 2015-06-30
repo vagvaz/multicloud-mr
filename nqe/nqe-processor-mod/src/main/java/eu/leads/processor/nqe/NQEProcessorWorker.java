@@ -172,7 +172,8 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     com.initialize(id, gr, null, leadsHandler, leadsHandler, vertx);
     bus.registerHandler(id + ".process", this);
     LQPConfiguration.initialize();
-    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component", "nqe");
+    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component",
+                                                                  "nqe." + id);
 
     String publicIP = ConfigurationUtilities.getPublicIPFromGlobal(LQPConfiguration.getInstance()
                                                                        .getMicroClusterName(),

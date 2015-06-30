@@ -40,6 +40,10 @@ public class GetQueryStatusActionHandler implements ActionHandler {
 //            JsonObject actionResult = persistence.get(StringConstants.QUERIESCACHE, queryId);
       String queryJson = queriesCache.get(queryId);
 
+      if (queryJson == null) {
+        System.out.println("queryId = " + queryId);
+      }
+
       JsonObject query = new JsonObject(queryJson);
       result.setResult(query);
 

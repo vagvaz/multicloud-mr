@@ -20,7 +20,9 @@ public class SubmitMRJobTest {
   private static int port;
 
   public static void main(String[] args) {
-    host = "http://localhost";
+//    host = "http://localhost";
+//    host = "http://80.156.73.116";  // dresden2
+    host = "http://80.156.222.4";  // dd1a
     port = 8080;
 
     if (args.length == 2) {
@@ -48,21 +50,34 @@ public class SubmitMRJobTest {
 //                                              new JsonArray().add("localcluster"));
 //    jsonObject.getObject("operator").putArray("outputMicroClouds",
 //                                              new JsonArray().add("localcluster"));
+//    jsonObject.getObject("operator")
+//        .putObject("scheduling", new JsonObject().putString("dresden2",
+//                                                            LQPConfiguration
+//                                                                .getInstance()
+//                                                                .getConfiguration()
+//                                                                .getString("node.ip")))
+//        .putString("reduceLocal", "true")
+//    ;
+//    jsonObject.getObject("operator").putObject("targetEndpoints",
+//                                               new JsonObject().putString("dresden2",
+//                                                                          LQPConfiguration
+//                                                                              .getInstance()
+//                                                                              .getConfiguration()
+//                                                                              .getString(
+//                                                                                  "node.ip")));
     jsonObject.getObject("operator")
-        .putObject("scheduling", new JsonObject().putString("localcluster",
-                                                            LQPConfiguration
-                                                                .getInstance()
-                                                                .getConfiguration()
-                                                                .getString("node.ip")))
+        .putObject("scheduling",
+                   new JsonObject()
+                       .putArray("dresden2", new JsonArray().add("80.156.73.116"))
+                       .putArray("dd1a", new JsonArray().add("80.156.222.4")))
         .putString("reduceLocal", "true")
     ;
-    jsonObject.getObject("operator").putObject("targetEndpoints",
-                                               new JsonObject().putString("localcluster",
-                                                                          LQPConfiguration
-                                                                              .getInstance()
-                                                                              .getConfiguration()
-                                                                              .getString(
-                                                                                  "node.ip")));
+    jsonObject.getObject("operator")
+        .putObject("targetEndpoints",
+                   new JsonObject()
+                       .putArray("dresden2", new JsonArray().add("80.156.73.116"))
+                       .putArray("dd1a", new JsonArray().add("80.156.222.4")))
+    ;
     try {
       String[] lines = {"this is a line",
                         "arnaki aspro kai paxy",
@@ -76,6 +91,8 @@ public class SubmitMRJobTest {
         data.putString(String.valueOf(i), lines[i % lines.length]);
       }
       WebServiceClient.putObject("clustered", "id", data);  // Add data to the input cache
+
+      System.out.println("jsonObject = " + jsonObject.toString());
 
       QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
       String id = res.getId();
@@ -91,12 +108,12 @@ public class SubmitMRJobTest {
           break;
         } else {
           System.out.print(".");
-          Thread.sleep(500);
+          Thread.sleep(1000);
         }
       }
-      RemoteCacheManager remoteCacheManager = createRemoteCacheManager();
-      RemoteCache results = remoteCacheManager.getCache(id);
-      PrintUtilities.printMap(results);
+//      RemoteCacheManager remoteCacheManager = createRemoteCacheManager();
+//      RemoteCache results = remoteCacheManager.getCache(id);
+//      PrintUtilities.printMap(results);
       System.out.println("\nDONE");
 
     } catch (Exception e) {

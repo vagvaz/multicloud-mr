@@ -279,6 +279,7 @@ public class DefaultNode implements Node, Handler<Long> {
     registerToEventBusAddresses(this.config);
     this.vertx = vertx;
     vertx.setPeriodic(timeout, this);
+    System.out.println("Node id: " + getId());
   }
 
   @Override
