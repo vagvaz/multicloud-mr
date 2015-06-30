@@ -142,6 +142,7 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             newAction = createNewAction(action);
             newAction.setLabel(NQEConstants.DEPLOY_REMOTE_OPERATOR);
             newAction.setDestination((StringConstants.NODEEXECUTORQUEUE));
+            newAction.setData(action.getResult().getObject("result"));
             com.sendTo(workQueueAddress, newAction.asJsonObject());
 
           } else if (label.equals(IManagerConstants.COMPLETED_MAPREDUCE)) {
