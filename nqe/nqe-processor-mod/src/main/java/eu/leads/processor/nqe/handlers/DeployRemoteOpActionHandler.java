@@ -46,7 +46,7 @@ public class DeployRemoteOpActionHandler implements ActionHandler {
   public Action process(Action action) {
     Action result = new Action(action.getData().getObject("data"));
     result.setLabel(NQEConstants.DEPLOY_REMOTE_OPERATOR);
-//    result.getData().putString("owner", id);
+    result.getData().putString("owner", id);
 //    String jobId = UUID.randomUUID().toString();
 //    result.getData().getObject("operator").putString("id", jobId);
 //    jobsCache.put(jobId, queryStatus.toString());
