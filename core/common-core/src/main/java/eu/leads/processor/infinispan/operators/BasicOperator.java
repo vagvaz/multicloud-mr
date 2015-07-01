@@ -535,7 +535,7 @@ public abstract class BasicOperator extends Thread implements Operator {
             "Sleeping to executing " + mapperCallable.getClass().toString() + " pending clusters ");
         PrintUtilities.printList(Arrays.asList(pendingMMC));
         try {
-          mmcMutex.wait(120000);
+          mmcMutex.wait(2000);
         } catch (InterruptedException e) {
           log.error("Interrupted " + e.getMessage());
           break;
@@ -881,7 +881,7 @@ public abstract class BasicOperator extends Thread implements Operator {
                            + " pending clusters ");
         PrintUtilities.printList(Arrays.asList(pendingMMC));
         try {
-          mmcMutex.wait(240000);
+          mmcMutex.wait(2000);
         } catch (InterruptedException e) {
           log.error("REduce Interrupted " + e.getMessage());
           break;
