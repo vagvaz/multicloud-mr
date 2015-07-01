@@ -867,7 +867,8 @@ public abstract class BasicOperator extends Thread implements Operator {
     pendingMMC = new HashSet<>();
     mcResults = new HashMap<>();
     pendingMMC.addAll(pendingRMC);
-    //      subscribeToMapActions(pendingMMC);
+    if(isRemote)
+          subscribeToMapActions(pendingMMC);
     if (!isRemote) {
       for (String mc : pendingMMC) {
         if (!mc.equals(currentCluster)) {
