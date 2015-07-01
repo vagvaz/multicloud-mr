@@ -25,10 +25,10 @@ public class IntermediateResultsTest {
   static String[] microClouds = null;//{"mc0"};//,"mc1"};//,"mc2","mc01","mc11","mc21"};
   static String[] keys;
   static String cacheName = "acache";
-  static int numOfkeys = 100; //10
-  static int numOfNodes = 100; //10
-  static int numOfMicroClouds = 5; //10
-  static int valuesPerKey = 4;
+  static int numOfkeys = 10; //10
+  static int numOfNodes = 10; //10
+  static int numOfMicroClouds = 10; //10
+  static int valuesPerKey = 2;
   static RemoteCacheManager rmanager;
   public static void main(String[] args) {
     LQPConfiguration.initialize();

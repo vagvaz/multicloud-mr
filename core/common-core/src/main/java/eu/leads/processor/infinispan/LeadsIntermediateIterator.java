@@ -55,8 +55,8 @@ public class LeadsIntermediateIterator<V> implements Iterator<V> {
       CloseableIterable<Map.Entry<Object, Object>> myIterable = ((Cache)indexSiteCache).getAdvancedCache().filterEntries(new IndexedComplexIntermKeyFilter(key));
       for (Map.Entry<Object, Object> entry : myIterable) {
         //        System.err.println("ADDING TO LIST key: " + entry.getKey() + " value " + entry.getValue().toString());
-        if(entry.getKey() instanceof  IndexedComplexIntermediateKey) {
-          ComplexIntermediateKey c = new ComplexIntermediateKey((IndexedComplexIntermediateKey) entry.getKey());
+        if(entry.getValue() instanceof  IndexedComplexIntermediateKey) {
+          ComplexIntermediateKey c = new ComplexIntermediateKey((IndexedComplexIntermediateKey) entry.getValue());
           if (intermediateDataCache.containsKey(c)){
             list.add((IndexedComplexIntermediateKey) entry.getValue());
           }else{
