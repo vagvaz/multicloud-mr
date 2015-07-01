@@ -125,6 +125,8 @@ public abstract class MapReduceOperator extends BasicOperator {
   @Override
   public void createCaches(boolean isRemote, boolean executeOnlyMap, boolean executeOnlyReduce) {
     Set<String> targetMC = getTargetMC();
+    if(isRemote)
+      return;
     for (String mc : targetMC) {
       createCache(mc, getOutput());
       createCache(mc, intermediateCacheName);
