@@ -94,14 +94,8 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             action.getData().putString("replyTo", msg.getString("from"));
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else if (label.equals(IManagerConstants.COMPLETED_MAPREDUCE)) {
-            JsonObject webServiceReply = action.getResult().getObject("status");
-            com.sendTo(action.getData().getString("replyTo"), webServiceReply);
-            newAction = createNewAction(action);
-            newAction.setLabel(NQEConstants.OPERATOR_COMPLETE);
-            newAction.setDestination(action.getResult().getString("replyGroup"));
-            newAction.setData(action.getResult().getObject("result"));
-            newAction.setStatus(ActionStatus.COMPLETED.toString());
-            com.sendTo(newAction.getDestination(), newAction.asJsonObject());
+            action.getData().putString("replyTo", msg.getString("from"));
+            com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else if (label.equals(IManagerConstants.PUT_OBJECT)) {
             action.getData().putString("replyTo", msg.getString("from"));
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
