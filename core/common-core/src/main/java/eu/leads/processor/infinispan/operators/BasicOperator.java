@@ -425,8 +425,13 @@ public abstract class BasicOperator extends Thread implements Operator {
       return;
     }
     if (executeOnlyReduce) {
-      for (String mc : getMicroCloudsFromOpTarget()) {
-        pendingRMC.add(mc);
+      if(!isRemote) {
+        for (String mc : getMicroCloudsFromOpTarget()) {
+          pendingRMC.add(mc);
+        }
+      }
+      else{
+        pendingRMC.add(LQPConfiguration.getInstance().getMicroClusterName());
       }
     }
   }
@@ -802,7 +807,7 @@ public abstract class BasicOperator extends Thread implements Operator {
           log.info("reduce " + reducerCallable.getClass().toString() +
                    " Execution is done");
         } else {
-          System.out.println("reduce " + reducerCallable.getClass().toString() +
+          System.out.println("FAIL reduce " + reducerCallable.getClass().toString() +
                              " Execution not done");
           log.info("reduce " + reducerCallable.getClass().toString() +
                    " Execution not done");
@@ -816,7 +821,7 @@ public abstract class BasicOperator extends Thread implements Operator {
             e.getClass().toString());
         log.error(e.getMessage());
         System.err
-            .println("Exception in reduce Excuettion " + "reduce " + reducerCallable.getClass()
+            .println("FAIL Exception in reduce Excuettion " + "reduce " + reducerCallable.getClass()
                 .toString() + "\n" +
                      e.getClass().toString());
         System.err.println(e.getMessage());
@@ -830,7 +835,7 @@ public abstract class BasicOperator extends Thread implements Operator {
             e.getClass().toString());
         log.error(e.getMessage());
         System.err.println(
-            "Exception in reduce Excuettion " + "map " + reducerCallable.getClass().toString()
+            "Exception in reduce Excuettion " + "reduce " + reducerCallable.getClass().toString()
             + "\n" +
             e.getClass().toString());
         System.err.println(e.getMessage());
@@ -872,7 +877,9 @@ public abstract class BasicOperator extends Thread implements Operator {
     }
 
     if (pendingMMC.contains(currentCluster)) {
+      System.err.println("RUNNING FREDUCE ON CLUSTER " + currentCluster);
       localExecuteReduce();
+      System.err.println("END FREDUCE ON CLUSTER " + currentCluster);
     }
 
     synchronized (mmcMutex) {
