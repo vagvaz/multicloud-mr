@@ -745,18 +745,21 @@ public abstract class BasicOperator extends Thread implements Operator {
   }
 
   public void setMapperCallableEnsembleHost() {
-    mapperCallable.setEnsembleHost(computeEnsembleHost());
+    mapperCallable.setEnsembleHost(computeEnsembleHost(true));
   }
 
   public void setReducerCallableEnsembleHost() {
-    reducerCallable.setEnsembleHost(computeEnsembleHost());
+    reducerCallable.setEnsembleHost(computeEnsembleHost(false));
   }
 
   public void setReducerLocaleEnsembleHost() {
-    reducerLocalCallable.setEnsembleHost(computeEnsembleHost());
+    reducerLocalCallable.setEnsembleHost(computeEnsembleHost(false));
+  }
+  public String computeEnsembleHost() {
+    return computeEnsembleHost(false);
   }
 
-  public String computeEnsembleHost() {
+  public String computeEnsembleHost(boolean isMap) {
     String result = "";
     JsonObject targetEndpoints = action.getData().getObject("operator")
         .getObject("targetEndpoints");
@@ -769,13 +772,14 @@ public abstract class BasicOperator extends Thread implements Operator {
     }
 
     Collections.sort(sites);
+    if(isMap && reduceLocal) { // compute is run for map and there reducelocal should run
+      result += globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222|";
+    }
+    else{
+      for (String site : sites) {
+          // If reduceLocal, we only need the local micro-cloud
+          result += globalConfig.getObject("componentsAddrs").getArray(site).get(0).toString() + ":11222|";
 
-    for (String site : sites) {
-      if (!reduceLocal
-          || (reduceLocal && site.equals(LQPConfiguration.getInstance().getMicroClusterName()))) {
-        // If reduceLocal, we only need the local micro-cloud
-        result += globalConfig.getObject("componentsAddrs").getArray(site).get(0).toString()
-                  + ":11222|";
       }
     }
     result = result.substring(0, result.length() - 1);
