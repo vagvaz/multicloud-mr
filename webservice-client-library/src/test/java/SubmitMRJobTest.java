@@ -1,6 +1,7 @@
 import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
+import eu.leads.processor.core.Tuple;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
 
@@ -81,10 +82,8 @@ public class SubmitMRJobTest {
         )
         .putString("reduceLocal", "true")
         .putObject("targetEndpoints",
-                   new JsonObject()
-                       .putArray("dresden2", new JsonArray().add(DRESDEN2_IP))
-                       .putArray("dd1a", new JsonArray().add(DD1A_IP))
-        );
+            new JsonObject().putArray("dresden2", new JsonArray().add(DRESDEN2_IP))
+                .putArray("dd1a", new JsonArray().add(DD1A_IP)));
     try {
 
       String ensembleString = DD1A_IP + ":11222" + "|" + DRESDEN2_IP + ":11222";
@@ -103,14 +102,14 @@ public class SubmitMRJobTest {
                         "na fame pilafaki"};
 
       JsonObject data;
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 20000; i++) {
         data = new JsonObject();
         data.putString(String.valueOf(i), lines[i % lines.length]);
-        ensembleCache.put(String.valueOf(i), data);
+        ensembleCache.put(String.valueOf(i), new Tuple(data.toString()));
         System.out.print(".");
       }
 
-      PrintUtilities.printMap(ensembleCache);
+//      PrintUtilities.printMap(ensembleCache);
 
 //      WebServiceClient.putObject("clustered", "id", data);  // Add data to the input cache
 
