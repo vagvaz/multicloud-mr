@@ -226,6 +226,7 @@ public abstract class MapReduceOperator extends BasicOperator {
                                                          intermediateLocalCacheName, LQPConfiguration
                                                              .getInstance().getMicroClusterName());
 
-    ((LeadsLocalReducerCallable)reducerCallable).setLocalSite(globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222");
+    String localSite = globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString();
+    ((LeadsLocalReducerCallable)reducerLocalCallable).setLocalSite( localSite+ ":11222");
   }
 }
