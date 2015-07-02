@@ -871,6 +871,7 @@ public abstract class BasicOperator extends Thread implements Operator {
     pendingMMC = new HashSet<>();
     mcResults = new HashMap<>();
     pendingMMC.addAll(pendingRMC);
+    pendingRMC.clear();
     if(isRemote)
           subscribeToMapActions(pendingMMC);
     if (!isRemote) {
@@ -888,16 +889,25 @@ public abstract class BasicOperator extends Thread implements Operator {
     }
 
     synchronized (mmcMutex) {
-      while (pendingMMC.size() > 0) {
+      int size = pendingMMC.size();
+      while (size > 0) {
         System.out.println("Sleeping to executing " + reducerCallable.getClass().toString()
                            + " pending clusters ");
         PrintUtilities.printList(Arrays.asList(pendingMMC));
         try {
-          mmcMutex.wait(2000);
+          mmcMutex.wait(5000);
         } catch (InterruptedException e) {
           log.error("REduce Interrupted " + e.getMessage());
           break;
         }
+        for (Map.Entry<String, String> entry : mcResults.entrySet()) {
+          System.out.println("Reduce Execution on " + entry.getKey() + " was " + entry.getValue());
+          log.error("Reduce Execution on " + entry.getKey() + " was " + entry.getValue());
+          if (entry.getValue().equals("FAIL")) {
+            failed = true;
+          }
+        }
+        size = pendingMMC.size();
       }
     }
     for (Map.Entry<String, String> entry : mcResults.entrySet()) {
