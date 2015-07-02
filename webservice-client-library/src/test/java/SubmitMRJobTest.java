@@ -149,6 +149,7 @@ public class SubmitMRJobTest {
       }
 
       printResults(id);
+      printResults("metrics");
 
       System.out.println("\nDONE IN: " + secs + " sec");
 

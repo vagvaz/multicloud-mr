@@ -94,6 +94,11 @@ public abstract class MapReduceOperator extends BasicOperator {
     }
   }
 
+  @Override public String computeEnsembleHost(boolean isMap) {
+    collector.setLocalSite(globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222");
+    return super.computeEnsembleHost(isMap);
+  }
+
   @Override /// Example do not use
   public void execute() {
     super.start();

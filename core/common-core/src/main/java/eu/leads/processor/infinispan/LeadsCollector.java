@@ -9,6 +9,7 @@ import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.distexec.mapreduce.Collector;
 import org.infinispan.ensemble.EnsembleCacheManager;
+import org.infinispan.ensemble.Site;
 import org.infinispan.ensemble.cache.EnsembleCache;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.slf4j.Logger;
@@ -33,11 +34,15 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   private transient EnsembleCacheManager emanager;
   private transient Logger log = null;
   private boolean onMap = true;  // TODO(ap0n): What is this?
+  private int indexSite=-1;
+  private String localSite;
   private String site;
   private String node;
   private String cacheName;
   private ComplexIntermediateKey baseIntermKey;
   private IndexedComplexIntermediateKey baseIndexedKey;
+  private long localData;
+  private long remoteData;
 
   public LeadsCollector(int maxCollectorSize, String collectorCacheName) {
     super();
@@ -45,6 +50,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     emitCount = new AtomicInteger();
     this.maxCollectorSize = maxCollectorSize;
     cacheName = collectorCacheName;
+    emanager.getLocalSite();
   }
 
   public LeadsCollector(int maxCollectorSize, String cacheName, InfinispanManager manager) {
@@ -81,6 +87,16 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     this.intermediateDataCache = intermediateDataCache;
   }
 
+
+  public String getLocalSite() {
+    return localSite;
+  }
+
+  public void setLocalSite(String localSite) {
+    this.localSite = localSite;
+  }
+
+
   public BasicCache getKeysCache() {
     return keysCache;
   }
@@ -107,6 +123,16 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   public void setManager(EmbeddedCacheManager manager) {
     this.manager = manager;
+    if(localSite != null && !localSite.equals("")){
+      for(Site s : emanager.sites()){
+        indexSite++;
+       if(s.getName().equals(localSite)){
+         break;
+       }
+     }
+    }
+
+    System.out.println("Index Site is " + localSite + indexSite);
   }
 
   public String getSite() {
@@ -191,6 +217,18 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       //      }
       //      list.add(value);
       //      emitCount.incrementAndGet();
+      if(key.hashCode() % emanager.sites().size() == indexSite){
+        localData += key.toString().length() +
+                     site.length() +
+                     node.length() + 4;  //cost for complex Intermediate key
+        localData += value.toString().length();
+      }
+      else{
+        remoteData += key.toString().length() +
+            site.length() +
+            node.length() + 4;  //cost for complex Intermediate key
+        remoteData += value.toString().length();
+      }
       Integer currentCount = (Integer) counterCache.get(key);
       if (currentCount == null) {
         currentCount = new Integer(0);
@@ -226,6 +264,12 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 //        log.error("intermediate key " + newKey.toString() + " saved ");
 //      }
     } else {
+      if(key.hashCode() % emanager.sites().size() == indexSite){
+        localData += key.toString().length() + value.toString().length();
+      }
+      else{
+        remoteData += key.toString().length() + value.toString().length();
+      }
       EnsembleCacheUtils.putToCache(storeCache, key, value);
 //      emitCount.incrementAndGet();
     }
@@ -236,6 +280,26 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 //    keys.add(key);
   }
 
+  public void spillMetricData(){
+    EnsembleCache cache = emanager.getCache("metrics");
+    Long oldValue = (Long) cache.get(node+site+storeCache.getName()+".local");
+    if(oldValue == null){
+      oldValue = new Long(localData);
+    }
+    else{
+      oldValue += localData;
+    }
+    cache.put(node+site+storeCache.getName()+".local",oldValue);
+
+    oldValue = (Long) cache.get(node+site+storeCache.getName()+".remote");
+    if(oldValue == null){
+      oldValue = new Long(remoteData);
+    }
+    else{
+      oldValue += remoteData;
+    }
+    cache.put(node+site+storeCache.getName()+".remote",oldValue);
+  }
 
   public void initializeCache(EmbeddedCacheManager manager) {
     imanager = new ClusterInfinispanManager(manager);

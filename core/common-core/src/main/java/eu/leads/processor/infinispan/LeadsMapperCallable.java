@@ -78,6 +78,7 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
   @Override
   public void finalizeCallable() {
     mapper.finalizeTask();
+    collector.spillMetricData();
     super.finalizeCallable();
     collector.getCounterCache().stop();
   }

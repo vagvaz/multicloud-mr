@@ -46,6 +46,7 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
 
   @Override
   public void finalizeCallable() {
+    collector.spillMetricData();
     reducer.finalizeTask();
     super.finalizeCallable();
   }

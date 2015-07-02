@@ -658,6 +658,7 @@ public abstract class BasicOperator extends Thread implements Operator {
 //        return;
 //      }
       setMapperCallableEnsembleHost();
+
       System.err.println("EXECUTE " + mapperCallable.getClass().toString()
                          + " ON " + currentCluster);
       ProfileEvent distTask = new ProfileEvent("setup map taks "
@@ -666,7 +667,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       System.err.println("building dist task");
       log.error("building dist task");
       DistributedTaskBuilder builder = des.createDistributedTaskBuilder(mapperCallable);
-      builder.timeout(1, TimeUnit.HOURS);
+      builder.timeout(5, TimeUnit.HOURS);
       DistributedTask task = builder.build();
       System.err.println("submitting to local cluster task");
       log.error("submitting to local cluster task");
@@ -795,7 +796,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       DistributedExecutorService des = new DefaultExecutorService(reduceInputCache);
       setReducerCallableEnsembleHost();
       DistributedTaskBuilder builder = des.createDistributedTaskBuilder(reducerCallable);
-      builder.timeout(1, TimeUnit.HOURS);
+      builder.timeout(6, TimeUnit.HOURS);
       DistributedTask task = builder.build();
       List<Future<String>> res = des.submitEverywhere(task);
       //      Future<String> res = des.submit(callable);
@@ -1016,7 +1017,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       DistributedExecutorService des = new DefaultExecutorService(reduceLocalInputCache);
       setReducerLocaleEnsembleHost();
       DistributedTaskBuilder builder = des.createDistributedTaskBuilder(reducerLocalCallable);
-      builder.timeout(1, TimeUnit.HOURS);
+      builder.timeout(5, TimeUnit.HOURS);
       DistributedTask task = builder.build();
       List<Future<String>> res = des.submitEverywhere(task);  // TODO(ap0n) Is this wrong?
       List<String> addresses = new ArrayList<String>();
