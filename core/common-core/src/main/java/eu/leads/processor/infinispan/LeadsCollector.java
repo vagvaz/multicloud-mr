@@ -50,7 +50,6 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     emitCount = new AtomicInteger();
     this.maxCollectorSize = maxCollectorSize;
     cacheName = collectorCacheName;
-    emanager.getLocalSite();
   }
 
   public LeadsCollector(int maxCollectorSize, String cacheName, InfinispanManager manager) {
