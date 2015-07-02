@@ -108,19 +108,19 @@ public abstract class MapReduceOperator extends BasicOperator {
   @Override
   public void cleanup() {
     super.cleanup();
-    if (executeOnlyReduce) {
-      intermediateCache.stop();
-      indexSiteCache.stop();
-      intermediateDataCache.stop();
-      keysCache.stop();
-
-      if (reduceLocal) {
-        intermediateLocalCache.stop();
-        indexLocalSiteCache.stop();
-        intermediateLocalDataCache.stop();
-        keysLocalCache.stop();
-      }
-    }
+//    if (executeOnlyReduce) {
+//      intermediateCache.stop();
+//      indexSiteCache.stop();
+//      intermediateDataCache.stop();
+//      keysCache.stop();
+//
+//      if (reduceLocal) {
+//        intermediateLocalCache.stop();
+//        indexLocalSiteCache.stop();
+//        intermediateLocalDataCache.stop();
+//        keysLocalCache.stop();
+//      }
+//    }
   }
 
   @Override
