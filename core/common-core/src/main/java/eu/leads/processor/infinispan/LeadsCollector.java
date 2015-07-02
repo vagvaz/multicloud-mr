@@ -114,6 +114,16 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   public void setEmanager(EnsembleCacheManager emanager) {
     this.emanager = emanager;
+    if(localSite != null && !localSite.equals("")){
+      for(Site s : emanager.sites()){
+        indexSite++;
+        if(s.getName().equals(localSite)){
+          break;
+        }
+      }
+    }
+
+    System.out.println("Index Site is " + localSite + indexSite);
   }
 
   public EmbeddedCacheManager getManager() {
@@ -122,16 +132,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   public void setManager(EmbeddedCacheManager manager) {
     this.manager = manager;
-    if(localSite != null && !localSite.equals("")){
-      for(Site s : emanager.sites()){
-        indexSite++;
-       if(s.getName().equals(localSite)){
-         break;
-       }
-     }
-    }
 
-    System.out.println("Index Site is " + localSite + indexSite);
   }
 
   public String getSite() {
@@ -281,23 +282,23 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   public void spillMetricData(){
     EnsembleCache cache = emanager.getCache("metrics");
-    Long oldValue = (Long) cache.get(node+site+storeCache.getName()+".local");
+    Long oldValue = (Long) cache.get(localSite+":"+indexSite+"-"+node+"-"+site+"-"+storeCache.getName()+".local");
     if(oldValue == null){
       oldValue = new Long(localData);
     }
     else{
       oldValue += localData;
     }
-    cache.put(node+site+storeCache.getName()+".local",oldValue);
+    cache.put(localSite+":"+indexSite+"-"+node+"-"+site+"-"+storeCache.getName()+".local",oldValue);
 
-    oldValue = (Long) cache.get(node+site+storeCache.getName()+".remote");
+    oldValue = (Long) cache.get(localSite+":"+indexSite+"-"+node+"-"+site+"-"+storeCache.getName()+".remote");
     if(oldValue == null){
       oldValue = new Long(remoteData);
     }
     else{
       oldValue += remoteData;
     }
-    cache.put(node+site+storeCache.getName()+".remote",oldValue);
+    cache.put(localSite+":"+indexSite+"-"+node+"-"+site+"-"+storeCache.getName()+".remote",oldValue);
   }
 
   public void initializeCache(EmbeddedCacheManager manager) {
