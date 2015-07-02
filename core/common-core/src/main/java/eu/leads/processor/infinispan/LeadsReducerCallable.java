@@ -21,6 +21,10 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
     this.prefix = prefix;
   }
 
+  public void setLocalSite(String localSite){
+    collector.setLocalSite(localSite);
+  }
+
   @Override
   public void executeOn(kOut key, Object value) {
     LeadsIntermediateIterator<vOut> values = new LeadsIntermediateIterator<>((String) key, prefix,

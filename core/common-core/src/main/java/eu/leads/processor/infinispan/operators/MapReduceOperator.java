@@ -96,6 +96,7 @@ public abstract class MapReduceOperator extends BasicOperator {
 
   @Override public String computeEnsembleHost(boolean isMap) {
     collector.setLocalSite(globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222");
+
     return super.computeEnsembleHost(isMap);
   }
 
@@ -199,6 +200,7 @@ public abstract class MapReduceOperator extends BasicOperator {
     inputCache = (Cache) keysCache;
     reducerCallable = new LeadsReducerCallable(outputCache.getName(), reducer,
                                                intermediateCacheName);
+    ((LeadsReducerCallable)reducerCallable).setLocalSite(globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222");
   }
 
   @Override
@@ -223,5 +225,7 @@ public abstract class MapReduceOperator extends BasicOperator {
     reducerLocalCallable = new LeadsLocalReducerCallable(outputCache.getName(), reducer,
                                                          intermediateLocalCacheName, LQPConfiguration
                                                              .getInstance().getMicroClusterName());
+
+    ((LeadsLocalReducerCallable)reducerCallable).setLocalSite(globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222");
   }
 }
