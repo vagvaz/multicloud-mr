@@ -87,8 +87,6 @@ public abstract class BasicOperator extends Thread implements Operator {
 
   protected BasicOperator(Node com, InfinispanManager manager, LogProxy log, Action action) {
     super(com.getId() + "-basic-operator-thread");
-    if(!getName().equals(com.getId() + "-basic-operator-thread"))
-      return;
 
     System.err.println(this.getClass().getCanonicalName());
     mcResults = new HashMap<>();
@@ -455,6 +453,10 @@ public abstract class BasicOperator extends Thread implements Operator {
 
   @Override
   public void run() {
+    System.err.println("Threadname " + getName());
+    if(!getName().equals(com.getId() + "-basic-operator-thread"))
+      return;
+
     ProfileEvent runProf = new ProfileEvent("findPendingMMCFromGlobal() "
         + this.getClass().toString(), profilerLog);
     findPendingMMCFromGlobal();
@@ -557,8 +559,8 @@ public abstract class BasicOperator extends Thread implements Operator {
 
     synchronized (mmcMutex) {
       while (pendingMMC.size() > 0) {
-        System.out.println(
-            "Sleeping to executing " + mapperCallable.getClass().toString() + " pending clusters ");
+        System.out.println( getName() +
+            " Sleeping to executing " + mapperCallable.getClass().toString() + " pending clusters ");
         PrintUtilities.printList(Arrays.asList(pendingMMC));
         try {
           mmcMutex.wait(30000);
