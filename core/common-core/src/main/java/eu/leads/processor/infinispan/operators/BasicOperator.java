@@ -89,7 +89,7 @@ public abstract class BasicOperator extends Thread implements Operator {
     super(com.getId() + "-basic-operator-thread");
     if(!getName().equals(com.getId() + "-basic-operator-thread"))
       return;
-    
+
     System.err.println(this.getClass().getCanonicalName());
     mcResults = new HashMap<>();
     this.com = com;
