@@ -182,7 +182,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 //    storeCache = (Cache) imanager.getPersisentCache(cacheName);
     storeCache = emanager.getCache(cacheName, new ArrayList<>(emanager.sites()),
                                    EnsembleCacheManager.Consistency.DIST);
-    node = manager.getAddress().toString();
+    node =imanager.getMemberName().toString();
 
     if (onMap) {
       intermediateDataCache = (BasicCache) emanager.getCache(storeCache.getName() + ".data",

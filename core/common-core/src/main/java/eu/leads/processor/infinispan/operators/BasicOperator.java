@@ -520,8 +520,9 @@ public abstract class BasicOperator extends Thread implements Operator {
   public void executeMap() {
 
     subscribeToMapActions(pendingMMC);
+    Set<String> remoteRequests = new HashSet<>(pendingMMC);
     if (!isRemote) {
-      for (String mc : pendingMMC) {
+      for (String mc : remoteRequests) {
         if (!mc.equals(currentCluster)) {
           sendRemoteRequest(mc, true);
         }
@@ -540,10 +541,17 @@ public abstract class BasicOperator extends Thread implements Operator {
             "Sleeping to executing " + mapperCallable.getClass().toString() + " pending clusters ");
         PrintUtilities.printList(Arrays.asList(pendingMMC));
         try {
-          mmcMutex.wait(2000);
+          mmcMutex.wait(30000);
         } catch (InterruptedException e) {
           log.error("Interrupted " + e.getMessage());
           break;
+        }
+      }
+      for (Map.Entry<String, String> entry : mcResults.entrySet()) {
+        System.out.println("Execution on " + entry.getKey() + " was " + entry.getValue());
+        log.error("Execution on " + entry.getKey() + " was " + entry.getValue());
+        if (entry.getValue().equals("FAIL")) {
+          failed = true;
         }
       }
     }
@@ -876,7 +884,8 @@ public abstract class BasicOperator extends Thread implements Operator {
     if(isRemote)
           subscribeToMapActions(pendingMMC);
     if (!isRemote) {
-      for (String mc : pendingMMC) {
+      HashSet<String> remoteRequests = new HashSet<>(pendingMMC);
+      for (String mc : remoteRequests) {
         if (!mc.equals(currentCluster)) {
           sendRemoteRequest(mc, false);
         }
@@ -896,7 +905,7 @@ public abstract class BasicOperator extends Thread implements Operator {
                            + " pending clusters ");
         PrintUtilities.printList(Arrays.asList(pendingMMC));
         try {
-          mmcMutex.wait(5000);
+          mmcMutex.wait(30000);
         } catch (InterruptedException e) {
           log.error("REduce Interrupted " + e.getMessage());
           break;
