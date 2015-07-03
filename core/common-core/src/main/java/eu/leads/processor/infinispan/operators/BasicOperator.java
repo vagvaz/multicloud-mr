@@ -86,7 +86,10 @@ public abstract class BasicOperator extends Thread implements Operator {
   }
 
   protected BasicOperator(Node com, InfinispanManager manager, LogProxy log, Action action) {
-    super(com.getId() + "-operator-thread");
+    super(com.getId() + "-basic-operator-thread");
+    if(!getName().equals(com.getId() + "-basic-operator-thread"))
+      return;
+    
     System.err.println(this.getClass().getCanonicalName());
     mcResults = new HashMap<>();
     this.com = com;
@@ -123,7 +126,21 @@ public abstract class BasicOperator extends Thread implements Operator {
   public void setConf(JsonObject conf) {
     this.conf = conf;
   }
+//    if(dataAction.containsField("data")){
+    //      System.err.println("contains data");
+    //      if(dataAction.getObject("data").containsField("operator")){
+    //        System.err.println("contains operator");
+    //        if(dataAction.getObject("data").getObject("operator").containsField("scheduling")){
+    //          System.err.println("contains schedu");
+    //        }
+    //      }
 
+    //    }
+    //    else{
+    //      for(String s : dataAction.getFieldNames()){
+    //        System.err.println(s);
+    //      }
+    //    }
   public Action getAction() {
     return action;
   }
@@ -274,7 +291,7 @@ public abstract class BasicOperator extends Thread implements Operator {
     startTime = System.currentTimeMillis();
     System.out.println("Execution Start! ");
     profOperator.start("Execute()");
-    start();
+    this.start();
   }
 
   @Override
