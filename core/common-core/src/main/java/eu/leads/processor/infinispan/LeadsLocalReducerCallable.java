@@ -44,13 +44,13 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
     collector.setSite(site);
     collector.setManager(embeddedCacheManager);
     collector.initializeCache(inputCache.getName(), imanager);
-
+    collector.setCombiner(null);
+    collector.setUseCombiner(false);
     this.reducer.initialize();
   }
 
-  @Override
-  public void finalizeCallable() {
-    collector.spillMetricData();
+  @Override public void finalizeCallable() {
+    collector.finalizeCollector();
     reducer.finalizeTask();
     super.finalizeCallable();
   }

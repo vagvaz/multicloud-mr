@@ -4,6 +4,7 @@ import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.core.Action;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
+import eu.leads.processor.infinispan.LeadsCombiner;
 import eu.leads.processor.infinispan.operators.mapreduce.WordCountMapper;
 import eu.leads.processor.infinispan.operators.mapreduce.WordCountReducer;
 
@@ -26,9 +27,10 @@ public class WordCountOperator extends MapReduceOperator {
     init_statistics(this.getClass().getCanonicalName());
   }
 
-  @Override
-  public void setupMapCallable() {
-//      init(conf);
+  @Override public void setupMapCallable() {
+    //      init(conf);
+    LeadsCombiner wordCountCombiner = new WordCountReducer(conf.toString());
+    setCombiner(wordCountCombiner);
     setMapper(new WordCountMapper(conf.toString()));
     super.setupMapCallable();
   }
@@ -43,5 +45,14 @@ public class WordCountOperator extends MapReduceOperator {
   public void setupReduceCallable() {
     setReducer(new WordCountReducer(conf.toString()));
     super.setupReduceCallable();
+  }
+
+
+  public LeadsCombiner<?, ?> getCombiner() {
+    return combiner;
+  }
+
+  public void setCombiner(LeadsCombiner<?, ?> combiner) {
+    this.combiner = combiner;
   }
 }

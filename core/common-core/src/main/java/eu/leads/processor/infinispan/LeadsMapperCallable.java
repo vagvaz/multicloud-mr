@@ -19,6 +19,7 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
   private Set<K> keys;
   private LeadsMapper<K, V, kOut, vOut> mapper = null;
   String site;
+  private LeadsCombiner<?, ?> combiner;
 
   public LeadsMapperCallable(Cache<K, V> cache,
                              LeadsCollector<kOut, vOut> collector,
@@ -46,6 +47,16 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
     collector.setEmanager(emanager);
     collector.setSite(site);
     collector.initializeCache(inputCache.getName(), imanager);
+    if(combiner != null){
+      combiner.initialize();
+      collector.setCombiner((LeadsCombiner<kOut, vOut>) combiner);
+      collector.setUseCombiner(true);
+    }
+    else{
+      collector.setCombiner(null);
+      collector.setUseCombiner(false);
+    }
+
   }
 
 //	public String call() throws Exception {
@@ -78,8 +89,16 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
   @Override
   public void finalizeCallable() {
     mapper.finalizeTask();
-    collector.spillMetricData();
+    collector.finalizeCollector();
     super.finalizeCallable();
     collector.getCounterCache().stop();
+  }
+
+  public void setCombiner(LeadsCombiner<?, ?> combiner) {
+    this.combiner = combiner;
+  }
+
+  public LeadsCombiner<?, ?> getCombiner() {
+    return combiner;
   }
 }

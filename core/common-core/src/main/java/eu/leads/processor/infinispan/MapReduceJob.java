@@ -172,6 +172,18 @@ public class MapReduceJob extends DataType {
     data.putArray("outputMicroClouds", array);
   }
 
+  public boolean useCombine(){
+    return data.getObject("operator").containsField("combine");
+  }
+
+  public void setUseCombine(boolean useCombine){
+    if(useCombine){
+      data.getObject("operator").putString("combine","1");
+    } else{
+      data.getObject("operator").removeField("combine");
+    }
+
+  }
   public boolean hasReduceLocal() {
     return data.getObject("operator").containsField("reduceLocal");
   }
