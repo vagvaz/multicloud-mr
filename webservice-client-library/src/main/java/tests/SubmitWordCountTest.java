@@ -33,7 +33,7 @@ public class SubmitWordCountTest {
 
   private static String host;
   private static int port;
-//  private static final String DRESDEN2_IP = "80.156.73.116";
+  private static final String DRESDEN2_IP = "80.156.73.116";
   private static final String DD1A_IP = "80.156.222.4";
   private static final String HAMM5_IP = "5.147.254.161";
   private static final String HAMM6_IP = "5.147.254.199";
@@ -83,11 +83,14 @@ public class SubmitWordCountTest {
           int lineCount = 0;
           while ((line = bufferedReader.readLine()) != null) {
             data.putString(String.valueOf(lineCount++), line);
-            if (lineCount % 10000 == 0) {
+            if (lineCount % 100 == 0) {
               ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
               data = new JsonObject();
-              lineCount = 0;
             }
+          }
+          if (lineCount % 100 != 0) {
+            // put the remaining lines
+            ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
           }
 
         } catch (FileNotFoundException e) {
@@ -100,6 +103,7 @@ public class SubmitWordCountTest {
   }
 
   private static void putData(String dataDirectory) {
+
 
     File datasetDirectory = new File(dataDirectory);
     File[] allFiles = datasetDirectory.listFiles();
@@ -185,7 +189,7 @@ public class SubmitWordCountTest {
     jsonObject.getObject("operator")
         .putObject("scheduling",
                    new JsonObject()
-//                       .putArray("dresden2", new JsonArray().add(DRESDEN2_IP))
+                       .putArray("dresden2", new JsonArray().add(DRESDEN2_IP))
                        .putArray("dd1a", new JsonArray().add(DD1A_IP))
 //                       .putArray("hamm5", new JsonArray().add(HAMM5_IP))
 //                       .putArray("hamm6", new JsonArray().add(HAMM6_IP))
@@ -193,7 +197,7 @@ public class SubmitWordCountTest {
         .putString("reduceLocal", "true")
         .putObject("targetEndpoints",
                    new JsonObject()
-//                       .putArray("dresden2", new JsonArray().add(DRESDEN2_IP))
+                       .putArray("dresden2", new JsonArray().add(DRESDEN2_IP))
                        .putArray("dd1a", new JsonArray().add(DD1A_IP))
 //                       .putArray("hamm5", new JsonArray().add(HAMM5_IP))
 //                       .putArray("hamm6", new JsonArray().add(HAMM6_IP))
@@ -201,7 +205,7 @@ public class SubmitWordCountTest {
     try {
 
       ensembleString = DD1A_IP + ":11222" + "|"
-//                              + DRESDEN2_IP + ":11222" + "|"
+                              + DRESDEN2_IP + ":11222" + "|"
 //                              + HAMM5_IP + ":11222" + "|"
 //                              + HAMM6_IP + ":11222"
       ;
@@ -232,7 +236,7 @@ public class SubmitWordCountTest {
         }
       }
 
-      printResults(id);
+//      printResults(id);
 
       System.out.println("\nDONE IN: " + secs + " sec");
 

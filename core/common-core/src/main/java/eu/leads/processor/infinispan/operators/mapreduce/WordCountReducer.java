@@ -23,7 +23,7 @@ public class WordCountReducer extends LeadsReducer<String, Tuple> {
 
   @Override
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
-    System.out.println(getClass().getName() + ".reduce!");
+//    System.out.println(getClass().getName() + ".reduce!");
     int sum = 0;
     while (iter.hasNext()) {
       Tuple input = iter.next();
@@ -33,5 +33,10 @@ public class WordCountReducer extends LeadsReducer<String, Tuple> {
     Tuple output = new Tuple();
     output.setAttribute("count", sum);
     collector.emit(reducedKey, output);
+  }
+
+  @Override
+  protected void finalizeTask() {
+    System.out.println(getClass().getName() + " finished!");
   }
 }
