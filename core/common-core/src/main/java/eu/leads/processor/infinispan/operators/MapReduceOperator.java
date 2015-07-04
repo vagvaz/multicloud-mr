@@ -94,6 +94,12 @@ public abstract class MapReduceOperator extends BasicOperator {
     }
   }
 
+  @Override public String computeEnsembleHost(boolean isMap) {
+    collector.setLocalSite(globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222");
+
+    return super.computeEnsembleHost(isMap);
+  }
+
   @Override /// Example do not use
   public void execute() {
     super.start();
@@ -102,19 +108,19 @@ public abstract class MapReduceOperator extends BasicOperator {
   @Override
   public void cleanup() {
     super.cleanup();
-    if (executeOnlyReduce) {
-      intermediateCache.stop();
-      indexSiteCache.stop();
-      intermediateDataCache.stop();
-      keysCache.stop();
-
-      if (reduceLocal) {
-        intermediateLocalCache.stop();
-        indexLocalSiteCache.stop();
-        intermediateLocalDataCache.stop();
-        keysLocalCache.stop();
-      }
-    }
+//    if (executeOnlyReduce) {
+//      intermediateCache.stop();
+//      indexSiteCache.stop();
+//      intermediateDataCache.stop();
+//      keysCache.stop();
+//
+//      if (reduceLocal) {
+//        intermediateLocalCache.stop();
+//        indexLocalSiteCache.stop();
+//        intermediateLocalDataCache.stop();
+//        keysLocalCache.stop();
+//      }
+//    }
   }
 
   @Override
@@ -194,6 +200,7 @@ public abstract class MapReduceOperator extends BasicOperator {
     inputCache = (Cache) keysCache;
     reducerCallable = new LeadsReducerCallable(outputCache.getName(), reducer,
                                                intermediateCacheName);
+    ((LeadsReducerCallable)reducerCallable).setLocalSite(globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222");
   }
 
   @Override
@@ -218,5 +225,8 @@ public abstract class MapReduceOperator extends BasicOperator {
     reducerLocalCallable = new LeadsLocalReducerCallable(outputCache.getName(), reducer,
                                                          intermediateLocalCacheName, LQPConfiguration
                                                              .getInstance().getMicroClusterName());
+
+    String localSite = globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString();
+    ((LeadsLocalReducerCallable)reducerLocalCallable).setLocalSite( localSite+ ":11222");
   }
 }

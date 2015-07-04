@@ -181,6 +181,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
     //    Cache nutchCache = manager.getCache("WebPage", true);
 
     getPersisentCache("clustered");
+    getPersisentCache("metrics");
     getPersisentCache("pagerankCache");
     getPersisentCache("approx_sum_cache");
     getPersisentCache(StringConstants.STATISTICS_CACHE);

@@ -86,7 +86,8 @@ public abstract class BasicOperator extends Thread implements Operator {
   }
 
   protected BasicOperator(Node com, InfinispanManager manager, LogProxy log, Action action) {
-    super(com.getId() + "-operator-thread");
+    super(com.getId() + "-basic-operator-thread");
+
     System.err.println(this.getClass().getCanonicalName());
     mcResults = new HashMap<>();
     this.com = com;
@@ -123,7 +124,21 @@ public abstract class BasicOperator extends Thread implements Operator {
   public void setConf(JsonObject conf) {
     this.conf = conf;
   }
+//    if(dataAction.containsField("data")){
+    //      System.err.println("contains data");
+    //      if(dataAction.getObject("data").containsField("operator")){
+    //        System.err.println("contains operator");
+    //        if(dataAction.getObject("data").getObject("operator").containsField("scheduling")){
+    //          System.err.println("contains schedu");
+    //        }
+    //      }
 
+    //    }
+    //    else{
+    //      for(String s : dataAction.getFieldNames()){
+    //        System.err.println(s);
+    //      }
+    //    }
   public Action getAction() {
     return action;
   }
@@ -274,17 +289,17 @@ public abstract class BasicOperator extends Thread implements Operator {
     startTime = System.currentTimeMillis();
     System.out.println("Execution Start! ");
     profOperator.start("Execute()");
-    start();
+    this.start();
   }
 
   @Override
   public void cleanup() {
     profOperator.end("cleanup");
     profOperator.start("Op CleanUp");
-//    if(!isRemote)
-//    {
+    //    if(!isRemote)
+    //    {
     unsubscribeToMapActions("execution." + com.getId() + "." + action.getId());
-//    }
+    //    }
     action.setStatus(ActionStatus.COMPLETED.toString());
 
     if (com != null) {
@@ -306,7 +321,7 @@ public abstract class BasicOperator extends Thread implements Operator {
     pendingMMC.clear();
     pendingRMC.clear();
 
-//    mmcMutex.notifyAll();
+    //    mmcMutex.notifyAll();
 
     //      rmcMutex.notifyAll();
     if (com != null) {
@@ -338,7 +353,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       outputSize = 1;
     }
     System.out.println("In#: " + inputSize + " Out#:" + outputSize + " Execution time: "
-                       + (endTime - startTime) / 1000.0 + " s");
+        + (endTime - startTime) / 1000.0 + " s");
     updateStatisticsCache(inputSize, outputSize, (endTime - startTime));
   }
 
@@ -438,8 +453,12 @@ public abstract class BasicOperator extends Thread implements Operator {
 
   @Override
   public void run() {
+    System.err.println("Threadname " + getName());
+    if(!getName().equals(com.getId() + "-basic-operator-thread"))
+      return;
+
     ProfileEvent runProf = new ProfileEvent("findPendingMMCFromGlobal() "
-                                            + this.getClass().toString(), profilerLog);
+        + this.getClass().toString(), profilerLog);
     findPendingMMCFromGlobal();
     runProf.end();
     runProf.start("findPendingRMCFromGlobal()");
@@ -480,11 +499,11 @@ public abstract class BasicOperator extends Thread implements Operator {
       failCleanup();
       runProf.end();
     }
-//    try {
-//      this.join();
-//    } catch (InterruptedException e) {
-//      e.printStackTrace();
-//    }
+    //    try {
+    //      this.join();
+    //    } catch (InterruptedException e) {
+    //      e.printStackTrace();
+    //    }
   }
 
   public void createCache(String microCloud, String cacheName) {
@@ -512,16 +531,20 @@ public abstract class BasicOperator extends Thread implements Operator {
 
   @Override
   public void addResult(String mc, String status) {
-    mcResults.put(mc, status);
+    System.out.println("Deliver " + mc + " " + status);
+    PrintUtilities.printList(Arrays.asList(pendingMMC));
     pendingMMC.remove(mc);
+    System.out.println("AFTER\n");
+    PrintUtilities.printList(Arrays.asList(pendingMMC));
   }
 
   @Override
   public void executeMap() {
 
     subscribeToMapActions(pendingMMC);
+    Set<String> remoteRequests = new HashSet<>(pendingMMC);
     if (!isRemote) {
-      for (String mc : pendingMMC) {
+      for (String mc : remoteRequests) {
         if (!mc.equals(currentCluster)) {
           sendRemoteRequest(mc, true);
         }
@@ -536,14 +559,21 @@ public abstract class BasicOperator extends Thread implements Operator {
 
     synchronized (mmcMutex) {
       while (pendingMMC.size() > 0) {
-        System.out.println(
-            "Sleeping to executing " + mapperCallable.getClass().toString() + " pending clusters ");
+        System.out.println( getName() +
+            " Sleeping to executing " + mapperCallable.getClass().toString() + " pending clusters ");
         PrintUtilities.printList(Arrays.asList(pendingMMC));
         try {
-          mmcMutex.wait(2000);
+          mmcMutex.wait(30000);
         } catch (InterruptedException e) {
           log.error("Interrupted " + e.getMessage());
           break;
+        }
+      }
+      for (Map.Entry<String, String> entry : mcResults.entrySet()) {
+        System.out.println("Execution on " + entry.getKey() + " was " + entry.getValue());
+        log.error("Execution on " + entry.getKey() + " was " + entry.getValue());
+        if (entry.getValue().equals("FAIL")) {
+          failed = true;
         }
       }
     }
@@ -563,24 +593,9 @@ public abstract class BasicOperator extends Thread implements Operator {
     Action copyAction = new Action(new JsonObject(action.toString()));
     Action newAction = new Action(copyAction);
     JsonObject dataAction = copyAction.asJsonObject().copy();
-//    log.error("DATA ACTION = "+dataAction.toString());
+    //    log.error("DATA ACTION = "+dataAction.toString());
     JsonObject sched = new JsonObject();
     sched.putArray(mc, globalConfig.getObject("microclouds").getArray(mc));
-//    if(dataAction.containsField("data")){
-//      System.err.println("contains data");
-//      if(dataAction.getObject("data").containsField("operator")){
-//        System.err.println("contains operator");
-//        if(dataAction.getObject("data").getObject("operator").containsField("scheduling")){
-//          System.err.println("contains schedu");
-//        }
-//      }
-
-//    }
-//    else{
-//      for(String s : dataAction.getFieldNames()){
-//        System.err.println(s);
-//      }
-//    }
     dataAction.getObject("data").getObject("operator").putObject("scheduling", sched);
     newAction.setData(dataAction);
     newAction.getData().putString("remote", "remote");
@@ -653,31 +668,32 @@ public abstract class BasicOperator extends Thread implements Operator {
   public void localExecuteMap() {
 
     if (mapperCallable != null) {
-//      if (inputCache.size() == 0) {
-//        replyForSuccessfulExecution(action);
-//        return;
-//      }
+      //      if (inputCache.size() == 0) {
+      //        replyForSuccessfulExecution(action);
+      //        return;
+      //      }
       setMapperCallableEnsembleHost();
+
       System.err.println("EXECUTE " + mapperCallable.getClass().toString()
-                         + " ON " + currentCluster);
+          + " ON " + currentCluster);
       ProfileEvent distTask = new ProfileEvent("setup map taks "
-                                               + mapperCallable.getClass().toString(), profilerLog);
+          + mapperCallable.getClass().toString(), profilerLog);
       DistributedExecutorService des = new DefaultExecutorService(inputCache);
       System.err.println("building dist task");
       log.error("building dist task");
       DistributedTaskBuilder builder = des.createDistributedTaskBuilder(mapperCallable);
-      builder.timeout(1, TimeUnit.HOURS);
+      builder.timeout(24, TimeUnit.HOURS);
       DistributedTask task = builder.build();
       System.err.println("submitting to local cluster task");
       log.error("submitting to local cluster task");
 
       List<Future<String>> res = des.submitEverywhere(task);//new ArrayList<>();
       List<Address> taskNodes = inputCache.getAdvancedCache().getRpcManager().getMembers();
-//      taskNodes.add(inputCache.getCacheManager().getAddress());
-//      for(Address node : taskNodes){
-//        Future<String> ft = des.submit(node,task);
-//        res.add(ft);
-//      }
+      //      taskNodes.add(inputCache.getCacheManager().getAddress());
+      //      for(Address node : taskNodes){
+      //        Future<String> ft = des.submit(node,task);
+      //        res.add(ft);
+      //      }
       distTask.end();
       //      Future<String> res = des.submit(callable);
       List<String> addresses = new ArrayList<String>();
@@ -688,18 +704,18 @@ public abstract class BasicOperator extends Thread implements Operator {
 
             while (resultIterator.hasNext()) {
               Future<String> future = resultIterator.next();
-//              System.err.println("Checking whether " + future.toString() + " is Done " + future.isDone() );
-//              if(future.isDone()){
+              //              System.err.println("Checking whether " + future.toString() + " is Done " + future.isDone() );
+              //              if(future.isDone()){
               System.err.println(mapperCallable.getClass().toString()
-                                 + " completed on " + future.get());
+                  + " completed on " + future.get());
               resultIterator.remove();
-//              }
+              //              }
             }
           }
-//          for (Future<?> result : res) {
-//            System.out.println(result.get());
-//            addresses.add((String) result.get());
-//          }
+          //          for (Future<?> result : res) {
+          //            System.out.println(result.get());
+          //            addresses.add((String) result.get());
+          //          }
           System.out.println("map " + mapperCallable.getClass().toString() + " Execution is done");
           log.info("map " + mapperCallable.getClass().toString() + " Execution is done");
         } else {
@@ -711,11 +727,11 @@ public abstract class BasicOperator extends Thread implements Operator {
       } catch (InterruptedException e) {
         log.error(
             "Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
-            e.getClass().toString());
+                e.getClass().toString());
         log.error(e.getMessage());
         System.err.println(
             "Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
-            e.getClass().toString());
+                e.getClass().toString());
         System.err.println(e.getMessage());
         failed = true;
         log.error(e.getStackTrace().toString());
@@ -723,11 +739,11 @@ public abstract class BasicOperator extends Thread implements Operator {
         replyForFailExecution(action);
       } catch (ExecutionException e) {
         log.error("Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString()
-                  + "\n" + e.getClass().toString());
+            + "\n" + e.getClass().toString());
         log.error(e.getMessage());
         System.err.println("Exception in Map Excuettion " + "map "
-                           + mapperCallable.getClass().toString()
-                           + "\n" + e.getClass().toString());
+            + mapperCallable.getClass().toString()
+            + "\n" + e.getClass().toString());
         System.err.println(e.getMessage());
         log.error(e.getStackTrace().toString());
         failed = true;
@@ -777,8 +793,8 @@ public abstract class BasicOperator extends Thread implements Operator {
     }
     else{
       for (String site : sites) {
-          // If reduceLocal, we only need the local micro-cloud
-          result += globalConfig.getObject("componentsAddrs").getArray(site).get(0).toString() + ":11222|";
+        // If reduceLocal, we only need the local micro-cloud
+        result += globalConfig.getObject("componentsAddrs").getArray(site).get(0).toString() + ":11222|";
 
       }
     }
@@ -795,7 +811,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       DistributedExecutorService des = new DefaultExecutorService(reduceInputCache);
       setReducerCallableEnsembleHost();
       DistributedTaskBuilder builder = des.createDistributedTaskBuilder(reducerCallable);
-      builder.timeout(1, TimeUnit.HOURS);
+      builder.timeout(24, TimeUnit.HOURS);
       DistributedTask task = builder.build();
       List<Future<String>> res = des.submitEverywhere(task);
       //      Future<String> res = des.submit(callable);
@@ -807,27 +823,27 @@ public abstract class BasicOperator extends Thread implements Operator {
             addresses.add((String) result.get());
           }
           System.out.println("reduce " + reducerCallable.getClass().toString() +
-                             " Execution is done");
+              " Execution is done");
           log.info("reduce " + reducerCallable.getClass().toString() +
-                   " Execution is done");
+              " Execution is done");
         } else {
           System.out.println("FAIL reduce " + reducerCallable.getClass().toString() +
-                             " Execution not done");
+              " Execution not done");
           log.info("reduce " + reducerCallable.getClass().toString() +
-                   " Execution not done");
+              " Execution not done");
           failed = true;
           replyForFailExecution(action);
         }
       } catch (InterruptedException e) {
         log.error(
             "Exception in reduce Excuettion " + "reduce " + reducerCallable.getClass().toString()
-            + "\n" +
-            e.getClass().toString());
+                + "\n" +
+                e.getClass().toString());
         log.error(e.getMessage());
         System.err
             .println("FAIL Exception in reduce Excuettion " + "reduce " + reducerCallable.getClass()
                 .toString() + "\n" +
-                     e.getClass().toString());
+                e.getClass().toString());
         System.err.println(e.getMessage());
         failed = true;
         replyForFailExecution(action);
@@ -835,13 +851,13 @@ public abstract class BasicOperator extends Thread implements Operator {
       } catch (ExecutionException e) {
         log.error(
             "Exception in reduce Excuettion " + "reduce " + reducerCallable.getClass().toString()
-            + "\n" +
-            e.getClass().toString());
+                + "\n" +
+                e.getClass().toString());
         log.error(e.getMessage());
         System.err.println(
             "Exception in reduce Excuettion " + "reduce " + reducerCallable.getClass().toString()
-            + "\n" +
-            e.getClass().toString());
+                + "\n" +
+                e.getClass().toString());
         System.err.println(e.getMessage());
         failed = true;
         replyForFailExecution(action);
@@ -873,9 +889,10 @@ public abstract class BasicOperator extends Thread implements Operator {
     pendingMMC.addAll(pendingRMC);
     pendingRMC.clear();
     if(isRemote)
-          subscribeToMapActions(pendingMMC);
+      subscribeToMapActions(pendingMMC);
     if (!isRemote) {
-      for (String mc : pendingMMC) {
+      HashSet<String> remoteRequests = new HashSet<>(pendingMMC);
+      for (String mc : remoteRequests) {
         if (!mc.equals(currentCluster)) {
           sendRemoteRequest(mc, false);
         }
@@ -892,10 +909,10 @@ public abstract class BasicOperator extends Thread implements Operator {
       int size = pendingMMC.size();
       while (size > 0) {
         System.out.println("Sleeping to executing " + reducerCallable.getClass().toString()
-                           + " pending clusters ");
+            + " pending clusters ");
         PrintUtilities.printList(Arrays.asList(pendingMMC));
         try {
-          mmcMutex.wait(5000);
+          mmcMutex.wait(30000);
         } catch (InterruptedException e) {
           log.error("REduce Interrupted " + e.getMessage());
           break;
@@ -1016,7 +1033,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       DistributedExecutorService des = new DefaultExecutorService(reduceLocalInputCache);
       setReducerLocaleEnsembleHost();
       DistributedTaskBuilder builder = des.createDistributedTaskBuilder(reducerLocalCallable);
-      builder.timeout(1, TimeUnit.HOURS);
+      builder.timeout(24, TimeUnit.HOURS);
       DistributedTask task = builder.build();
       List<Future<String>> res = des.submitEverywhere(task);  // TODO(ap0n) Is this wrong?
       List<String> addresses = new ArrayList<String>();
@@ -1027,25 +1044,25 @@ public abstract class BasicOperator extends Thread implements Operator {
             addresses.add((String) result.get());
           }
           System.out.println("reduceLocal " + reducerLocalCallable.getClass().toString() +
-                             " Execution is done");
+              " Execution is done");
           log.info("reduceLocal " + reducerLocalCallable.getClass().toString() +
-                   " Execution is done");
+              " Execution is done");
         } else {
           System.out.println("reduceLocal " + reducerLocalCallable.getClass().toString() +
-                             " Execution not done");
+              " Execution not done");
           log.info("reduceLocal " + reducerLocalCallable.getClass().toString() +
-                   " Execution not done");
+              " Execution not done");
           failed = true;
           replyForFailExecution(action);
         }
       } catch (InterruptedException e) {
         log.error(
             "Exception in reduceLocal Execution " + "reduceLocal "
-            + reducerCallable.getClass().toString() + "\n" + e.getClass().toString());
+                + reducerCallable.getClass().toString() + "\n" + e.getClass().toString());
         log.error(e.getMessage());
         System.err.println("Exception in reduceLocal Execution " + "reduceLocal "
-                           + reducerLocalCallable.getClass().toString() + "\n"
-                           + e.getClass().toString());
+            + reducerLocalCallable.getClass().toString() + "\n"
+            + e.getClass().toString());
         System.err.println(e.getMessage());
         failed = true;
         replyForFailExecution(action);
@@ -1053,11 +1070,11 @@ public abstract class BasicOperator extends Thread implements Operator {
       } catch (ExecutionException e) {
         log.error(
             "Exception in reduceLocal Execution " + "reduceLocal "
-            + reducerLocalCallable.getClass().toString() + "\n" + e.getClass().toString());
+                + reducerLocalCallable.getClass().toString() + "\n" + e.getClass().toString());
         log.error(e.getMessage());
         System.err.println(
             "Exception in reduceLocal Execution " + "map "
-            + reducerLocalCallable.getClass().toString() + "\n" + e.getClass().toString());
+                + reducerLocalCallable.getClass().toString() + "\n" + e.getClass().toString());
         System.err.println(e.getMessage());
         failed = true;
         replyForFailExecution(action);

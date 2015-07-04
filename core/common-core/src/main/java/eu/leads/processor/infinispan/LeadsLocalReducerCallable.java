@@ -25,6 +25,10 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
     this.site = site;
   }
 
+  public void setLocalSite(String localSite){
+    collector.setLocalSite(localSite);
+  }
+
   @Override
   public void executeOn(kOut key, Object value) {
     LeadsIntermediateIterator<vOut> values = new LeadsIntermediateIterator<>((String) key, prefix,
@@ -46,6 +50,7 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
 
   @Override
   public void finalizeCallable() {
+    collector.spillMetricData();
     reducer.finalizeTask();
     super.finalizeCallable();
   }
