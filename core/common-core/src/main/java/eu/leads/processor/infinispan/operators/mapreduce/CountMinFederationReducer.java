@@ -25,12 +25,12 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
 
   @Override
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
-    System.out.println(getClass().getName() + ".reduce global!");
     int[] singleRow = new int[w];
     while (iter.hasNext()) {
       String coord = iter.next().getAttribute("coord");
+      int sum = iter.next().getNumberAttribute("sum").intValue();
       int column = Integer.valueOf(coord.split(",")[1]);
-      singleRow[column]++;
+      singleRow[column]+= sum;
     }
 
     Tuple output = new Tuple();

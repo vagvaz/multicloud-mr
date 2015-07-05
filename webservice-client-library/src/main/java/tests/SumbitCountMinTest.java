@@ -1,9 +1,13 @@
 package tests;
 
+import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
 
+import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -20,8 +24,8 @@ public class SumbitCountMinTest {
   public static void main(String[] args) {
     host = "http://localhost";
     port = 8080;
-    double epsilon = 0.01;
-    double delta = 0.9;
+    double epsilon = 0.9;
+    double delta = 0.02;
 
     if (args.length > 1) {
       host = args[0];
@@ -98,12 +102,47 @@ public class SumbitCountMinTest {
         }
       }
 
+      printResults(id);
+
       System.out.println("\nDONE");
 
     } catch (Exception e) {
       e.printStackTrace();
     }
   }
+
+  private static RemoteCacheManager createRemoteCacheManager(String host) {
+    ConfigurationBuilder builder = new ConfigurationBuilder();
+    builder.addServer().host(host).port(11222);
+    return new RemoteCacheManager(builder.build());
+  }
+
+  private static void printResults(String id) {
+    System.out.println("\n\nlocalcluster");
+    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(LQPConfiguration
+                                                                         .getInstance()
+                                                                         .getConfiguration()
+                                                                         .getString(
+                                                                             "node.ip"));
+    RemoteCache results = remoteCacheManager.getCache(id);
+    PrintUtilities.printMap(results);
+
+//    System.out.println("dresden");
+//    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
+//    results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results);
+
+//    System.out.println("hamm5");
+//    remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
+//    results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results);
+//
+//    System.out.println("hamm6");
+//    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
+//    results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results);
+  }
+
 
   private static int[] calculateSketchDimentions(double delta, double epsilon) {
     int[] wd = new int[2];

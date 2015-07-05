@@ -11,7 +11,7 @@ import java.util.Random;
 /**
  * Created by Apostolos Nydriotis on 2015/07/03.
  */
-public class CountMinMapper extends LeadsMapper<String, Tuple, String, Integer> {
+public class CountMinMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
   int w, d;
   Random random;
@@ -31,14 +31,16 @@ public class CountMinMapper extends LeadsMapper<String, Tuple, String, Integer> 
   }
 
   @Override
-  public void map(String key, Tuple value, Collector<String, Integer> collector) {
+  public void map(String key, Tuple value, Collector<String, Tuple> collector) {
     for (String attribute : value.getFieldNames()) {
       for (String word : value.getAttribute(attribute).split(" ")) {
         if (word != null && word.length() > 0) {
           for (int i = 0; i < d; i++) {
             // emit <(<row>,<col>), count>
-            collector.emit(String.valueOf(i) + "," + String.valueOf(hashRandom(word.hashCode())[d]),
-                           1);
+            Tuple output = new Tuple();
+            output.setAttribute("count", 1);
+            collector.emit(String.valueOf(i) + "," + String.valueOf(hashRandom(word.hashCode())[i]),
+                           output);
           }
         }
       }

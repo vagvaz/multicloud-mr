@@ -11,7 +11,8 @@ import java.util.Iterator;
 /**
  * Created by Apostolos Nydriotis on 2015/07/03.
  */
-public class CountMinLocalReducer extends LeadsReducer<String, Integer> {
+public class CountMinLocalReducer extends LeadsReducer<String, Tuple> {
+
 
   public CountMinLocalReducer(JsonObject configuration) {
     super(configuration);
@@ -22,11 +23,12 @@ public class CountMinLocalReducer extends LeadsReducer<String, Integer> {
   }
 
   @Override
-  public void reduce(String reducedKey, Iterator<Integer> iter, LeadsCollector collector) {
+  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
 
     int sum = 0;
     while (iter.hasNext()) {
-      sum += iter.next();
+      Tuple t = iter.next();
+      sum += t.getNumberAttribute("count").intValue();
     }
     Tuple output = new Tuple();
     output.setAttribute("coord", reducedKey);
