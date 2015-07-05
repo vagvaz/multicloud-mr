@@ -5,6 +5,7 @@ import eu.leads.processor.core.Action;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.infinispan.MapReduceJob;
+import eu.leads.processor.infinispan.operators.CountMinOperator;
 import eu.leads.processor.infinispan.operators.Operator;
 import eu.leads.processor.infinispan.operators.WordCountOperator;
 
@@ -24,6 +25,8 @@ public class MapReduceOperatorFactory {
     } else {
       if (name.equals("wordCount")) {
         return new WordCountOperator(com, persistence, log, action);
+      } else if (name.equals("countMin")) {
+        return new CountMinOperator(com, persistence, log, action);
       } else {
         System.err.println("No operator for application \"" + name + "\" found!");
       }

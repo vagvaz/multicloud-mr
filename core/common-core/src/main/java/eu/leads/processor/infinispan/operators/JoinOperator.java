@@ -384,7 +384,7 @@ public class JoinOperator extends MapReduceOperator {
 
   @Override
   public void setupReduceCallable() {
-    setReducer(new JoinReducer(conf.toString()));
+    setFederationReducer(new JoinReducer(conf.toString()));
     super.setupReduceCallable();
   }
 

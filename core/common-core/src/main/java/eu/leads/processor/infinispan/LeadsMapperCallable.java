@@ -56,7 +56,7 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
       collector.setCombiner(null);
       collector.setUseCombiner(false);
     }
-
+    mapper.initialize();
   }
 
 //	public String call() throws Exception {
