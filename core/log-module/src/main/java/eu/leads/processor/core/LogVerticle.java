@@ -35,6 +35,8 @@ public class LogVerticle extends Verticle {
         public void handle(JsonObject msg) {
           String type = msg.getString("type");
           String message = msg.getString("message");
+          if(id != null) //return allways for not spamming the output!
+            return;
           if (type.equals("info")) {
             logger.info(message);
             msg.putString("component", componentId);
