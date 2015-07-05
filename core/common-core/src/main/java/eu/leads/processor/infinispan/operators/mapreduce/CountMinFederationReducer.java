@@ -17,26 +17,35 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
 
   public CountMinFederationReducer(JsonObject configuration) {
     super(configuration);
-    // TODO(ap0n): Init w for configuration
   }
 
   public CountMinFederationReducer(String configString) {
     super(configString);
-    // TODO(ap0n): Init w for configuration
   }
 
   @Override
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
-    System.out.println(getClass().getName() + ".reduce global!");
     int[] singleRow = new int[w];
     while (iter.hasNext()) {
       String coord = iter.next().getAttribute("coord");
+      int sum = iter.next().getNumberAttribute("sum").intValue();
       int column = Integer.valueOf(coord.split(",")[1]);
-      singleRow[column]++;
+      singleRow[column]+= sum;
     }
 
     Tuple output = new Tuple();
     output.setAttribute("singleRow", singleRow);
     collector.emit(reducedKey, output);
+  }
+
+  @Override
+  public void initialize() {
+    super.initialize();
+    w = conf.getInteger("w");
+  }
+
+  @Override
+  protected void finalizeTask() {
+    System.out.println(getClass().getName() + " finished!");
   }
 }

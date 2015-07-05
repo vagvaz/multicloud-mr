@@ -236,7 +236,7 @@ public class WGSOperator extends MapReduceOperator {
     configBody.putNumber("iteration", iteration);
     configBody.putString("realOutput", conf.getString("realOutput"));
     action.getData().getObject("operator").getObject("configuration").putObject("body", configBody);
-    setReducer(new WGSReducer(configBody.toString()));
+    setFederationReducer(new WGSReducer(configBody.toString()));
     super.setupReduceCallable();
   }
 
@@ -414,9 +414,9 @@ public class WGSOperator extends MapReduceOperator {
           System.err.println(result.get());
           System.err.println("wait end" + System.currentTimeMillis());
         }
-        System.out.println("reducer Execution is done");
+        System.out.println("federationReducer Execution is done");
       } else {
-        System.out.println("reducer Execution not done");
+        System.out.println("federationReducer Execution not done");
       }
     } catch (InterruptedException e) {
       e.printStackTrace();
