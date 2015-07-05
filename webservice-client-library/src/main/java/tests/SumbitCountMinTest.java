@@ -57,8 +57,7 @@ public class SumbitCountMinTest {
                                                                 .getConfiguration()
                                                                 .getString("node.ip")))
         .putString("reduceLocal", "true")
-        .putNumber("w", wd[0])
-        .putNumber("d", wd[1])
+        .getObject("configuration").putNumber("w", wd[0]).putNumber("d", wd[1])
     ;
     jsonObject.getObject("operator").putObject("targetEndpoints",
                                                new JsonObject().putString("localcluster",

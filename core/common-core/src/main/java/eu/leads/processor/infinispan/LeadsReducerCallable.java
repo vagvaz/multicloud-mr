@@ -42,10 +42,10 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
     this.reducer.initialize();
   }
   //    public vOut call() throws Exception {
-//        if (reducer == null) {
+//        if (federationReducer == null) {
 //            System.out.println(" Reducer not initialized ");
 //        } else {
-//           reducer.setCacheManager(inputCache.getCacheManager());
+//           federationReducer.setCacheManager(inputCache.getCacheManager());
 //            // System.out.println(" Run Reduce ");
 //            vOut result = null;
 ////            System.out.println("inputCache Cache Size:"
@@ -61,7 +61,7 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
 //                  continue;
 //                }
 //
-//                vOut res = reducer.reduce(key, list.iterator());
+//                vOut res = federationReducer.reduce(key, list.iterator());
 //                if(res == null || res.toString().equals("")){
 //                  ;
 //                }

@@ -65,7 +65,7 @@ public class JoinOperator2 extends MapReduceOperator {
       inputCache = tmpInputCache;
       Map<String, List<String>> columnsByTable = computeColumnsByTable();
 //         mapper = new JoinMapper(conf.toString(),getOutput());
-//         reducer = new JoinReducer(conf.toString(),getOutput());
+//         federationReducer = new JoinReducer(conf.toString(),getOutput());
       init_statistics(this.getClass().getCanonicalName());
     }
   }

@@ -35,8 +35,8 @@ public class GenericMapReduceOperator extends MapReduceOperator {
     super.init(config);
     //Read Mapper class
     //read mapjar path
-    //read reducer class
-    //read reducer path
+    //read federationReducer class
+    //read federationReducer path
     //read Config path or //read config
     //Storage //storagetype
     //tmpdir prefix
@@ -46,12 +46,12 @@ public class GenericMapReduceOperator extends MapReduceOperator {
   @Override
   public void run() {
     long startTime = System.nanoTime();
-    if (reducer == null) {
-      reducer = new LeadsReducer("");
+    if (federationReducer == null) {
+      federationReducer = new LeadsReducer("");
     }
     System.out.println("RUN MR on " + inputCache.getName());
     //       MapReduceTask<String,String,String,String> task = new MapReduceTask(inputCache);
-    //               .reducedWith((org.infinispan.distexec.mapreduce.Reducer<String, String>) reducer);
+    //               .reducedWith((org.infinispan.distexec.mapreduce.Reducer<String, String>) federationReducer);
     //       task.timeout(1, TimeUnit.HOURS);
     //       task.execute();
 
@@ -83,12 +83,12 @@ public class GenericMapReduceOperator extends MapReduceOperator {
     System.err.println("keysCache " + keysCache.size());
     System.err.println("dataCache " + intermediateDataCache.size());
     System.err.println("indexedCache " + indexSiteCache.size());
-    if (reducer != null) {
+    if (federationReducer != null) {
 
       GenericReducerCallable
           reducerCacllable =
           new GenericReducerCallable(conf.toString(), getOutput());
-//                                                         (outputCache.getName(), reducer,
+//                                                         (outputCache.getName(), federationReducer,
 //                                                                                 intermediateCacheName);
       DistributedExecutorService des_inter = new DefaultExecutorService((Cache<?, ?>) keysCache);
       DistributedTaskBuilder
@@ -105,9 +105,9 @@ public class GenericMapReduceOperator extends MapReduceOperator {
             System.err.println(result.get());
             System.err.println("wait end" + System.currentTimeMillis());
           }
-          System.out.println("reducer Execution is done");
+          System.out.println("federationReducer Execution is done");
         } else {
-          System.out.println("reducer Execution not done");
+          System.out.println("federationReducer Execution not done");
         }
       } catch (InterruptedException e) {
         e.printStackTrace();

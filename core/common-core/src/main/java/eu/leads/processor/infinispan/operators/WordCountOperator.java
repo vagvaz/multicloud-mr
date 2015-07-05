@@ -4,6 +4,7 @@ import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.core.Action;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
+import eu.leads.processor.infinispan.LeadsReducer;
 import eu.leads.processor.infinispan.operators.mapreduce.WordCountMapper;
 import eu.leads.processor.infinispan.operators.mapreduce.WordCountReducer;
 
@@ -14,6 +15,8 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class WordCountOperator extends MapReduceOperator {
 
+  LeadsReducer<?, ?> wordCountReducer;  // same for local and federation reducer
+
   public WordCountOperator(Node com, InfinispanManager persistence, LogProxy log, Action action) {
     super(com, persistence, log, action);
   }
@@ -22,7 +25,9 @@ public class WordCountOperator extends MapReduceOperator {
   public void init(JsonObject config) {
     super.init(conf);
     setMapper(new WordCountMapper(conf.toString()));
-    setReducer(new WordCountReducer(conf.toString()));
+    wordCountReducer = new WordCountReducer(conf.toString());
+    setFederationReducer(wordCountReducer);
+    setLocalReducer(wordCountReducer);
     init_statistics(this.getClass().getCanonicalName());
   }
 
@@ -35,13 +40,13 @@ public class WordCountOperator extends MapReduceOperator {
 
   @Override
   public void setupReduceLocalCallable() {
-
+    setLocalReducer(wordCountReducer);
     super.setupReduceLocalCallable();
   }
 
   @Override
   public void setupReduceCallable() {
-    setReducer(new WordCountReducer(conf.toString()));
+    setFederationReducer(wordCountReducer);
     super.setupReduceCallable();
   }
 }

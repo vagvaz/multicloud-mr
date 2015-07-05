@@ -11,7 +11,6 @@ import eu.leads.processor.infinispan.LeadsMapper;
 import eu.leads.processor.infinispan.LeadsMapperCallable;
 import eu.leads.processor.infinispan.LeadsReducer;
 import eu.leads.processor.infinispan.LeadsReducerCallable;
-import eu.leads.processor.nqe.NQEConstants;
 
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
@@ -41,7 +40,8 @@ public abstract class MapReduceOperator extends BasicOperator {
   protected String intermediateLocalCacheName;
   protected LeadsMapper<?, ?, ?, ?> mapper;
   protected LeadsCollector<?, ?> collector;
-  protected LeadsReducer<?, ?> reducer;
+  protected LeadsReducer<?, ?> federationReducer;
+  protected LeadsReducer<?, ?> localReducer;
   protected String uuid;
 
   public MapReduceOperator(Node com, InfinispanManager persistence, LogProxy log, Action action) {
@@ -58,8 +58,12 @@ public abstract class MapReduceOperator extends BasicOperator {
     this.mapper = mapper;
   }
 
-  public void setReducer(LeadsReducer<?, ?> reducer) {
-    this.reducer = reducer;
+  public void setLocalReducer(LeadsReducer<?, ?> localReducer) {
+    this.localReducer = localReducer;
+  }
+
+  public void setFederationReducer(LeadsReducer<?, ?> federationReducer) {
+    this.federationReducer = federationReducer;
   }
 
   @Override
@@ -198,7 +202,7 @@ public abstract class MapReduceOperator extends BasicOperator {
 
     collector = new LeadsCollector(0, outputCache.getName());
     inputCache = (Cache) keysCache;
-    reducerCallable = new LeadsReducerCallable(outputCache.getName(), reducer,
+    reducerCallable = new LeadsReducerCallable(outputCache.getName(), federationReducer,
                                                intermediateCacheName);
     ((LeadsReducerCallable)reducerCallable).setLocalSite(globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222");
   }
@@ -222,7 +226,7 @@ public abstract class MapReduceOperator extends BasicOperator {
 
     collector = new LeadsCollector(0, outputCache.getName());
     inputCache = (Cache) keysLocalCache;
-    reducerLocalCallable = new LeadsLocalReducerCallable(outputCache.getName(), reducer,
+    reducerLocalCallable = new LeadsLocalReducerCallable(outputCache.getName(), localReducer,
                                                          intermediateLocalCacheName, LQPConfiguration
                                                              .getInstance().getMicroClusterName());
 

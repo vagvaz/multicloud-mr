@@ -29,7 +29,7 @@ public class ProjectOperator extends BasicOperator {
 
     //      LeadsMapper projectMapper = new ProjectMapper(conf.toString());
 //      setMapper(projectMapper);
-//      setReducer(null);
+//      setFederationReducer(null);
 //      init_statistics(this.getClass().getCanonicalName());
   }
 
