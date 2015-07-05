@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -47,8 +48,8 @@ public class DefaultNode implements Node, Handler<Long> {
 
   public DefaultNode() {
     config = new JsonObject();
-    pending = new HashMap<Long, MessageWrapper>();
-    pendingHandlers = new HashMap<Long, AckHandler>();
+    pending = new ConcurrentHashMap<>();
+    pendingHandlers = new ConcurrentHashMap<Long, AckHandler>();
     requests = new HashSet<Long>();
     removalListener = new RemovalListener<String, Long>() {
       @Override
