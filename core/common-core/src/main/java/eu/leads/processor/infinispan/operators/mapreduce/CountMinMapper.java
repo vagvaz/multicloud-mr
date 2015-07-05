@@ -11,7 +11,7 @@ import java.util.Random;
 /**
  * Created by Apostolos Nydriotis on 2015/07/03.
  */
-public class CountMinMapper extends LeadsMapper<String, Tuple, String, Tuple> {
+public class CountMinMapper extends LeadsMapper<String, Tuple, String, Integer> {
 
   int w, d;
   Random random;
@@ -25,30 +25,39 @@ public class CountMinMapper extends LeadsMapper<String, Tuple, String, Tuple> {
   public CountMinMapper(String configuration) {
     super(configuration);
     random = new Random();
-    // TODO(ap0n): Init w, d from config
+    JsonObject operatorConfiguration = new JsonObject(configuration);
+//    w = operatorConfiguration.getInteger("w");
+//    d = operatorConfiguration.getInteger("d");
   }
 
   @Override
-  public void map(String key, Tuple value, Collector<String, Tuple> collector) {
-    System.out.println(getClass().getName() + ".map!");
+  public void map(String key, Tuple value, Collector<String, Integer> collector) {
     for (String attribute : value.getFieldNames()) {
       for (String word : value.getAttribute(attribute).split(" ")) {
-        // TODO(ap0n): cleaning should go here (if not in the client)
         if (word != null && word.length() > 0) {
-
           for (int i = 0; i < d; i++) {
-            Tuple outputTuple = new Tuple();
-            outputTuple.setAttribute("count", 1);
-            // emit (<row>,<col>),Tuple
+            // emit <(<row>,<col>), count>
             collector.emit(String.valueOf(i) + "," + String.valueOf(hashRandom(word.hashCode())[d]),
-                           outputTuple);
+                           1);
           }
         }
       }
     }
   }
 
-  private synchronized int[] hashRandom(int seed) {
+  @Override
+  public void initialize() {
+    super.initialize();
+    w = conf.getInteger("w");
+    d = conf.getInteger("d");
+  }
+
+  @Override
+  protected void finalizeTask() {
+    System.out.println(getClass().getName() + " finished!");
+  }
+
+  private int[] hashRandom(int seed) {
     int[] hash = new int[d];
     random.setSeed(seed);
     for (int i = 0; i < d; i++) {
