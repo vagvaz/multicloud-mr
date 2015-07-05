@@ -86,7 +86,7 @@ public abstract class BasicOperator extends Thread implements Operator {
   }
 
   protected BasicOperator(Node com, InfinispanManager manager, LogProxy log, Action action) {
-    super(com.getId() + "-basic-operator-thread");
+    super(com.getId()+"-"+action.getId() + "-basic-operator-thread");
 
     System.err.println(this.getClass().getCanonicalName());
     mcResults = new HashMap<>();
