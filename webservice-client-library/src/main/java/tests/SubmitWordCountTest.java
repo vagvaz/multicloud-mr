@@ -194,7 +194,8 @@ public class SubmitWordCountTest {
 //                       .putArray("hamm5", new JsonArray().add(HAMM5_IP))
 //                       .putArray("hamm6", new JsonArray().add(HAMM6_IP))
         )
-        .putString("reduceLocal", "true")
+//        .putString("reduceLocal", "true")
+        .putString("combine","1")
         .putObject("targetEndpoints",
                    new JsonObject()
                        .putArray("dresden2", new JsonArray().add(DRESDEN2_IP))
@@ -202,6 +203,7 @@ public class SubmitWordCountTest {
 //                       .putArray("hamm5", new JsonArray().add(HAMM5_IP))
 //                       .putArray("hamm6", new JsonArray().add(HAMM6_IP))
         );
+
     try {
 
       ensembleString = DD1A_IP + ":11222" + "|"
@@ -210,7 +212,33 @@ public class SubmitWordCountTest {
 //                              + HAMM6_IP + ":11222"
       ;
 
-      putData(dataPath);
+//      putData(dataPath);
+
+      EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
+
+      EnsembleCache ensembleCache =
+          ensembleCacheManager.getCache(CACHE_NAME,
+                                        new ArrayList<>(ensembleCacheManager.sites()),
+                                        EnsembleCacheManager.Consistency.DIST);
+
+      String[] lines = {"this is a line",
+                        "arnaki aspro kai paxy",
+                        "ths manas to kamari",
+                        "this another line is yoda said",
+                        "rudolf to elafaki",
+                        "na fame pilafaki"};
+
+      JsonObject data;
+      System.out.print("Loading data to '" + CACHE_NAME + "' cache\n ");
+      data = new JsonObject();
+      for (int i = 0; i < 5000; i++) {
+        data.putString(String.valueOf(i), lines[i % lines.length]);
+        if ((i + 1) % 100 == 0) {
+          ensembleCache.put(String.valueOf(i), new Tuple(data.toString()));
+          data = new JsonObject();
+        }
+        printProgress(i + 1);
+      }
 
 //      WebServiceClient.putObject("clustered", "id", data);  // Add data to the input cache
 
@@ -270,12 +298,12 @@ public class SubmitWordCountTest {
     RemoteCache results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results);
 
-//    System.out.println("dresden");
-//    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
-//    results = remoteCacheManager.getCache(id);
-//    PrintUtilities.printMap(results);
+    System.out.println("dresden");
+    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
+    results = remoteCacheManager.getCache(id);
+    PrintUtilities.printMap(results);
 
-    System.out.println("hamm5");
+/*    System.out.println("hamm5");
     remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
     results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results);
@@ -283,7 +311,7 @@ public class SubmitWordCountTest {
     System.out.println("hamm6");
     remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
     results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);
+    PrintUtilities.printMap(results);*/
   }
 
 }
