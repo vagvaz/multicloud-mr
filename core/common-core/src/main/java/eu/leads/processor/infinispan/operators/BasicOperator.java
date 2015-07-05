@@ -454,9 +454,6 @@ public abstract class BasicOperator extends Thread implements Operator {
   @Override
   public void run() {
     System.err.println("Threadname " + getName());
-    if(!getName().equals(com.getId() + "-basic-operator-thread"))
-      return;
-
     ProfileEvent runProf = new ProfileEvent("findPendingMMCFromGlobal() "
         + this.getClass().toString(), profilerLog);
     findPendingMMCFromGlobal();
