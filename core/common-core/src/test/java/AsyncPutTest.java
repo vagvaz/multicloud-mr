@@ -26,10 +26,10 @@ public class AsyncPutTest {
     static String[] keys;
     static BasicCache[] caches = new BasicCache[4];
     static String cacheName = "acache";
-    static int numOfkeys = 5000; //10
-    static int numOfNodes = 50; //10
-    static int numOfMicroClouds = 3; //10
-    static int valuesPerKey = 1;
+    static int numOfkeys = 20; //10
+    static int numOfNodes = 10; //10
+    static int numOfMicroClouds = 10; //10
+    static int valuesPerKey = 20;
     static int numOfCaches = 4;
 //    static RemoteCacheManager rmanager;
     static EnsembleCacheManager rmanager;
@@ -92,16 +92,19 @@ public class AsyncPutTest {
         for(String k : keys){
             int keyCounter = 0;
             //initialize iterator
+            System.out.println("\n\n\n\n\n\n\n\n\nkey: " + k);
             LeadsIntermediateIterator iterator = new LeadsIntermediateIterator(k,"prefix",InfinispanClusterSingleton.getInstance().getManager(),numOfMicroClouds*numOfNodes);
 
-            while(true){
+            while(iterator.hasNext()){
                 try {
                     //          System.out.println(keyCounter + ": " + iterator.next().toString());
                     iterator.next();
                     keyCounter++;
                     counter++;
-                    if(keyCounter % 10 == 0)
-                        System.out.print(".");
+//                    if(keyCounter % 10 == 0)
+//                        System.out.print(".");
+//                    if(keyCounter % 100 == 0)
+//                        System.err.println();
                 }catch(Exception e ){
                     if ( e instanceof NoSuchElementException){
                         //            System.err.println("End of Iteration");
@@ -116,6 +119,7 @@ public class AsyncPutTest {
                 System.err.println("key " + k + " iteration size: " + keyCounter + " instead of " + valuesPerKey*numOfMicroClouds*numOfNodes + " number of missed iterations" + (valuesPerKey*numOfMicroClouds*numOfNodes -keyCounter)/valuesPerKey );
             }
         }
+        System.err.println("\nTotal counted " + counter + " total " + keys.length* microClouds.length*nodes.length*valuesPerKey);
         InfinispanClusterSingleton.getInstance().getManager().stopManager();
         System.exit(0);
     }
