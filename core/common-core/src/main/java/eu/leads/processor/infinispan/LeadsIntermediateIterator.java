@@ -161,17 +161,18 @@ public class LeadsIntermediateIterator<V> implements Iterator<V> {
     //     o = intermediateDataCache.get(new ComplexIntermediateKey(baseIntermKey));
     //    if(o != null){
 
-    if (baseIntermKey != null && intermediateDataCache.containsKey(new ComplexIntermediateKey(baseIntermKey))) {
+    if(chunkIterator != null && chunkIterator.hasNext()) {
+      //      System.err.println("chunk has next " + chunkIterator.toString());
+      //      PrintUtilities.printList(list);
+      return  true;
+    }
+    if (baseIntermKey != null && intermediateDataCache.containsKey(baseIntermKey)) {
       //      System.err.println("baseIntermKey " + baseIntermKey);
       //      System.err.println("with object " + o.toString());
       result = true;
     }
 
-    if(chunkIterator != null && chunkIterator.hasNext()) {
-      //      System.err.println("chunk has next " + chunkIterator.toString());
-      //      PrintUtilities.printList(list);
-      result = true;
-    }
+
 
     //    System.err.println("leadsIntermediateIterator hasNext returns " + result);
     return result;
