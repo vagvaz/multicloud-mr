@@ -87,7 +87,7 @@ public class EnsembleCacheUtils {
     List<Thread> completedThreads = new LinkedList<>();
     synchronized (mutex) {
       threadCounter = threads.size();
-      System.err.println("Active threads: " + threadCounter);
+//      System.err.println("Active threads: " + threadCounter);
       if(threadCounter > threadBatch){
         for(Thread t : threads){
           if(!t.isAlive()){
@@ -95,7 +95,7 @@ public class EnsembleCacheUtils {
           }
 
         }
-        System.err.println("Completed threads: " + completedThreads.size());
+//        System.err.println("Completed threads: " + completedThreads.size());
         while(threads.size() - completedThreads.size() > threadBatch) {
           for (Thread t : threads) {
             try {
@@ -103,7 +103,7 @@ public class EnsembleCacheUtils {
               if (!t.isAlive()) {
                 completedThreads.add(t);
                 if(threads.size() - completedThreads.size() < threadBatch) {
-                 System.out.println("t " + threads.size() + "  c " + completedThreads.size() + " so " + (threads.size() - completedThreads.size() < threadBatch));
+//                 System.out.println("t " + threads.size() + "  c " + completedThreads.size() + " so " + (threads.size() - completedThreads.size() < threadBatch));
                   break;
                 }
               }
@@ -118,7 +118,7 @@ public class EnsembleCacheUtils {
       for(Thread t : completedThreads){
         threads.remove(t);
       }
-      System.err.println("After cleanup Active threads: " + threads.size());
+//      System.err.println("After cleanup Active threads: " + threads.size());
       assert (threads.size() < threadBatch);
       caches = currentCaches;
       objects = mapsToPut;

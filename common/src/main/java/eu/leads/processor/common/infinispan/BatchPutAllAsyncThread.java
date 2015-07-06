@@ -34,7 +34,7 @@ public class BatchPutAllAsyncThread extends Thread {
   @Override
   public void run() {
 //        super.run();
-    System.out.println("Output async");
+//    System.out.println("Output async");
     for (Map.Entry<String, Map<Object, Object>> entry : objects.entrySet()) {
       BasicCache cache = caches.get(entry.getKey());
       NotifyingFuture nextFuture = cache.putAllAsync(entry.getValue());
