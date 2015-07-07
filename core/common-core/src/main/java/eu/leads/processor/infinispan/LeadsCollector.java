@@ -5,6 +5,7 @@ import eu.leads.processor.common.infinispan.ClusterInfinispanManager;
 import eu.leads.processor.common.infinispan.EnsembleCacheUtils;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 
+import eu.leads.processor.conf.LQPConfiguration;
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.distexec.mapreduce.Collector;
@@ -23,7 +24,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   private static final long serialVersionUID = -602082107893975415L;
   private  Integer emitCount;
-  private final int maxCollectorSize = 1000;
+  private  int maxCollectorSize = 1000;
   private LeadsCombiner<KOut,VOut> combiner;
   protected transient BasicCache keysCache;
   protected transient BasicCache intermediateDataCache;
@@ -73,6 +74,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   public void setCombiner(LeadsCombiner<KOut, VOut> combiner) {
     this.combiner = combiner;
+    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
   }
 
   public Cache getCounterCache() {

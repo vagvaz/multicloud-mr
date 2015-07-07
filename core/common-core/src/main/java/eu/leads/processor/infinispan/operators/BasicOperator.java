@@ -496,6 +496,11 @@ public abstract class BasicOperator extends Thread implements Operator {
       failCleanup();
       runProf.end();
     }
+    pendingMMC.clear();
+    pendingRMC.clear();
+    synchronized(mmcMutex){
+      mmcMutex.notifyAll();
+    }
     //    try {
     //      this.join();
     //    } catch (InterruptedException e) {

@@ -7,10 +7,7 @@ import org.infinispan.commons.util.concurrent.NotifyingFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -26,6 +23,7 @@ public class BatchPutAllAsyncThread extends Thread {
 
   public BatchPutAllAsyncThread(Map<String, BasicCache> caches,
                                 Map<String, Map<Object, Object>> objects) {
+    super("Thread-" + UUID.randomUUID().toString());
     this.caches = caches;
     this.objects = objects;
     futures = new ArrayList<>();
@@ -36,6 +34,7 @@ public class BatchPutAllAsyncThread extends Thread {
   @Override
   public void run() {
 //        super.run();
+//    System.out.println("Output async");
     for (Map.Entry<String, Map<Object, Object>> entry : objects.entrySet()) {
       BasicCache cache = caches.get(entry.getKey());
       NotifyingFuture nextFuture = cache.putAllAsync(entry.getValue());
