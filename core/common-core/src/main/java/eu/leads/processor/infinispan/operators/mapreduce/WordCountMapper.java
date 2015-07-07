@@ -6,8 +6,6 @@ import eu.leads.processor.infinispan.LeadsMapper;
 import org.infinispan.distexec.mapreduce.Collector;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.StringTokenizer;
-
 /**
  * Created by Apostolos Nydriotis on 2015/06/23.
  */
@@ -25,10 +23,7 @@ public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
   public void map(String key, Tuple value, Collector<String, Tuple> collector) {
 //    System.out.println(getClass().getName() + ".map!");
     for (String attribute : value.getFieldNames()) {
-
-      StringTokenizer itr = new StringTokenizer(attribute.toString());
-      while (itr.hasMoreTokens()) {
-        String word = itr.nextToken();
+      for (String word : value.getAttribute(attribute).split(" ")) {
         if (word != null && word.length() > 0) {
           Tuple outputTuple = new Tuple();
           outputTuple.setAttribute("count", 1);
