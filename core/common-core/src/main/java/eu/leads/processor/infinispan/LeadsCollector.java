@@ -25,6 +25,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   private static final long serialVersionUID = -602082107893975415L;
   private  Integer emitCount;
   private  int maxCollectorSize = 1000;
+  private double percent = .75;
   private LeadsCombiner<KOut,VOut> combiner;
   protected transient BasicCache keysCache;
   protected transient BasicCache intermediateDataCache;
@@ -256,7 +257,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
           buffer.put(key,values);
           emitCount++;
           if(isOverflown()){
-            combine();
+            combine(false);
           }
         }
         else{
@@ -275,19 +276,25 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     }
   }
 
-  private void combine() {
+  private void combine(boolean force) { //force the output of values
     LeadsCollector localCollector = new LocalCollector(0,"");
     for(Map.Entry<KOut,List<VOut>> entry : buffer.entrySet()){
       combiner.reduce(entry.getKey(),entry.getValue().iterator(),localCollector);
     }
     Map<KOut,List<VOut>> combinedValues = localCollector.getCombinedValues();
-    for(Map.Entry<KOut,List<VOut>> entry : combinedValues.entrySet()){
-      for(VOut v : entry.getValue()){
-        output(entry.getKey(),v);
+    if( force  || (combinedValues.size() >= maxCollectorSize*percent )) {
+      for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
+        for (VOut v : entry.getValue()) {
+          output(entry.getKey(), v);
+        }
       }
+      buffer.clear();
+      emitCount = 0; // the size is 0 since we have written everything
     }
-    buffer.clear();
-    emitCount = 0;
+    else{
+      buffer = combinedValues;
+      emitCount = buffer.size(); // the size is only one per each key
+    }
   }
 
   private void output(KOut key, VOut value) {
@@ -324,7 +331,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   }
 
   public void finalizeCollector(){
-    combine();
+    combine(true);
     spillMetricData();
   }
   public void spillMetricData(){
