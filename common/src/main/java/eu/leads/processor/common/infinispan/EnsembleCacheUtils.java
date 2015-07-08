@@ -48,6 +48,7 @@ public class EnsembleCacheUtils {
       initialized = true;
       batchSize = LQPConfiguration.getInstance().getConfiguration()
           .getInt("node.ensemble.batchsize", 10);
+      threadBatch = LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.threads",2);
       currentCaches = new ConcurrentHashMap<>();
       mapsToPut = new ConcurrentHashMap<>();
     }
