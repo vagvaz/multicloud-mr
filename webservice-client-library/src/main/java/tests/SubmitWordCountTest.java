@@ -40,6 +40,7 @@ public class SubmitWordCountTest {
   private static final int PUT_THREADS_COUNT = 100;
   private static String ensembleString;
   private static Vector<File> files;
+  private static String[] resultWords = {"to", "the", "of", "in", "on"};
 
   private static class Putter implements Runnable {
 
@@ -289,7 +290,8 @@ public class SubmitWordCountTest {
         }
       }
 
-//      printResults(id);
+      printResults(id,5);
+      verifyResults(id,resultWords,ensembleString);
       printResults("metrics");
 
       System.out.println("\nDONE IN: " + secs + " sec");
@@ -297,6 +299,22 @@ public class SubmitWordCountTest {
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private static void verifyResults(String id, String[] resultWords, String ensembleString) {
+    EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
+    EnsembleCache cache = ensembleCacheManager.getCache(id,new ArrayList<>(ensembleCacheManager.sites()),
+        EnsembleCacheManager.Consistency.DIST);
+    for(String word : resultWords){
+      Object result = cache.get(word);
+      if(result != null) {
+        System.out.println(word + "--->" + result.toString());
+      } else {
+        System.out.println(word + " NULL");
+      }
+
+    }
+
   }
 
   private static RemoteCacheManager createRemoteCacheManager(String host) {
@@ -337,6 +355,28 @@ public class SubmitWordCountTest {
     remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
     results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results);
+  }
+
+  private static void printResults(String id,int numOfItems) {
+    System.out.println("\n\ndd1a");
+    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
+    RemoteCache results = remoteCacheManager.getCache(id);
+    PrintUtilities.printMap(results,numOfItems);
+
+    System.out.println("dresden");
+    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
+    results = remoteCacheManager.getCache(id);
+    PrintUtilities.printMap(results,numOfItems);
+
+/*    System.out.println("hamm5");
+    remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
+    results = remoteCacheManager.getCache(id);
+    PrintUtilities.printMap(results);*/
+
+    System.out.println("hamm6");
+    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
+    results = remoteCacheManager.getCache(id);
+    PrintUtilities.printMap(results,numOfItems);
   }
 
   private static void PrintUsage() {
