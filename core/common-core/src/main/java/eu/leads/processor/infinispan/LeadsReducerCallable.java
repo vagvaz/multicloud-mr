@@ -35,6 +35,7 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
   @Override
   public void initialize() {
     super.initialize();
+
     collector.setOnMap(false);
     collector.setEmanager(emanager);
     collector.initializeCache(inputCache.getName(), imanager);

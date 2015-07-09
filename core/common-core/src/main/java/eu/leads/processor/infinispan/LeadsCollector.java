@@ -76,6 +76,8 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   public void setCombiner(LeadsCombiner<KOut, VOut> combiner) {
     this.combiner = combiner;
     maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
+    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent");
+    percent /= 100;
   }
 
   public Cache getCounterCache() {
@@ -217,7 +219,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     storeCache = emanager.getCache(cacheName, new ArrayList<>(emanager.sites()),
                                    EnsembleCacheManager.Consistency.DIST);
     node =imanager.getMemberName().toString();
-
+    site = LQPConfiguration.getInstance().getMicroClusterName();
     if (onMap) {
       intermediateDataCache = (BasicCache) emanager.getCache(storeCache.getName() + ".data",
                                                              new ArrayList<>(emanager.sites()),
@@ -292,6 +294,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       emitCount = 0; // the size is 0 since we have written everything
     }
     else{
+      buffer.clear();
       buffer = combinedValues;
       emitCount = buffer.size(); // the size is only one per each key
     }
@@ -371,7 +374,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
 
   public boolean isOverflown() {
-    return emitCount.intValue() > maxCollectorSize;
+    return emitCount.intValue() >=   maxCollectorSize;
   }
 
   public Map<KOut, List<VOut>> getCombinedValues() {
