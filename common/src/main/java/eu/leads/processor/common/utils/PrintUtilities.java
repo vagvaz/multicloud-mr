@@ -22,7 +22,17 @@ public class PrintUtilities {
     }
     System.out.println("end of map }");
   }
-
+  public static void printMap(Map<?, ?> map, int numOfItems) {
+    System.out.println("Map{\n");
+    int counter = 0;
+    for (Object e : map.keySet()) {
+      System.out.println("\t " + e.toString() + "--->" + map.get(e).toString() + "\n");
+      counter++;
+      if(counter > numOfItems)
+        break;
+    }
+    System.out.println("end of map }");
+  }
   public static void saveMapToFile(Map<?, ?> map, String filename) {
     RandomAccessFile raf = null;
     try {
