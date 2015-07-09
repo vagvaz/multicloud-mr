@@ -254,10 +254,9 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
           List<VOut> values = buffer.get(key);
           if(values == null) {
             values = new LinkedList<>();
-            buffer.put(key,values);
           }
           values.add(value);
-
+          buffer.put(key, values);
           emitCount++;
           if(isOverflown()){
             combine(false);
@@ -319,7 +318,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       currentCount = new Integer(0);
       baseIndexedKey.setKey(key.toString());
       EnsembleCacheUtils.putIfAbsentToCache(keysCache, key, key);
-      EnsembleCacheUtils.putToCache(indexSiteCache, baseIndexedKey,
+      EnsembleCacheUtils.putToCache(indexSiteCache,  new IndexedComplexIntermediateKey(baseIndexedKey),
           new IndexedComplexIntermediateKey(baseIndexedKey));
     } else {
       currentCount = currentCount + 1;
