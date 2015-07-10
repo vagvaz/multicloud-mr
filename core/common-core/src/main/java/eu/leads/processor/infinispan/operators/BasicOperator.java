@@ -668,7 +668,7 @@ public abstract class BasicOperator extends Thread implements Operator {
 
   @Override
   public void localExecuteMap() {
-
+    long start = System.currentTimeMillis();
     if (mapperCallable != null) {
       //      if (inputCache.size() == 0) {
       //        replyForSuccessfulExecution(action);
@@ -676,8 +676,11 @@ public abstract class BasicOperator extends Thread implements Operator {
       //      }
       setMapperCallableEnsembleHost();
 
-      System.err.println("EXECUTE " + mapperCallable.getClass().toString()
-          + " ON " + currentCluster);
+      System.err.println(
+          "EXECUTE " + mapperCallable.getClass().toString() + " ON " + currentCluster + " with "
+              + inputCache.size() + " keys");
+      log.error("EXECUTE " + mapperCallable.getClass().toString()
+          + " ON " + currentCluster + " with " + inputCache.size() + " keys");
       ProfileEvent distTask = new ProfileEvent("setup map taks "
           + mapperCallable.getClass().toString(), profilerLog);
       DistributedExecutorService des = new DefaultExecutorService(inputCache);
@@ -753,7 +756,9 @@ public abstract class BasicOperator extends Thread implements Operator {
         replyForFailExecution(action);
       }
     }
-
+    long end = System.currentTimeMillis();
+    System.out.println("TIME FOR MAP = " + (end - start)/1000f);
+    log.error("TIME FOR MAP = " + (end - start)/1000f);
     if (reduceLocal) {
       setupReduceLocalCallable();
       executeReduceLocal();
@@ -808,8 +813,12 @@ public abstract class BasicOperator extends Thread implements Operator {
 
   @Override
   public void localExecuteReduce() {
-
+    long start = System.currentTimeMillis();
     if (reducerCallable != null) {
+      System.err.println("EXECUTE " + reducerCallable.getClass().toString()
+          + " ON " + currentCluster + " with " + reduceInputCache.size() + " keys");
+      log.error("EXECUTE " + reducerCallable.getClass().toString()
+          + " ON " + currentCluster + " with " + reduceInputCache.size() + " keys");
       DistributedExecutorService des = new DefaultExecutorService(reduceInputCache);
       setReducerCallableEnsembleHost();
       DistributedTaskBuilder builder = des.createDistributedTaskBuilder(reducerCallable);
@@ -866,6 +875,9 @@ public abstract class BasicOperator extends Thread implements Operator {
         e.printStackTrace();
       }
     }
+    long end = System.currentTimeMillis();
+    System.out.println("TIME FOR FEDREDUCE = " + (end - start)/1000f);
+    log.error("TIME FOR FEDREDUCE = " + (end - start)/1000f);
     replyForSuccessfulExecution(action);
   }
 
@@ -1030,19 +1042,27 @@ public abstract class BasicOperator extends Thread implements Operator {
     return result;
   }
 
-  public void executeReduceLocal() {
+  public void   executeReduceLocal() {
+    long start = System.currentTimeMillis();
     if (reducerLocalCallable != null) {
       DistributedExecutorService des = new DefaultExecutorService(reduceLocalInputCache);
       setReducerLocaleEnsembleHost();
       DistributedTaskBuilder builder = des.createDistributedTaskBuilder(reducerLocalCallable);
       builder.timeout(24, TimeUnit.HOURS);
       DistributedTask task = builder.build();
+      System.out.println("EXECUTE reduceLocal " + reducerLocalCallable.getClass().toString() +
+          " ON " + currentCluster + " with " + inputCache.size() + " keys");
+      log.error("EXECUTE reduceLocal " + reducerLocalCallable.getClass().toString() +
+          " ON " + currentCluster + " with " + inputCache.size() + " keys");
+
+      log.info("reduceLocal " + reducerLocalCallable.getClass().toString() +
+          " Execution is done");
       List<Future<String>> res = des.submitEverywhere(task);  // TODO(ap0n) Is this wrong?
       List<String> addresses = new ArrayList<String>();
       try {
         if (res != null) {
           for (Future<?> result : res) {
-            System.out.println(result.get());
+            System.out.println("ReduceLocal completed on " + result.get());
             addresses.add((String) result.get());
           }
           System.out.println("reduceLocal " + reducerLocalCallable.getClass().toString() +
@@ -1083,7 +1103,10 @@ public abstract class BasicOperator extends Thread implements Operator {
         e.printStackTrace();
       }
     }
-    replyForSuccessfulExecution(action);
+    long end = System.currentTimeMillis();
+    System.out.println("TIME FOR REDUCELOCAL = " + (end - start)/1000f);
+    log.error("TIME FOR REDUCELOCAL = " + (end - start)/1000f);
+//    replyForSuccessfulExecution(action);
   }
 
   public void setupReduceLocalCallable() {
