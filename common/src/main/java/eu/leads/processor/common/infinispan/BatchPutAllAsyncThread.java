@@ -59,6 +59,8 @@ public class BatchPutAllAsyncThread extends Thread {
           log.error(e.getClass().toString());
           PrintUtilities.logStackTrace(log, e.getStackTrace());
           e.printStackTrace();
+          PrintUtilities.logStackTrace(log, e.getStackTrace());
+          failed.add(future);
         }
 
       }
