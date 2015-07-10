@@ -141,7 +141,6 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 //    for(Object key : inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).keySet()) {
 //      if (!cdl.localNodeIsPrimaryOwner(key))
 //        continue;
-    // TODO(ap0n): What is CloseableIterable?
     CloseableIterable iterable = inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL)
         .filterEntries(new LocalDataFilter<K, V>(cdl));
     profExecute.end();

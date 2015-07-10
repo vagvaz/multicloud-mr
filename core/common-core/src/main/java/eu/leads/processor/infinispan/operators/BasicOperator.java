@@ -1037,7 +1037,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       DistributedTaskBuilder builder = des.createDistributedTaskBuilder(reducerLocalCallable);
       builder.timeout(24, TimeUnit.HOURS);
       DistributedTask task = builder.build();
-      List<Future<String>> res = des.submitEverywhere(task);  // TODO(ap0n) Is this wrong?
+      List<Future<String>> res = des.submitEverywhere(task);
       List<String> addresses = new ArrayList<String>();
       try {
         if (res != null) {

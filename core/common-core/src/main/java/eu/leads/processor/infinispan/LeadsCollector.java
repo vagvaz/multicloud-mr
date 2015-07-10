@@ -37,7 +37,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   private transient EnsembleCacheManager emanager;
   private transient Logger log = null;
   private transient Map<KOut,List<VOut>> buffer;
-  private boolean onMap = true;  // TODO(ap0n): What is this?
+  private boolean onMap = true;
   private boolean isReduceLocal = false;
   private boolean useCombiner = true;
   private int indexSite=-1;

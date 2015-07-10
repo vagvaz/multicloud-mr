@@ -6,6 +6,7 @@ import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.infinispan.MapReduceJob;
 import eu.leads.processor.infinispan.operators.CountMinOperator;
+import eu.leads.processor.infinispan.operators.KMeansOperator;
 import eu.leads.processor.infinispan.operators.Operator;
 import eu.leads.processor.infinispan.operators.WordCountOperator;
 
@@ -19,7 +20,7 @@ public class MapReduceOperatorFactory {
                                         Action action) {
     JsonObject object = action.getData();
     MapReduceJob job = new MapReduceJob(object);
-    String name = job.getName();  // TODO(ap0n): There has to be a better way to get the name...
+    String name = job.getName();
     if (name == null) {
       System.err.println("name == null!");
     } else {
@@ -27,6 +28,8 @@ public class MapReduceOperatorFactory {
         return new WordCountOperator(com, persistence, log, action);
       } else if (name.equals("countMin")) {
         return new CountMinOperator(com, persistence, log, action);
+      } else if (name.equals("kMeans")) {
+        return new KMeansOperator(com, persistence, log, action);
       } else {
         System.err.println("No operator for application \"" + name + "\" found!");
       }

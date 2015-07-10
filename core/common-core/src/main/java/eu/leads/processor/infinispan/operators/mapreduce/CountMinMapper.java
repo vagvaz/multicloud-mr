@@ -19,7 +19,6 @@ public class CountMinMapper extends LeadsMapper<String, Tuple, String, Tuple> {
   public CountMinMapper(JsonObject configuration) {
     super(configuration);
     random = new Random();
-    // TODO(ap0n): Init w, d from config
   }
 
   public CountMinMapper(String configuration) {

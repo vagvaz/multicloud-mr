@@ -117,7 +117,7 @@ public class LeadsWebServerVerticle extends Verticle implements LeadsMessageHand
     matcher.post("/rest/upload/encData", uploadEncryptedData);
     matcher.post("/rest/query/encrypted/ppq", privacyPointQueryHandler);
 
-    matcher.post("/rest/mrjob/submit/", executeMapReduceJobHandler);  // TODO(ap0n): Change the API
+    matcher.post("/rest/mrjob/submit/", executeMapReduceJobHandler);
 
     vertx.createHttpServer().requestHandler(matcher)
         .listen((Integer) config.getNumber("port", 8080));
