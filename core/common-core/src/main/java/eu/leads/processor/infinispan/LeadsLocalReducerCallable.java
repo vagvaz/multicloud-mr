@@ -51,8 +51,11 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
   }
 
   @Override public void finalizeCallable() {
+    System.err.println("finalize collector in reduce callable");
     collector.finalizeCollector();
+    System.err.println("finalize reducelocalabe task");
     reducer.finalizeTask();
+    System.err.println("finalize base");
     super.finalizeCallable();
   }
 }
