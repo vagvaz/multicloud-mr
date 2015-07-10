@@ -209,6 +209,13 @@ public abstract class MapReduceOperator extends BasicOperator {
     inputCache = (Cache) keysCache;
     reducerCallable = new LeadsReducerCallable(outputCache.getName(), federationReducer,
                                                intermediateCacheName);
+
+    System.err.println("intermediateDataCache " + intermediateDataCache.size());
+    System.err.println("keysCache " + keysCache.size());
+    System.err.println("indexSiteCache " + indexSiteCache.size());
+    System.err.println("intermediateDataCache " + intermediateDataCache.size());
+    System.err.println("reduInput " + reduceInputCache.size());
+    
     ((LeadsReducerCallable)reducerCallable).setLocalSite(globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222");
   }
 
@@ -235,6 +242,10 @@ public abstract class MapReduceOperator extends BasicOperator {
                                                          intermediateLocalCacheName, LQPConfiguration
                                                              .getInstance().getMicroClusterName());
 
+    System.err.println("intermediateDataCache " + intermediateLocalDataCache.size());
+    System.err.println("keysCache " + keysLocalCache.size());
+    System.err.println("indexSiteCache " + indexLocalSiteCache.size());
+    System.err.println("reduInput " + reduceLocalInputCache.size());
     combiner = null;
     String localSite = globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString();
     ((LeadsLocalReducerCallable)reducerLocalCallable).setLocalSite( localSite+ ":11222");
