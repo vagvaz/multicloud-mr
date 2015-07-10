@@ -34,7 +34,7 @@ public class SubmitWordCountTest {
   private static int port;
   private static final String DRESDEN2_IP = "80.156.73.116";
   private static final String DD1A_IP = "80.156.222.4";
-  private static final String HAMM5_IP = "5.147.254.161";
+//  private static final String HAMM5_IP = "5.147.254.161";
   private static final String HAMM6_IP = "5.147.254.199";
   private static final String CACHE_NAME = "clustered";
   private static final int PUT_THREADS_COUNT = 100;
@@ -54,6 +54,7 @@ public class SubmitWordCountTest {
 
     @Override
     public void run() {
+      int linesPerTupe = 100;
       File f;
       while (true) {
         synchronized (files) {
@@ -83,12 +84,12 @@ public class SubmitWordCountTest {
           int lineCount = 0;
           while ((line = bufferedReader.readLine()) != null) {
             data.putString(String.valueOf(lineCount++), line);
-            if (lineCount % 100 == 0) {
+            if (lineCount % linesPerTupe == 0) {
               ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
               data = new JsonObject();
             }
           }
-          if (lineCount % 100 != 0) {
+          if (lineCount % linesPerTupe != 0) {
             // put the remaining lines
             ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
           }
@@ -141,7 +142,7 @@ public class SubmitWordCountTest {
 //    host = "http://" + DRESDEN2_IP;  // dresden2
     host = "http://" + DD1A_IP;  // dd1a
     port = 8080;
-    String dataPath = ".";  // "/home/ap0n/Desktop/tmp-dataset"
+    String dataPath = ".";  // "/home/ap0n/Desktop/tmp-dataset";
     boolean loadData = false;
     boolean reduceLocal = false;
 
@@ -231,9 +232,9 @@ public class SubmitWordCountTest {
     try {
 
       ensembleString = DD1A_IP + ":11222" + "|"
-                              + DRESDEN2_IP + ":11222" + "|"
-//                              + HAMM5_IP + ":11222" + "|"
-                              + HAMM6_IP + ":11222"
+                       + DRESDEN2_IP + ":11222" + "|"
+//                     + HAMM5_IP + ":11222" + "|"
+                       + HAMM6_IP + ":11222"
       ;
 
       if (loadData) {
@@ -265,9 +266,9 @@ public class SubmitWordCountTest {
 //        }
 //        printProgress(i + 1);
 //      }
-
+//
 //      WebServiceClient.putObject("clustered", "id", data);  // Add data to the input cache
-
+//
 //      System.out.println("\njsonObject = " + jsonObject.toString());
 
       QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
@@ -290,8 +291,8 @@ public class SubmitWordCountTest {
         }
       }
 
-      printResults(id,5);
-      verifyResults(id,resultWords,ensembleString);
+      printResults(id, 5);
+      verifyResults(id, resultWords, ensembleString);
       printResults("metrics");
 
       System.out.println("\nDONE IN: " + secs + " sec");
@@ -303,8 +304,8 @@ public class SubmitWordCountTest {
 
   private static void verifyResults(String id, String[] resultWords, String ensembleString) {
     EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
-    EnsembleCache cache = ensembleCacheManager.getCache(id,new ArrayList<>(ensembleCacheManager.sites()),
-        EnsembleCacheManager.Consistency.DIST);
+    EnsembleCache cache = ensembleCacheManager.getCache(id, new ArrayList<>(
+        ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
     for(String word : resultWords){
       Object result = cache.get(word);
       if(result != null) {
@@ -312,9 +313,7 @@ public class SubmitWordCountTest {
       } else {
         System.out.println(word + " NULL");
       }
-
     }
-
   }
 
   private static RemoteCacheManager createRemoteCacheManager(String host) {
