@@ -182,6 +182,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   public void finalizeCallable() {
     try {
       profCallable.start("finalize");
+      System.err.println("Wait for all puts leadsbasecallable");
       EnsembleCacheUtils.waitForAllPuts();
 //      emanager.stop();
 //

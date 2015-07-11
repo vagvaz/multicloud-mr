@@ -54,10 +54,13 @@ public class BatchPutAllAsyncThread extends Thread {
           log.error(e.getClass().toString());
           PrintUtilities.logStackTrace(log, e.getStackTrace());
           failed.add(future);
-        } catch (ExecutionException e) {
+        } catch (Exception e) {
 //                    e.printStackTrace();
           log.error(e.getClass().toString());
           PrintUtilities.logStackTrace(log, e.getStackTrace());
+          e.printStackTrace();
+          PrintUtilities.logStackTrace(log, e.getStackTrace());
+          failed.add(future);
         }
 
       }
@@ -65,7 +68,7 @@ public class BatchPutAllAsyncThread extends Thread {
       for (NotifyingFuture failedFuture : failed) {
         //for the failed redo the action
         //Get Cache for that future
-        log.error("EnsembleRetrying putting data to " + backup.get(failed));
+        System.err.println("EnsembleRetrying putting data to " + backup.get(failedFuture));
         BasicCache cache = caches.get(backup.get(failedFuture));
         //Get Map that we need to put
         Object ob = objects.get(cache.getName());
@@ -74,7 +77,7 @@ public class BatchPutAllAsyncThread extends Thread {
 
         //                    BasicCache cache = caches.get(backup.get(future));
         //Reddo operation
-        NotifyingFuture nextFuture = cache.putAllAsync(objects.get(cache.getName()));
+        NotifyingFuture nextFuture = cache.putAllAsync((Map) ob);
         futures.add(nextFuture);
         backup.put(nextFuture, cache.getName());
       }

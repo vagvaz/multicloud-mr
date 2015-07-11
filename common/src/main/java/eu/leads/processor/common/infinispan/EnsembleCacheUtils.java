@@ -56,6 +56,7 @@ public class EnsembleCacheUtils {
 
   public static void waitForAllPuts() {
     //        profExecute.start("waitForAllPuts");
+    System.err.println("Wait For Puts");
     clearCompleted();
     while (!threads.isEmpty()) {
       Thread t = threads.poll();

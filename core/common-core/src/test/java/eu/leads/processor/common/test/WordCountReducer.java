@@ -6,6 +6,7 @@ import eu.leads.processor.infinispan.LeadsReducer;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class WordCountReducer extends LeadsReducer<String, Integer> {
 
@@ -18,9 +19,18 @@ public class WordCountReducer extends LeadsReducer<String, Integer> {
 
   public Integer reduce(String key, Iterator<Integer> iter) {
     int sum = 0;
-    while (iter.hasNext()) {
-      Integer i = iter.next();
-      sum += i;
+    try {
+      while (iter.hasNext()) {
+        Integer i = iter.next();
+        sum += i;
+      }
+    }catch (Exception e){
+      if(e instanceof NoSuchElementException){
+
+      }
+      else{
+        e.printStackTrace();
+      }
     }
     return sum;
   }
