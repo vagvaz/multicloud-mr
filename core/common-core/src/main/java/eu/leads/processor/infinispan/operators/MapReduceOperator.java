@@ -215,7 +215,7 @@ public abstract class MapReduceOperator extends BasicOperator {
     System.err.println("indexSiteCache " + indexSiteCache.size());
     System.err.println("intermediateDataCache " + intermediateDataCache.size());
     System.err.println("reduInput " + reduceInputCache.size());
-    
+
     ((LeadsReducerCallable)reducerCallable).setLocalSite(globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0).toString() + ":11222");
   }
 

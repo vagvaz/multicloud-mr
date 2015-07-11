@@ -89,13 +89,14 @@ public class AsyncPutTest {
         int counter = 0;
 
         System.err.println("Start Iteration");
+        start = System.currentTimeMillis();
         for(String k : keys){
             int keyCounter = 0;
             //initialize iterator
-            System.out.println("\n\n\n\n\n\n\n\n\nkey: " + k);
-            LeadsIntermediateIterator iterator = new LeadsIntermediateIterator(k,"prefix",InfinispanClusterSingleton.getInstance().getManager(),numOfMicroClouds*numOfNodes);
+            System.out.println("key: " + k);
+            LeadsIntermediateIterator iterator = new LeadsIntermediateIterator(k,"prefix",InfinispanClusterSingleton.getInstance().getManager());//,numOfMicroClouds*numOfNodes);
 
-            while(iterator.hasNext()){
+            while(true){
                 try {
                     //          System.out.println(keyCounter + ": " + iterator.next().toString());
                     iterator.next();
@@ -120,6 +121,8 @@ public class AsyncPutTest {
             }
         }
         System.err.println("\nTotal counted " + counter + " total " + keys.length* microClouds.length*nodes.length*valuesPerKey);
+        end = System.currentTimeMillis();
+        System.out.println("Iterate " + (valuesPerKey*numOfkeys*numOfMicroClouds*numOfNodes) + " in " + ((end-start)/1000) + " secs");
         InfinispanClusterSingleton.getInstance().getManager().stopManager();
         System.exit(0);
     }
