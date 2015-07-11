@@ -54,7 +54,7 @@ public class LeadsIntermediateIterator<V> implements Iterator<V> {
     ProfileEvent event = new ProfileEvent("ReadIndexedKeys",log);
     this.list = new ArrayList<>();
     try{
-      CloseableIterable<Map.Entry<Object, Object>> myIterable = ((Cache)indexSiteCache).getAdvancedCache().filterEntries(
+      CloseableIterable<Map.Entry<Object, Object>> myIterable = ((Cache)indexSiteCache).getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).filterEntries(
           new IndexedComplexIntermKeyFilter(key));
       for (Map.Entry<Object, Object> entry : myIterable) {
         //        System.err.println("ADDING TO LIST key: " + entry.getKey() + " value " + entry.getValue().toString());
