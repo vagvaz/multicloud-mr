@@ -11,9 +11,8 @@ import org.infinispan.interceptors.locking.ClusteringDependentLogic;
 import java.io.Serializable;
 import java.util.*;
 
-public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut,Object> implements
-    Serializable {
-
+public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Object> implements
+                                                                                      Serializable {
   /**
    * tr
    */
@@ -21,15 +20,18 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut,Obj
   private LeadsReducer<kOut, vOut> reducer = null;
   private LeadsCollector collector;
   private String prefix;
+  String site;
 
-
-  public LeadsReducerCallable(String cacheName,
-      LeadsReducer<kOut, vOut> reducer,String prefix) {
-    super("{}",cacheName);
+  public LeadsReducerCallable(String cacheName, LeadsReducer<kOut, vOut> reducer, String prefix) {
+    super("{}", cacheName);
     this.reducer = reducer;
-    collector = new LeadsCollector(1000,cacheName);
+    collector = new LeadsCollector(1000, cacheName);
     collector.setOnMap(false);
     this.prefix = prefix;
+  }
+
+  public void setLocalSite(String localSite){
+    collector.setLocalSite(localSite);
   }
 
   @Override public void setEnvironment(Cache<kOut, Object> cache, Set<kOut> inputKeys) {
@@ -92,7 +94,8 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut,Obj
 
   private Map<String, List<vOut>> createInMemoryDataStruct(Cache dataCache) {
     Map<String,List<vOut>>  result = new HashMap<>();
-    CloseableIterable iterable = dataCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).filterEntries(new AcceptAllFilter());
+    CloseableIterable iterable = dataCache.getAdvancedCache().withFlags(
+        Flag.CACHE_MODE_LOCAL).filterEntries(new AcceptAllFilter());
     try {
       for (Object object : iterable) {
         Map.Entry<ComplexIntermediateKey, vOut> entry = (Map.Entry<ComplexIntermediateKey, vOut>) object;
@@ -123,20 +126,58 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut,Obj
     return result;
   }
 
-
-  @Override public void initialize() {
+  @Override
+  public void initialize() {
     super.initialize();
+
     collector.setOnMap(false);
     collector.setEmanager(emanager);
-
-    collector.initializeCache(inputCache.getName(),imanager);
-
+    collector.initializeCache(inputCache.getName(), imanager);
 
     this.reducer.initialize();
   }
+  //    public vOut call() throws Exception {
+//        if (federationReducer == null) {
+//            System.out.println(" Reducer not initialized ");
+//        } else {
+//           federationReducer.setCacheManager(inputCache.getCacheManager());
+//            // System.out.println(" Run Reduce ");
+//            vOut result = null;
+////            System.out.println("inputCache Cache Size:"
+////                    + this.inputCache.size());
+////            for (Entry<kOut, List<vOut>> entry : inputCache.entrySet()) {
+//          final ClusteringDependentLogic cdl = inputCache.getAdvancedCache().getComponentRegistry().getComponent(ClusteringDependentLogic.class);
+//          for(Object ikey : inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).keySet()){
+//            if(!cdl.localNodeIsPrimaryOwner(ikey))
+//              continue;
+//                kOut key = (kOut)ikey;
+//                List<vOut> list = inputCache.get(key);
+//                if(list == null || list.size() == 0){
+//                  continue;
+//                }
+//
+//                vOut res = federationReducer.reduce(key, list.iterator());
+//                if(res == null || res.toString().equals("")){
+//                  ;
+//                }
+//                else
+//                {
+////                  outCache.put(key, res);
+//                }
+//            }
+//
+//            return result;
+//        }
+//        return null;
+//    }
 
-  @Override public void finalizeCallable() {
+  @Override
+  public void finalizeCallable() {
+    System.err.println("reduce finalize reducer");
     reducer.finalizeTask();
+    System.err.println("reducer finalizee collector");
+    collector.finalizeCollector();
+    System.err.println("finalzie super");
     super.finalizeCallable();
   }
 }
