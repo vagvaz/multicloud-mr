@@ -29,9 +29,9 @@ import java.util.Map;
 import java.util.Vector;
 
 /**
- * Created by Apostolos Nydriotis on 2015/07/10.
+ * Created by Apostolos Nydriotis on 2015/06/22.
  */
-public class SubmitKMeansTest {
+public class SubmitCountMinTest {
 
   private static final String DRESDEN2_IP = "80.156.73.116";
   private static final String DD1A_IP = "80.156.222.4";
@@ -44,11 +44,10 @@ public class SubmitKMeansTest {
   private static Map<String, String> microcloudAddresses;
   private static Map<String, String> activeIps;
   private static List<String> activeMicroClouds;
+  private static String webserviceAddress;
   private static String ensembleString;
   private static Vector<File> files;
   private static String[] resultWords = {"to", "the", "of", "in", "on"};
-  private static Map<String, Integer>[] centers;
-  private static int k;
 
   private static void putData(String dataDirectory) {
 
@@ -84,7 +83,6 @@ public class SubmitKMeansTest {
   public static void main(String[] args) {
 
     host = "http://" + DD1A_IP;  // dd1a
-    port = 8080;
 
     String propertiesFile = "client.properties";
     if (args.length != 1) {
@@ -92,15 +90,18 @@ public class SubmitKMeansTest {
     } else {
       propertiesFile = args[0];
     }
-
     LQPConfiguration.getInstance().initialize();
     LQPConfiguration.getInstance().loadFile(propertiesFile);
-    host = LQPConfiguration.getInstance().getConfiguration().getString("webservice-address",
-                                                                       "http://" + DD1A_IP);
+
+    host = LQPConfiguration.getInstance().getConfiguration()
+        .getString("webservice-address", "http://" + DD1A_IP);
     System.out.println("webservice host: " + host);
+
     port = 8080;
+
     String dataPath = LQPConfiguration.getInstance().getConfiguration().getString("data-path", ".");
     System.out.println("data path " + dataPath);
+
     boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data",
                                                                                     false);
     System.out.println("load data " + loadData);
@@ -109,16 +110,19 @@ public class SubmitKMeansTest {
         LQPConfiguration.getInstance().getConfiguration().getBoolean("use-reduce-local", false);
     System.out.println("use reduce local " + reduceLocal);
 
-    boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine",
-                                                                                   true);
+    boolean combine =
+        LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine", true);
     System.out.println("use combine " + combine);
 
-    k = LQPConfiguration.getInstance().getConfiguration().getInt("k", 2);
-    System.out.println("k " + k);
-    centers = new Map[k];
+    double delta = LQPConfiguration.getInstance().getConfiguration().getDouble("delta", 0.02);
+    System.out.println("delta " + delta);
+
+    double epsilon = LQPConfiguration.getInstance().getConfiguration().getDouble("epsilon", 0.9);
+    System.out.println("epsilon " + epsilon);
 
     //set the default microclouds
     List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dresden2", "hamm6"));
+
     //read the microcloud to run the job
     activeMicroClouds =
         LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
@@ -153,27 +157,28 @@ public class SubmitKMeansTest {
     JsonObject jsonObject = new JsonObject();
     jsonObject.putObject("operator", new JsonObject());
     jsonObject.getObject("operator").putObject("configuration", new JsonObject());
-    jsonObject.getObject("operator").putString("name", "kMeans");
+    jsonObject.getObject("operator").putString("name", "countMin");
     jsonObject.getObject("operator").putArray("inputs", new JsonArray().add(CACHE_NAME));
     jsonObject.getObject("operator").putString("output", "testOutputCache");
-
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
-    jsonObject.getObject("operator")
-        .putObject("scheduling", scheduling);
+    jsonObject.getObject("operator").putObject("scheduling", scheduling);
 
     if (combine) {
       jsonObject.getObject("operator").putString("combine", "1");
     }
-
     if (reduceLocal) {
       jsonObject.getObject("operator").putString("reduceLocal", "true");
     }
+
+    int[] wd = calculateSketchDimentions(delta, epsilon);
+
+    jsonObject.getObject("operator").getObject("configuration")
+        .putNumber("w", wd[0]).putNumber("d", wd[1]);
 
     JsonObject targetEndpoints = scheduling;
     jsonObject.getObject("operator").putObject("targetEndpoints", targetEndpoints);
 
     try {
-
       ensembleString = "";
       for (String mc : activeMicroClouds) {
         ensembleString += activeIps.get(mc) + ":11222|";
@@ -184,42 +189,31 @@ public class SubmitKMeansTest {
         putData(dataPath);
       }
 
+      QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
+      String id = res.getId();
+      System.out.println("Submitted job. id: " + id);
+      System.out.println("Executing...");
+
+      int secs = 0;
+
       while (true) {
-        for (int i = 0; i < k; i++) {
-          Map center = centers[i];
-          jsonObject.getObject("operator")
-              .getObject("configuration").putObject("center" + String.valueOf(i),
-                                                    new JsonObject(center));
+        QueryStatus status = WebServiceClient.getQueryStatus(id);
+        if (status.getStatus().equals("COMPLETED")) {
+          break;
+        } else if (status.getErrorMessage() != null && status.getErrorMessage().length() > 0) {
+          System.out.println(status.getErrorMessage());
+          break;
+        } else {
+          System.out.print("\r" + secs++);
+          Thread.sleep(1000);
         }
-
-        QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
-        String id = res.getId();
-        System.out.println("Submitted job. id: " + id);
-        System.out.println("Executing...");
-
-        int secs = 0;
-
-        while (true) {
-          QueryStatus status = WebServiceClient.getQueryStatus(id);
-          if (status.getStatus().equals("COMPLETED")) {
-            break;
-          } else if (status.getErrorMessage() != null && status.getErrorMessage().length() > 0) {
-            System.out.println(status.getErrorMessage());
-            break;
-          } else {
-            System.out.print("\r" + secs++);
-            Thread.sleep(1000);
-          }
-        }
-
-        // TODO(ap0n): read the results and compare the centers here.
-
-        printResults(id, 5);
-        System.out.println("\nDONE IN: " + secs + " sec");
-        break;
       }
 
+      printResults(id, 5);
+      verifyResults(id, resultWords, ensembleString);
       printResults("metrics");
+
+      System.out.println("\nDONE IN: " + secs + " sec");
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -255,6 +249,13 @@ public class SubmitKMeansTest {
     return new RemoteCacheManager(builder.build());
   }
 
+  private static int[] calculateSketchDimentions(double delta, double epsilon) {
+    int[] wd = new int[2];
+    wd[0] = (int) Math.ceil(Math.E / epsilon);
+    wd[1] = (int) Math.ceil(Math.log(1d / delta));
+    return wd;
+  }
+
   private static void printProgress(int i) {
     if (i % 6 == 0 || i % 6 == 3) {
       System.out.print("\r" + i + " |");
@@ -268,47 +269,20 @@ public class SubmitKMeansTest {
   }
 
   private static void printResults(String id) {
-    System.out.println("\n\ndd1a");
-    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
-    RemoteCache results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);
-
-    System.out.println("dresden");
-    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);
-
-/*    System.out.println("hamm5");
-    remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);*/
-
-    System.out.println("hamm6");
-    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);
+    printResults(id, -1);
   }
 
   private static void printResults(String id, int numOfItems) {
-    System.out.println("\n\ndd1a");
-    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
-    RemoteCache results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results, numOfItems);
-
-    System.out.println("dresden");
-    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results, numOfItems);
-
-/*    System.out.println("hamm5");
-    remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);*/
-
-    System.out.println("hamm6");
-    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results, numOfItems);
+    for (String mc : activeMicroClouds) {
+      System.out.println(mc);
+      RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
+      RemoteCache results = remoteCacheManager.getCache(id);
+      if (numOfItems > 0) {
+        PrintUtilities.printMap(results, numOfItems);
+      } else {
+        PrintUtilities.printMap(results);
+      }
+    }
   }
 
   private static void PrintUsage() {
@@ -320,29 +294,26 @@ public class SubmitKMeansTest {
 
   private static class Putter implements Runnable {
 
-    static int centerIndex;
     String id;
     long putCount;
 
     public Putter(int i) {
       id = String.valueOf(i);
       putCount = 0;
-      centerIndex = k;
     }
 
     @Override
     public void run() {
-      File f;
-
+      int linesPerTupe = 100;
+      File f = null;
       while (true) {
-        synchronized (files) {
-          if (files.size() > 0) {
-            f = files.get(0);
-            files.remove(0);
-            centerIndex--;
-          } else {
+        try {
+          f = files.remove(0);
+        } catch (Exception e) {
+          if (e instanceof ArrayIndexOutOfBoundsException) {
             break;
           }
+          e.printStackTrace();
         }
 
         System.out.println(id + ": files.get(0).getAbsolutePath() = " + f.getAbsolutePath());
@@ -357,31 +328,20 @@ public class SubmitKMeansTest {
           BufferedReader bufferedReader =
               new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
+          JsonObject data = new JsonObject();
           String line;
-          Map<String, Integer> frequencies = new HashMap<>();
 
+          int lineCount = 0;
           while ((line = bufferedReader.readLine()) != null) {
-
-            String[] words = line.split(" ");
-
-            for (String word : words) {
-              if (word.length() == 0) {
-                continue;
-              }
-              Integer wordFrequency = frequencies.get(word);
-              if (wordFrequency == null) {
-                frequencies.put(word, 1);
-              } else {
-                frequencies.put(word, wordFrequency + 1);
-              }
+            data.putString(String.valueOf(lineCount++), line);
+            if (lineCount % linesPerTupe == 0) {
+              ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
+              data = new JsonObject();
             }
           }
-          Tuple data = new Tuple();
-          data.asBsonObject().putAll(frequencies);
-          ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
-
-          if (centerIndex >= 0) {
-            centers[centerIndex] = frequencies;
+          if (lineCount % linesPerTupe != 0) {
+            // put the remaining lines
+            ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
           }
 
           bufferedReader.close();
