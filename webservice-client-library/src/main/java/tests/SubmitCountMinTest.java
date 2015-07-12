@@ -306,6 +306,14 @@ public class SubmitCountMinTest {
     public void run() {
       int linesPerTupe = 100;
       File f = null;
+
+      EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
+
+      EnsembleCache ensembleCache =
+          ensembleCacheManager.getCache(CACHE_NAME,
+                                        new ArrayList<>(ensembleCacheManager.sites()),
+                                        EnsembleCacheManager.Consistency.DIST);
+
       while (true) {
         try {
           f = files.remove(0);
@@ -318,12 +326,6 @@ public class SubmitCountMinTest {
 
         System.out.println(id + ": files.get(0).getAbsolutePath() = " + f.getAbsolutePath());
 
-        EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
-
-        EnsembleCache ensembleCache =
-            ensembleCacheManager.getCache(CACHE_NAME,
-                                          new ArrayList<>(ensembleCacheManager.sites()),
-                                          EnsembleCacheManager.Consistency.DIST);
         try {
           BufferedReader bufferedReader =
               new BufferedReader(new InputStreamReader(new FileInputStream(f)));

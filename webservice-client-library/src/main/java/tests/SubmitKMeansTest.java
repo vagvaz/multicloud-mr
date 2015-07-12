@@ -334,6 +334,13 @@ public class SubmitKMeansTest {
     public void run() {
       File f;
 
+      EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
+
+      EnsembleCache ensembleCache =
+          ensembleCacheManager.getCache(CACHE_NAME,
+                                        new ArrayList<>(ensembleCacheManager.sites()),
+                                        EnsembleCacheManager.Consistency.DIST);
+
       while (true) {
         synchronized (files) {
           if (files.size() > 0) {
@@ -347,12 +354,6 @@ public class SubmitKMeansTest {
 
         System.out.println(id + ": files.get(0).getAbsolutePath() = " + f.getAbsolutePath());
 
-        EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
-
-        EnsembleCache ensembleCache =
-            ensembleCacheManager.getCache(CACHE_NAME,
-                                          new ArrayList<>(ensembleCacheManager.sites()),
-                                          EnsembleCacheManager.Consistency.DIST);
         try {
           BufferedReader bufferedReader =
               new BufferedReader(new InputStreamReader(new FileInputStream(f)));
