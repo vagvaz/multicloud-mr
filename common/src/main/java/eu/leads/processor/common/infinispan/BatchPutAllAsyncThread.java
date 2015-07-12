@@ -70,8 +70,10 @@ public class BatchPutAllAsyncThread extends Thread {
         //Get Cache for that future
         System.err.println("EnsembleRetrying putting data to " + backup.get(failedFuture));
         BasicCache cache = caches.get(backup.get(failedFuture));
+
         //Get Map that we need to put
         Object ob = objects.get(cache.getName());
+        System.err.println("Size of retrying map = " + ((Map)ob).size());
         //Remove old Future from Future backup
         backup.remove(failedFuture);
 

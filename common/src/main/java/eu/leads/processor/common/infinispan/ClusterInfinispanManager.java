@@ -15,6 +15,7 @@ import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.distexec.DefaultExecutorService;
 import org.infinispan.distexec.DistributedExecutorService;
+import org.infinispan.distribution.ch.impl.SyncConsistentHashFactory;
 import org.infinispan.eviction.EvictionStrategy;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.DefaultCacheManager;
@@ -717,7 +718,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
         defaultConfig = new ConfigurationBuilder()//.read(manager.getDefaultCacheConfiguration())
             .clustering()
             .cacheMode(CacheMode.DIST_SYNC)
-            .hash().numOwners(1)
+            .hash().numOwners(1).consistentHashFactory( new SyncConsistentHashFactory())
             .indexing().index(Index.NONE).transaction().transactionMode(
                 TransactionMode.NON_TRANSACTIONAL)
             .persistence().passivation(true)
@@ -736,7 +737,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
         defaultConfig = new ConfigurationBuilder()//.read(manager.getDefaultCacheConfiguration())
             .clustering()
             .cacheMode(CacheMode.DIST_SYNC)
-            .hash().numOwners(1)
+            .hash().numOwners(1).consistentHashFactory(new SyncConsistentHashFactory())
             .indexing().index(Index.NONE).transaction()
             .transactionMode(TransactionMode.NON_TRANSACTIONAL)
             .persistence().passivation(true)
@@ -757,7 +758,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
       defaultConfig = new ConfigurationBuilder()//.read(manager.getDefaultCacheConfiguration())
           .clustering()
           .cacheMode(CacheMode.DIST_SYNC)
-          .hash().numOwners(1)
+          .hash().numOwners(1).consistentHashFactory(new SyncConsistentHashFactory())
           .indexing().index(Index.NONE).transaction()
           .transactionMode(TransactionMode.NON_TRANSACTIONAL)
           .compatibility().enable()//.marshaller(new TupleMarshaller())
