@@ -4,6 +4,7 @@ import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsCombiner;
 
+import org.bson.BasicBSONObject;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.HashMap;
@@ -25,29 +26,39 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
 
   @Override
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
+    System.out.println("REDUCER");
     int documentsCount = 0;
-    Map<String, Integer> dimentions = new HashMap<>();
+    Map<String, Integer> dimensions = new HashMap<>();
+    int valuesReduced = 0;
     while (iter.hasNext()) {
-      documentsCount++;  // TODO(ap0n): If combine is active this should be
-                         // TODO        documentsCount += tuple.documentsCount from the combiner
       Tuple t = iter.next();
-      for (String s : t.getFieldNames()) {
-        int wordFrequency = t.getNumberAttribute(s).intValue();
-        Integer currentFrequency = dimentions.get(s);
+
+      Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("value"));
+      int count = t.getNumberAttribute("count").intValue();
+
+      documentsCount += count;
+      for (String s : valueTuple.getFieldNames()) {
+        int wordFrequency = valueTuple.getNumberAttribute(s).intValue();
+        Integer currentFrequency = dimensions.get(s);
         if (currentFrequency == null) {
-          dimentions.put(s, wordFrequency);
+          dimensions.put(s, wordFrequency);
         } else {
-          dimentions.put(s, currentFrequency + wordFrequency);
+          dimensions.put(s, currentFrequency + wordFrequency);
         }
       }
+      valuesReduced++;
     }
 
-    for (Map.Entry<String, Integer> entry : dimentions.entrySet()) {
+    for (Map.Entry<String, Integer> entry : dimensions.entrySet()) {
       entry.setValue(entry.getValue() / documentsCount);
     }
-    Tuple result = new Tuple();
-    result.asBsonObject().putAll(dimentions);
-    collector.emit(reducedKey, result);
+    Tuple dimensionsTuple = new Tuple();
+    dimensionsTuple.asBsonObject().putAll(dimensions);
+
+    Tuple r = new Tuple();
+    r.asBsonObject().put("value", dimensionsTuple.asBsonObject());
+    r.setAttribute("count", valuesReduced);
+    collector.emit(reducedKey, r);
   }
 
   @Override

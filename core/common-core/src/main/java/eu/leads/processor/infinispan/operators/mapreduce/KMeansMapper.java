@@ -27,6 +27,7 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
   @Override
   public void map(String key, Tuple value, Collector<String, Tuple> collector) {
+    System.out.println("MAPPER");
     double maxSimilarity = 0;
     int index = -1;
 
@@ -37,7 +38,10 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
         index = i;
       }
     }
-    collector.emit(String.valueOf(index), value);
+    Tuple res = new Tuple();
+    res.asBsonObject().put("value", value.asBsonObject());
+    res.setAttribute("count", 1);
+    collector.emit(String.valueOf(index), res);
   }
 
   @Override
@@ -49,9 +53,9 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     centers = new Map[k];
     for (int i = 0; i < k; i++) {
       Map<String, Integer> map = new HashMap<>();
-      Tuple doc = conf.getField("doc" + String.valueOf(i));
+      JsonObject doc = conf.getField("center" + String.valueOf(i));
       for (String word : doc.getFieldNames()) {
-        map.put(word, doc.getNumberAttribute(word).intValue());
+        map.put(word, doc.getInteger(word));
       }
       centers[i] = map;
     }
