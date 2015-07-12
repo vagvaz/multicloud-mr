@@ -15,7 +15,8 @@ import java.util.Map;
 public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
   int k;
-  Map<String, Integer>[] centers;
+  Map<String, Double>[] centers;
+  Double[] norms;
 
   public KMeansMapper(JsonObject configuration) {
     super(configuration);
@@ -27,6 +28,7 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
   @Override
   public void map(String key, Tuple value, Collector<String, Tuple> collector) {
+    System.out.println("MAPPER");
     double maxSimilarity = 0;
     int index = -1;
 
@@ -37,7 +39,10 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
         index = i;
       }
     }
-    collector.emit(String.valueOf(index), value);
+    Tuple res = new Tuple();
+    res.asBsonObject().put("value", value.asBsonObject());
+    res.setAttribute("count", 1d);
+    collector.emit(String.valueOf(index), res);
   }
 
   @Override
@@ -47,11 +52,14 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
     // Get centers from configuration
     centers = new Map[k];
+    norms = new Double[k];
+
     for (int i = 0; i < k; i++) {
-      Map<String, Integer> map = new HashMap<>();
-      Tuple doc = conf.getField("doc" + String.valueOf(i));
+      norms[i] = conf.getNumber("norm" + String.valueOf(i)).doubleValue();
+      Map<String, Double> map = new HashMap<>();
+      JsonObject doc = conf.getField("center" + String.valueOf(i));
       for (String word : doc.getFieldNames()) {
-        map.put(word, doc.getNumberAttribute(word).intValue());
+        map.put(word, doc.getNumber(word).doubleValue());
       }
       centers[i] = map;
     }
@@ -64,22 +72,22 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
   private double calculateDistance(int i, Tuple value) {
 
-    // cosine = A B / ||A|| ||B||
+    // cosine = A B / ||A|| ||B|| (Ignore document's norm)
 
-    Integer numerator = 0;
-    double normA = 0.0, normB = 0.0;
+    Double numerator = 0d;
 
-    for (Map.Entry<String, Integer> entry : centers[i].entrySet()) {
-      if (value.hasField(entry.getKey())) {
-        numerator += (value.getNumberAttribute(entry.getKey()).intValue() * entry.getValue());
-      }
-      normA += entry.getValue() ^ 2;
-    }
-
+    Map<String, Double> document = new HashMap<>();
     for (String s : value.getFieldNames()) {
-      normB += value.getNumberAttribute(s).intValue() ^ 2;
+      document.put(s, value.getNumberAttribute(s).doubleValue());
     }
 
-    return numerator / Math.sqrt(normA) / Math.sqrt(normB);
+    for (Map.Entry<String, Double> entry : document.entrySet()) {
+      Double centroidValue = centers[i].get(entry.getKey());
+      if (centroidValue != null) {
+        numerator += entry.getValue() * centroidValue;
+      }
+    }
+
+    return numerator / Math.sqrt(norms[i]);
   }
 }

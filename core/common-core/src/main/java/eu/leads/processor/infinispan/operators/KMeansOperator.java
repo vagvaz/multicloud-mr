@@ -16,7 +16,7 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class KMeansOperator extends MapReduceOperator {
 
-  LeadsReducer<?, ?> kMeansReducer;  // same for local and federation reducer
+//  LeadsReducer<?, ?> kMeansReducer;  // same for local and federation reducer
 
   public KMeansOperator(Node com,
                         InfinispanManager persistence,
@@ -29,9 +29,9 @@ public class KMeansOperator extends MapReduceOperator {
   public void init(JsonObject config) {
     super.init(conf);
     setMapper(new KMeansMapper(conf.toString()));
-    kMeansReducer = new KMeansReducer(conf.toString());
-    setLocalReducer(kMeansReducer);
-    setFederationReducer(kMeansReducer);
+//    kMeansReducer = new KMeansReducer(conf.toString());
+    setLocalReducer(new KMeansReducer(conf.toString()));
+    setFederationReducer(new KMeansReducer(conf.toString()));
     init_statistics(this.getClass().getCanonicalName());
   }
 
@@ -45,13 +45,13 @@ public class KMeansOperator extends MapReduceOperator {
 
   @Override
   public void setupReduceLocalCallable() {
-    setLocalReducer(kMeansReducer);
+    setLocalReducer(new KMeansReducer(conf.toString()));
     super.setupReduceLocalCallable();
   }
 
   @Override
   public void setupReduceCallable() {
-    setFederationReducer(kMeansReducer);
+    setFederationReducer(new KMeansReducer(conf.toString()));
     super.setupReduceCallable();
   }
 

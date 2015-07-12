@@ -6,6 +6,7 @@ import eu.leads.processor.core.Tuple;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
 
+import org.bson.BasicBSONObject;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
@@ -23,6 +24,7 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +49,8 @@ public class SubmitKMeansTest {
   private static String ensembleString;
   private static Vector<File> files;
   private static String[] resultWords = {"to", "the", "of", "in", "on"};
-  private static Map<String, Integer>[] centers;
+  private static Map<String, Double>[] centers;
+  private static Double[] norms;
   private static int k;
 
   private static void putData(String dataDirectory) {
@@ -116,6 +119,7 @@ public class SubmitKMeansTest {
     k = LQPConfiguration.getInstance().getConfiguration().getInt("k", 2);
     System.out.println("k " + k);
     centers = new Map[k];
+    norms = new Double[k];
 
     //set the default microclouds
     List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dresden2", "hamm6"));
@@ -172,8 +176,9 @@ public class SubmitKMeansTest {
     JsonObject targetEndpoints = scheduling;
     jsonObject.getObject("operator").putObject("targetEndpoints", targetEndpoints);
 
-    try {
+    jsonObject.getObject("operator").getObject("configuration").putNumber("k", k);
 
+    try {
       ensembleString = "";
       for (String mc : activeMicroClouds) {
         ensembleString += activeIps.get(mc) + ":11222|";
@@ -184,12 +189,14 @@ public class SubmitKMeansTest {
         putData(dataPath);
       }
 
+      Date start = new Date();
+
       while (true) {
         for (int i = 0; i < k; i++) {
           Map center = centers[i];
-          jsonObject.getObject("operator")
-              .getObject("configuration").putObject("center" + String.valueOf(i),
-                                                    new JsonObject(center));
+          jsonObject.getObject("operator").getObject("configuration")
+              .putObject("center" + String.valueOf(i), new JsonObject(center))
+              .putNumber("norm" + String.valueOf(i), norms[i]);
         }
 
         QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
@@ -212,18 +219,58 @@ public class SubmitKMeansTest {
           }
         }
 
-        // TODO(ap0n): read the results and compare the centers here.
+        EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
+        EnsembleCache cache = ensembleCacheManager.getCache(id, new ArrayList<>(
+            ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
 
-        printResults(id, 5);
-        System.out.println("\nDONE IN: " + secs + " sec");
-        break;
+        Map<String, Double>[] newCenters = new Map[k];
+        for (int i = 0; i < k; i++) {
+          Tuple t = (Tuple) cache.get(String.valueOf(i));
+          norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
+          Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("value"));
+          newCenters[i] = new HashMap<>();
+          for (String key : valueTuple.getFieldNames()) {
+            newCenters[i].put(key, valueTuple.getNumberAttribute(key).doubleValue());
+          }
+        }
+
+        if (!centersChanged(newCenters)) {
+          break;
+        }
+        for (int i = 0; i < k; i++) {
+          centers[i] = newCenters[i];
+        }
+        System.out.println("Recalculating");
+
       }
+//        printResults(id, 5);
+      Date end = new Date();
+      System.out.println("\nDONE IN: "
+                         + ((double) (end.getTime() - start.getTime()) / 1000.0) + " sec");
 
-      printResults("metrics");
+//      printResults("metrics");
 
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private static boolean centersChanged(Map<String, Double>[] newCenters) {
+    for (int i = 0; i < k; i++) {
+      Map<String, Double> newCenter = newCenters[i];
+      Map<String, Double> oldCenter = centers[i];
+      if (newCenter.size() != oldCenter.size()) {
+        return true;
+      }
+
+      for (Map.Entry<String, Double> entry : newCenter.entrySet()) {
+        Double oldValue = oldCenter.get(entry.getKey());
+        if (oldValue == null || oldValue.intValue() != entry.getValue().intValue()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private static JsonObject getScheduling(List<String> activeMicroClouds,
@@ -268,46 +315,57 @@ public class SubmitKMeansTest {
   }
 
   private static void printResults(String id) {
-    System.out.println("\n\ndd1a");
-    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
-    RemoteCache results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);
-
-    System.out.println("dresden");
-    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);
+//    System.out.println("\n\ndd1a");
+//    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
+//    RemoteCache results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results);
+//
+//    System.out.println("dresden");
+//    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
+//    results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results);
 
 /*    System.out.println("hamm5");
     remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
     results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results);*/
 
-    System.out.println("hamm6");
-    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
-    results = remoteCacheManager.getCache(id);
+//    System.out.println("hamm6");
+//    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
+//    results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results);
+
+    System.out.println("\n\nlocalcluster");
+    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
+    RemoteCache results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results);
+
   }
 
   private static void printResults(String id, int numOfItems) {
-    System.out.println("\n\ndd1a");
-    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
-    RemoteCache results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results, numOfItems);
-
-    System.out.println("dresden");
-    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results, numOfItems);
+//    System.out.println("\n\ndd1a");
+//    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
+//    RemoteCache results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results, numOfItems);
+//
+//    System.out.println("dresden");
+//    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
+//    results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results, numOfItems);
 
 /*    System.out.println("hamm5");
     remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
     results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results);*/
 
-    System.out.println("hamm6");
-    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
-    results = remoteCacheManager.getCache(id);
+//    System.out.println("hamm6");
+//    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
+//    results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results, numOfItems);
+
+    System.out.println("\n\nlocalcluster");
+    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
+    RemoteCache results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results, numOfItems);
   }
 
@@ -323,11 +381,13 @@ public class SubmitKMeansTest {
     static int centerIndex;
     String id;
     long putCount;
+    int fileIsCenterIndex;
 
     public Putter(int i) {
       id = String.valueOf(i);
       putCount = 0;
       centerIndex = k;
+      fileIsCenterIndex = -1;
     }
 
     @Override
@@ -340,13 +400,12 @@ public class SubmitKMeansTest {
           ensembleCacheManager.getCache(CACHE_NAME,
                                         new ArrayList<>(ensembleCacheManager.sites()),
                                         EnsembleCacheManager.Consistency.DIST);
-
       while (true) {
         synchronized (files) {
           if (files.size() > 0) {
             f = files.get(0);
             files.remove(0);
-            centerIndex--;
+            fileIsCenterIndex = --centerIndex;
           } else {
             break;
           }
@@ -359,7 +418,7 @@ public class SubmitKMeansTest {
               new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           String line;
-          Map<String, Integer> frequencies = new HashMap<>();
+          Map<String, Double> frequencies = new HashMap<>();
 
           while ((line = bufferedReader.readLine()) != null) {
 
@@ -369,9 +428,9 @@ public class SubmitKMeansTest {
               if (word.length() == 0) {
                 continue;
               }
-              Integer wordFrequency = frequencies.get(word);
+              Double wordFrequency = frequencies.get(word);
               if (wordFrequency == null) {
-                frequencies.put(word, 1);
+                frequencies.put(word, 1d);
               } else {
                 frequencies.put(word, wordFrequency + 1);
               }
@@ -379,10 +438,16 @@ public class SubmitKMeansTest {
           }
           Tuple data = new Tuple();
           data.asBsonObject().putAll(frequencies);
-          ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
+          System.out.println("Putting size " + frequencies.size());
+          ensembleCache.put(id + "-" + String.valueOf(putCount++), data);
 
-          if (centerIndex >= 0) {
-            centers[centerIndex] = frequencies;
+          if (fileIsCenterIndex >= 0) {
+            centers[fileIsCenterIndex] = frequencies;
+            Double norm = 0d;
+            for (Double d : frequencies.values()) {
+              norm += d * d;
+            }
+            norms[fileIsCenterIndex] = new Double(norm);
           }
 
           bufferedReader.close();
