@@ -76,7 +76,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   public void setCombiner(LeadsCombiner<KOut, VOut> combiner) {
     this.combiner = combiner;
     maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
-    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent");
+    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent",75);
     percent /= 100;
   }
 
