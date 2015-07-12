@@ -26,10 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Vector;
 
 /**
@@ -51,7 +49,8 @@ public class SubmitKMeansTest {
   private static String ensembleString;
   private static Vector<File> files;
   private static String[] resultWords = {"to", "the", "of", "in", "on"};
-  private static Map<String, Integer>[] centers;
+  private static Map<String, Double>[] centers;
+  private static Double[] norms;
   private static int k;
 
   private static void putData(String dataDirectory) {
@@ -120,6 +119,7 @@ public class SubmitKMeansTest {
     k = LQPConfiguration.getInstance().getConfiguration().getInt("k", 2);
     System.out.println("k " + k);
     centers = new Map[k];
+    norms = new Double[k];
 
     //set the default microclouds
     List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dresden2", "hamm6"));
@@ -194,9 +194,9 @@ public class SubmitKMeansTest {
       while (true) {
         for (int i = 0; i < k; i++) {
           Map center = centers[i];
-          jsonObject.getObject("operator")
-              .getObject("configuration").putObject("center" + String.valueOf(i),
-                                                    new JsonObject(center));
+          jsonObject.getObject("operator").getObject("configuration")
+              .putObject("center" + String.valueOf(i), new JsonObject(center))
+              .putNumber("norm" + String.valueOf(i), norms[i]);
         }
 
         QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
@@ -223,15 +223,14 @@ public class SubmitKMeansTest {
         EnsembleCache cache = ensembleCacheManager.getCache(id, new ArrayList<>(
             ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
 
-        printResults(id);
-
-        Map<String, Integer>[] newCenters = new Map[k];
+        Map<String, Double>[] newCenters = new Map[k];
         for (int i = 0; i < k; i++) {
           Tuple t = (Tuple) cache.get(String.valueOf(i));
+          norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
           Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("value"));
           newCenters[i] = new HashMap<>();
           for (String key : valueTuple.getFieldNames()) {
-            newCenters[i].put(key, valueTuple.getNumberAttribute(key).intValue());
+            newCenters[i].put(key, valueTuple.getNumberAttribute(key).doubleValue());
           }
         }
 
@@ -256,16 +255,16 @@ public class SubmitKMeansTest {
     }
   }
 
-  private static boolean centersChanged(Map<String, Integer>[] newCenters) {
+  private static boolean centersChanged(Map<String, Double>[] newCenters) {
     for (int i = 0; i < k; i++) {
-      Map<String, Integer> newCenter = newCenters[i];
-      Map<String, Integer> oldCenter = centers[i];
+      Map<String, Double> newCenter = newCenters[i];
+      Map<String, Double> oldCenter = centers[i];
       if (newCenter.size() != oldCenter.size()) {
         return true;
       }
 
-      for (Map.Entry<String, Integer> entry : newCenter.entrySet()) {
-        Integer oldValue = oldCenter.get(entry.getKey());
+      for (Map.Entry<String, Double> entry : newCenter.entrySet()) {
+        Double oldValue = oldCenter.get(entry.getKey());
         if (oldValue == null || oldValue.intValue() != entry.getValue().intValue()) {
           return true;
         }
@@ -401,7 +400,6 @@ public class SubmitKMeansTest {
           ensembleCacheManager.getCache(CACHE_NAME,
                                         new ArrayList<>(ensembleCacheManager.sites()),
                                         EnsembleCacheManager.Consistency.DIST);
-
       while (true) {
         synchronized (files) {
           if (files.size() > 0) {
@@ -420,7 +418,7 @@ public class SubmitKMeansTest {
               new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           String line;
-          Map<String, Integer> frequencies = new HashMap<>();
+          Map<String, Double> frequencies = new HashMap<>();
 
           while ((line = bufferedReader.readLine()) != null) {
 
@@ -430,9 +428,9 @@ public class SubmitKMeansTest {
               if (word.length() == 0) {
                 continue;
               }
-              Integer wordFrequency = frequencies.get(word);
+              Double wordFrequency = frequencies.get(word);
               if (wordFrequency == null) {
-                frequencies.put(word, 1);
+                frequencies.put(word, 1d);
               } else {
                 frequencies.put(word, wordFrequency + 1);
               }
@@ -445,6 +443,11 @@ public class SubmitKMeansTest {
 
           if (fileIsCenterIndex >= 0) {
             centers[fileIsCenterIndex] = frequencies;
+            Double norm = 0d;
+            for (Double d : frequencies.values()) {
+              norm += d * d;
+            }
+            norms[fileIsCenterIndex] = new Double(norm);
           }
 
           bufferedReader.close();

@@ -28,8 +28,9 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     System.out.println("REDUCER");
     int documentsCount = 0;
-    Map<String, Integer> dimensions = new HashMap<>();
+    Map<String, Double> dimensions = new HashMap<>();
     int valuesReduced = 0;
+
     while (iter.hasNext()) {
       Tuple t = iter.next();
 
@@ -38,8 +39,8 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
 
       documentsCount += count;
       for (String s : valueTuple.getFieldNames()) {
-        int wordFrequency = valueTuple.getNumberAttribute(s).intValue();
-        Integer currentFrequency = dimensions.get(s);
+        Double wordFrequency = valueTuple.getNumberAttribute(s).doubleValue();
+        Double currentFrequency = dimensions.get(s);
         if (currentFrequency == null) {
           dimensions.put(s, wordFrequency);
         } else {
@@ -48,16 +49,20 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
       }
       valuesReduced++;
     }
+    double norm = 0d;
+    for (Map.Entry<String, Double> entry : dimensions.entrySet()) {
 
-    for (Map.Entry<String, Integer> entry : dimensions.entrySet()) {
-      entry.setValue(entry.getValue() / documentsCount);
+      entry.setValue(entry.getValue() / (double) documentsCount);
+      norm += entry.getValue() * entry.getValue();
     }
+
     Tuple dimensionsTuple = new Tuple();
     dimensionsTuple.asBsonObject().putAll(dimensions);
 
     Tuple r = new Tuple();
     r.asBsonObject().put("value", dimensionsTuple.asBsonObject());
     r.setAttribute("count", valuesReduced);
+    r.setAttribute("norm" + reducedKey, norm);
     collector.emit(reducedKey, r);
   }
 
