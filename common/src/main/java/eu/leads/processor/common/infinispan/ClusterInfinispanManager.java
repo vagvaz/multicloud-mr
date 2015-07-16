@@ -330,7 +330,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
                         //                                 .expiredLocation("/tmp/leveldb/expired-foo" + "/")
                     .implementationType(LevelDBStoreConfiguration.ImplementationType.JAVA)
                     .fetchPersistentState(true)
-                    .shared(false).purgeOnStartup(true).preload(false).compatibility().enable()
+                    .shared(false).purgeOnStartup(false).preload(false).compatibility().enable()
                     .expiration().lifespan(-1).maxIdle(-1).wakeUpInterval(-1).reaperEnabled(
                     false).eviction().maxEntries(5000).strategy(EvictionStrategy.LIRS)
                     .build();
@@ -634,13 +634,20 @@ public class ClusterInfinispanManager implements InfinispanManager {
             .clustering()
             .cacheMode(CacheMode.LOCAL)
             .hash().numOwners(1)
-            .persistence()
-            .addSingleFileStore().location("/tmp/leadsprocessor-data/" + uniquePath + "/")
-            .fetchPersistentState(true).purgeOnStartup(false).shared(false).preload(false)
-            .compatibility().enable()//.marshaller(new TupleMarshaller())
-            .expiration().lifespan(-1).maxIdle(-1).wakeUpInterval(-1).reaperEnabled(false)
+            .transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL)
+            .persistence().passivation(true)
+            .addStore(LevelDBStoreConfigurationBuilder.class)
+            .location("/tmp/leadsprocessor-data/leveldb/" + uniquePath + "-data/")
+                //                                 .location("/tmp/leveldb/data-foo/" + "/")
+            .expiredLocation("/tmp/leadsprocessor-data/" + uniquePath + "-expired/")
+                //                                 .expiredLocation("/tmp/leveldb/expired-foo" + "/")
+            .implementationType(LevelDBStoreConfiguration.ImplementationType.JAVA)
+            .fetchPersistentState(true)
+            .shared(false).purgeOnStartup(false).preload(false).compatibility().enable()
+            .expiration().lifespan(-1).maxIdle(-1).wakeUpInterval(-1).reaperEnabled(
+                false).eviction().maxEntries(5000).strategy(EvictionStrategy.LIRS)
             .build();
-        manager.defineConfiguration(cacheName, configuration);
+                manager.defineConfiguration(cacheName, configuration);
         Cache startedCache = manager.getCache(cacheName);
         return startedCache;
     }

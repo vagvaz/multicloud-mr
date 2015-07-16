@@ -31,13 +31,12 @@
                            statistics="true">
             <compatibility></compatibility>
             <persistence>
-                <file-store fetch-state="true"
-                            shared="false"
+                <file-store fetch-state="false"
+                            shared="true"
                             read-only="false"
-                            purge="false" path="/tmp/leadsprocessor-data/default/" passivation="true" />
+                            purge="true" path="/tmp/leadsprocessor-data/default/" />
             </persistence>
-            <expiration max-idle="-1" interval="60000" lifespan="-1"/>
-            <transaction mode="NONE" reaper-interval="-1"/>
+            <transaction mode="NONE"/>
             <expiration lifespan="-1" max-idle="-1" interval="-1"/>
             <state-transfer enabled="true" await-initial-transfer="true"/>
         </distributed-cache>
@@ -61,6 +60,26 @@
                             read-only="false"
                             purge="false" path="/tmp/"/>
             </persistence>
+        </distributed-cache>
+        <distributed-cache name="Link" mode="SYNC" segments="20" owners="1" remote-timeout="10000"
+                           start="EAGER">
+            <locking acquire-timeout="1000" concurrency-level="1000000" striping="false"/>
+            <indexing index="LOCAL">
+                <property name="hibernate.search.default.directory_provider">ram</property>
+                <!--<property name="hibernate.search.default.directory_provider">filesystem</property>-->
+                <!--<property name="hibernate.search.default.indexBase">/tmp/infinispan/webpage</property>-->
+                <!--<property name="hibernate.search.lucene_version">LUCENE_CURRENT</property>-->
+                <!--<property name="hibernate.search.default.exclusive_index_use">true</property>-->
+                <!--<property name="hibernate.search.default.indexmanager">near-real-time</property>-->
+                <!--<property name="hibernate.search.default.indexwriter.ram_buffer_size">256</property>-->
+            </indexing>
+            <transaction mode="NONE"/>
+            <!--<eviction strategy="LRU" max-entries="10000"/>-->
+            <!--<persistence>-->
+            <!--<file-store fetch-state="true"-->
+            <!--read-only="false"-->
+            <!--purge="false" path="/tmp/"/>-->
+            <!--</persistence>-->
         </distributed-cache>
     </cache-container>
 

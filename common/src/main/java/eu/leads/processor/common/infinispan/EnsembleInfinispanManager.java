@@ -105,4 +105,12 @@ public class EnsembleInfinispanManager implements InfinispanManager {
   public boolean isStarted() {
     return true;
   }
+
+  @Override public String getUniquePath() {
+    return null;
+  }
+
+  @Override public Cache getLocalCache(String cacheName) {
+    return null;
+  }
 }

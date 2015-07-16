@@ -9,11 +9,11 @@ import java.util.NoSuchElementException;
  */
 public class LocalIndexKeyIterator implements Iterator<Object> {
     String key;
-    Long numberOfValues;
-    Long currentCounter;
+    Integer numberOfValues;
+    Integer currentCounter;
     Map<String,Object> dataCache;
-    public LocalIndexKeyIterator(String key, Long counter,Map<String,Object> dataCache) {
-        this.currentCounter = 0L;
+    public LocalIndexKeyIterator(String key, Integer counter,Map<String,Object> dataCache) {
+        this.currentCounter = 0;
         this.numberOfValues = counter;
         this.key = key;
         this.dataCache  = dataCache;
@@ -30,16 +30,19 @@ public class LocalIndexKeyIterator implements Iterator<Object> {
     @Override public Object next() {
         if(currentCounter <= numberOfValues){
             Object result = dataCache.get(key+currentCounter);
-            if(result != null){
-                currentCounter++;
-                return result;
-            }
-            throw new NoSuchElementException("LocalIndexIterator GOT NULL VALUE for  key " + key + " currentCounter " + currentCounter + " maximum " + numberOfValues);
+            //            if(result != null){
+            currentCounter++;
+            return result;
+            //            }
+            //            throw new NoSuchElementException("LocalIndexIterator GOT NULL VALUE for  key " + key + " currentCounter " + currentCounter + " maximum " + numberOfValues);
         }
         throw new NoSuchElementException("LocalIndexIterator key " + key + " currentCounter " + currentCounter + " maximum " + numberOfValues);
     }
 
     @Override public void remove() {
-        dataCache.remove(key+currentCounter);
+        System.err.println("SHOULD NOT BE USED");
+//        if(currentCounter > 0) {
+//            dataCache.remove(key + (currentCounter - 1));
+//        }
     }
 }

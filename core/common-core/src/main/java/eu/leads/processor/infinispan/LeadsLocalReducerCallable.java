@@ -42,8 +42,8 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
   public void executeOn(kOut key, Object value) {
 //    LeadsIntermediateIterator<vOut> values = new LeadsIntermediateIterator<>((String) key, prefix,
 //                                                                             imanager);
-    Iterator<vOut> values = ((List)value).iterator();
-
+//    Iterator<vOut> values = ((List)value).iterator();
+    Iterator<vOut> values = (Iterator<vOut>) value;
     reducer.reduce(key, values, collector);
   }
 
@@ -65,9 +65,22 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
     //        continue;
     Cache dataCache = inputCache.getCacheManager().getCache(prefix+".data");
     //Build data cache
-    Map<String,List<vOut>> map = createInMemoryDataStruct(dataCache);
-    for(Map.Entry<String,List<vOut>> entry : map.entrySet()) {
-      executeOn((kOut) entry.getKey(),entry.getValue());
+    IntermediateKeyIndex index = null;
+    for(Object listener : dataCache.getListeners()){
+      if(listener instanceof LocalIndexListener){
+        LocalIndexListener localIndexListener = (LocalIndexListener) listener;
+        index = localIndexListener.getIndex();
+        break;
+      }
+    }
+    if(index == null){
+      System.err.println("Index was not installed serious error exit...");
+      System.exit(-1);
+    }
+    for(Map.Entry<String,Integer> entry : index.getKeysIterator()){
+      LocalIndexKeyIterator iterator =
+          (LocalIndexKeyIterator) index.getKeyIterator(entry.getKey(),entry.getValue());
+      executeOn((kOut)entry.getKey(),iterator);
     }
     //            CloseableIterable iterable = inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).filterEntries(new LocalDataFilter<K,V>(cdl));
     //            profExecute.end();

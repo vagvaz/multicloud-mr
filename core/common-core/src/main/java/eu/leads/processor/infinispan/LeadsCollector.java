@@ -234,7 +234,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
                                                       new ArrayList<>(emanager.sites()),
                                                       EnsembleCacheManager.Consistency.DIST);
 
-      counterCache = manager.getCache(storeCache.getName()
+      counterCache = imanager.getLocalCache(storeCache.getName()
                                       + "." + inputCacheName
                                       + "." + manager.getAddress().toString()
                                       + ".counters");
