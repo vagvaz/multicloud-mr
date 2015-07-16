@@ -524,6 +524,22 @@ public abstract class BasicOperator extends Thread implements Operator {
 
   }
 
+  public void createCache(String microCloud, String cacheName, String listenerName) {
+
+    String uri = getURIForMC(microCloud);
+    try {
+      WebServiceClient.initialize(uri);
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
+    }
+    try {
+      WebServiceClient.putObject(cacheName, "", new JsonObject().putString("listener",listenerName));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+  }
+
   @Override
   public void signal() {
     synchronized (mmcMutex) {

@@ -6,6 +6,7 @@ import eu.leads.processor.common.infinispan.EnsembleCacheUtils;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 
 import eu.leads.processor.conf.LQPConfiguration;
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.distexec.mapreduce.Collector;
@@ -232,10 +233,12 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       indexSiteCache = (BasicCache) emanager.getCache(storeCache.getName() + ".indexed",
                                                       new ArrayList<>(emanager.sites()),
                                                       EnsembleCacheManager.Consistency.DIST);
+
       counterCache = manager.getCache(storeCache.getName()
                                       + "." + inputCacheName
                                       + "." + manager.getAddress().toString()
                                       + ".counters");
+      System.out.println("\n\n\n\n counterCache: " + counterCache.getAdvancedCache().getRpcManager().getMembers().size() + "\n\n\n");
       baseIndexedKey = new IndexedComplexIntermediateKey(site, manager.getAddress().toString(),
                                                          inputCacheName);
       baseIntermKey = new ComplexIntermediateKey(site, manager.getAddress().toString(),

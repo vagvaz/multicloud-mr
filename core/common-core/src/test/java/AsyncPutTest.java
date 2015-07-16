@@ -67,7 +67,6 @@ public class AsyncPutTest {
             keys[index] = "key"+index;
             keysCache.put(keys[index],keys[index]);
         }
-
         //generate nodes and micro clouds
         nodes = new String[numOfNodes];
         microClouds = new String[numOfMicroClouds];
