@@ -27,14 +27,22 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     int[] singleRow = new int[w];
     while (iter.hasNext()) {
-      String coord = iter.next().getAttribute("coord");
-      int sum = iter.next().getNumberAttribute("sum").intValue();
+      Tuple t = iter.next();
+      String coord = t.getAttribute("coord");
+      int sum = t.getNumberAttribute("sum").intValue();
       int column = Integer.valueOf(coord.split(",")[1]);
       singleRow[column]+= sum;
     }
 
     Tuple output = new Tuple();
-    output.setAttribute("singleRow", singleRow);
+    String singleRowStr = "";
+    for (int i = 0; i < singleRow.length; i++) {
+      singleRowStr += String.valueOf(singleRow[i]);
+      if (i < singleRow.length - 1) {
+        singleRowStr += ",";
+      }
+    }
+    output.setAttribute("singleRow", singleRowStr);
     collector.emit(reducedKey, output);
   }
 
