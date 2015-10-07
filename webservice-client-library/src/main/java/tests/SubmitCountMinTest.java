@@ -35,6 +35,7 @@ public class SubmitCountMinTest {
 
   private static final String DRESDEN2_IP = "80.156.73.116";
   private static final String DD1A_IP = "80.156.222.4";
+  private static final String DD2A_IP = "87.190.238.119";
   private static final String HAMM5_IP = "5.147.254.161";
   private static final String HAMM6_IP = "5.147.254.199";
   private static final String CACHE_NAME = "clustered";
@@ -121,7 +122,7 @@ public class SubmitCountMinTest {
     System.out.println("epsilon " + epsilon);
 
     //set the default microclouds
-    List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dresden2", "hamm6"));
+    List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dd2a", "dresden2"));
 
     //read the microcloud to run the job
     activeMicroClouds =
@@ -131,6 +132,7 @@ public class SubmitCountMinTest {
     //initialize default values
     microcloudAddresses = new HashMap<>();
     microcloudAddresses.put("dd1a", DD1A_IP);
+    microcloudAddresses.put("dd2a", DD2A_IP);
     microcloudAddresses.put("dresden2", DRESDEN2_IP);
     microcloudAddresses.put("hamm6", HAMM6_IP);
     microcloudAddresses.put("hamm5", HAMM5_IP);

@@ -32,14 +32,12 @@ public class CountMinMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     for (String attribute : value.getFieldNames()) {
       for (String word : value.getAttribute(attribute).split(" ")) {
         if (word != null && word.length() > 0) {
-//          System.out.println("word: " + word + "\nhashed at:");
+          int[] yDim = hashRandom(word.hashCode());
           for (int i = 0; i < d; i++) {
             // emit <(<row>,<col>), count>
             Tuple output = new Tuple();
             output.setAttribute("count", 1);
-//            System.out.println(i + "," + hashRandom(word.hashCode())[i]);
-            collector.emit(String.valueOf(i) + "," + String.valueOf(hashRandom(word.hashCode())[i]),
-                           output);
+            collector.emit(String.valueOf(i) + "," + String.valueOf(yDim[i]), output);
           }
         }
       }

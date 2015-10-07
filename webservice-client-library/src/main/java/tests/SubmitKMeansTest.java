@@ -37,6 +37,7 @@ public class SubmitKMeansTest {
 
   private static final String DRESDEN2_IP = "80.156.73.116";
   private static final String DD1A_IP = "80.156.222.4";
+  private static final String DD2A_IP = "87.190.238.119";
   private static final String HAMM5_IP = "5.147.254.161";
   private static final String HAMM6_IP = "5.147.254.199";
   private static final String CACHE_NAME = "clustered";
@@ -122,7 +123,7 @@ public class SubmitKMeansTest {
     norms = new Double[k];
 
     //set the default microclouds
-    List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dresden2", "hamm6"));
+    List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dd2a", "dresden2"));
     //read the microcloud to run the job
     activeMicroClouds =
         LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
@@ -131,6 +132,7 @@ public class SubmitKMeansTest {
     //initialize default values
     microcloudAddresses = new HashMap<>();
     microcloudAddresses.put("dd1a", DD1A_IP);
+    microcloudAddresses.put("dd2a", DD2A_IP);
     microcloudAddresses.put("dresden2", DRESDEN2_IP);
     microcloudAddresses.put("hamm6", HAMM6_IP);
     microcloudAddresses.put("hamm5", HAMM5_IP);
@@ -235,14 +237,19 @@ public class SubmitKMeansTest {
         }
 
         if (!centersChanged(newCenters)) {
+          System.out.println();
           break;
         }
         for (int i = 0; i < k; i++) {
           centers[i] = newCenters[i];
         }
         System.out.println("Recalculating");
-
       }
+
+      for (int i = 0; i < centers.length; i++) {
+        System.out.println("center" + i + ": " + centers[i].get("~"));
+      }
+
 //        printResults(id, 5);
       Date end = new Date();
       System.out.println("\nDONE IN: "
@@ -379,12 +386,12 @@ public class SubmitKMeansTest {
   private static class Putter implements Runnable {
 
     static int centerIndex;
-    String id;
+    int id;
     long putCount;
     int fileIsCenterIndex;
 
     public Putter(int i) {
-      id = String.valueOf(i);
+      id = i;
       putCount = 0;
       centerIndex = k;
       fileIsCenterIndex = -1;
@@ -436,16 +443,21 @@ public class SubmitKMeansTest {
               }
             }
           }
+          frequencies.put("~", Double.valueOf(String.valueOf(id) + String.valueOf(putCount)));
           Tuple data = new Tuple();
           data.asBsonObject().putAll(frequencies);
-          System.out.println("Putting size " + frequencies.size());
-          ensembleCache.put(id + "-" + String.valueOf(putCount++), data);
+//          System.out.println("Putting size " + frequencies.size());
+          System.out.println("Putting id " + frequencies.get("~"));
+          ensembleCache.put(String.valueOf(id) + "-" + String.valueOf(putCount++), data);
 
           if (fileIsCenterIndex >= 0) {
             centers[fileIsCenterIndex] = frequencies;
             Double norm = 0d;
-            for (Double d : frequencies.values()) {
-              norm += d * d;
+            for (Map.Entry<String, Double> e : frequencies.entrySet()) {
+              if (e.getKey().equals("~")) {
+                continue;
+              }
+              norm += e.getValue() * e.getValue();
             }
             norms[fileIsCenterIndex] = new Double(norm);
           }

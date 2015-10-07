@@ -39,6 +39,10 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
 
       documentsCount += count;
       for (String s : valueTuple.getFieldNames()) {
+        if (s.equals("~")) {  // Skip the document id
+          dimensions.put(s, valueTuple.getNumberAttribute(s).doubleValue());
+          continue;
+        }
         Double wordFrequency = valueTuple.getNumberAttribute(s).doubleValue();
         Double currentFrequency = dimensions.get(s);
         if (currentFrequency == null) {
@@ -49,12 +53,16 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
       }
       valuesReduced++;
     }
+    // --------------------------------
     double norm = 0d;
     for (Map.Entry<String, Double> entry : dimensions.entrySet()) {
-
+      if (entry.getKey().equals("~")) {
+        continue;
+      }
       entry.setValue(entry.getValue() / (double) documentsCount);
       norm += entry.getValue() * entry.getValue();
     }
+    // --------------------------------
 
     Tuple dimensionsTuple = new Tuple();
     dimensionsTuple.asBsonObject().putAll(dimensions);
