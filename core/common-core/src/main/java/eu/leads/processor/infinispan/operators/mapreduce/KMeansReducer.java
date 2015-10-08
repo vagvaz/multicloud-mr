@@ -31,16 +31,18 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
     Map<String, Double> dimensions = new HashMap<>();
     int valuesReduced = 0;
 
+    String clusterDocuments = "";  // Space-separated document ids
+
     while (iter.hasNext()) {
       Tuple t = iter.next();
 
-      Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("value"));
+      Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("document"));
       int count = t.getNumberAttribute("count").intValue();
 
       documentsCount += count;
       for (String s : valueTuple.getFieldNames()) {
         if (s.equals("~")) {  // Skip the document id
-          dimensions.put(s, valueTuple.getNumberAttribute(s).doubleValue());
+          clusterDocuments += String.valueOf(valueTuple.getNumberAttribute(s).doubleValue()) + " ";
           continue;
         }
         Double wordFrequency = valueTuple.getNumberAttribute(s).doubleValue();
@@ -51,14 +53,14 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
           dimensions.put(s, currentFrequency + wordFrequency);
         }
       }
+      if (clusterDocuments.length() == 0) {  // because of the combiner
+        clusterDocuments = t.getAttribute("cluster" + reducedKey);
+      }
       valuesReduced++;
     }
     // --------------------------------
     double norm = 0d;
     for (Map.Entry<String, Double> entry : dimensions.entrySet()) {
-      if (entry.getKey().equals("~")) {
-        continue;
-      }
       entry.setValue(entry.getValue() / (double) documentsCount);
       norm += entry.getValue() * entry.getValue();
     }
@@ -68,8 +70,9 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
     dimensionsTuple.asBsonObject().putAll(dimensions);
 
     Tuple r = new Tuple();
-    r.asBsonObject().put("value", dimensionsTuple.asBsonObject());
+    r.asBsonObject().put("document", dimensionsTuple.asBsonObject());
     r.setAttribute("count", valuesReduced);
+    r.setAttribute("cluster" + reducedKey, clusterDocuments);
     r.setAttribute("norm" + reducedKey, norm);
     collector.emit(reducedKey, r);
   }

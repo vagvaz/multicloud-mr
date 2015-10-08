@@ -30,20 +30,20 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
   }
 
   @Override
-  public void map(String key, Tuple value, Collector<String, Tuple> collector) {
+  public void map(String key, Tuple document, Collector<String, Tuple> collector) {
     System.out.println("MAPPER");
     double maxSimilarity = 0;
     int index = random.nextInt(k);
 
     for (int i = 0; i < k; i++) {
-      double d = calculateCosSimilarity(i, value);
+      double d = calculateCosSimilarity(i, document);
       if (d > maxSimilarity) {
         maxSimilarity = d;
         index = i;
       }
     }
     Tuple res = new Tuple();
-    res.asBsonObject().put("value", value.asBsonObject());  // TODO can we avoid (de)serializations?
+    res.asBsonObject().put("document", document.asBsonObject());  // TODO can we avoid (de)serializations?
     res.setAttribute("count", 1d);
     collector.emit(String.valueOf(index), res);
   }

@@ -192,7 +192,7 @@ public class SubmitKMeansTest {
       }
 
       Date start = new Date();
-
+      String[] clusters = new String[k];
       while (true) {
         for (int i = 0; i < k; i++) {
           Map center = centers[i];
@@ -229,7 +229,8 @@ public class SubmitKMeansTest {
         for (int i = 0; i < k; i++) {
           Tuple t = (Tuple) cache.get(String.valueOf(i));
           norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
-          Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("value"));
+          clusters[i] = t.getAttribute("cluster" + i);
+          Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("document"));
           newCenters[i] = new HashMap<>();
           for (String key : valueTuple.getFieldNames()) {
             newCenters[i].put(key, valueTuple.getNumberAttribute(key).doubleValue());
@@ -243,11 +244,11 @@ public class SubmitKMeansTest {
         for (int i = 0; i < k; i++) {
           centers[i] = newCenters[i];
         }
-        System.out.println("Recalculating");
+        System.out.println("\nRecalculating");
       }
 
       for (int i = 0; i < centers.length; i++) {
-        System.out.println("center" + i + ": " + centers[i].get("~"));
+        System.out.println("cluster" + i + ": " + clusters[i]);
       }
 
 //        printResults(id, 5);
@@ -443,7 +444,7 @@ public class SubmitKMeansTest {
               }
             }
           }
-          frequencies.put("~", Double.valueOf(String.valueOf(id) + String.valueOf(putCount)));
+          frequencies.put("~", Double.valueOf(f.getName().hashCode()));
           Tuple data = new Tuple();
           data.asBsonObject().putAll(frequencies);
 //          System.out.println("Putting size " + frequencies.size());
