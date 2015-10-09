@@ -11,6 +11,7 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.ensemble.EnsembleCacheManager;
+import org.infinispan.ensemble.Site;
 import org.infinispan.ensemble.cache.EnsembleCache;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -50,7 +51,7 @@ public class SubmitKMeansTest {
   private static String ensembleString;
   private static Vector<File> files;
   private static String[] resultWords = {"to", "the", "of", "in", "on"};
-  private static Map<String, Double>[] centers;
+  private static Map<String, Double>[] centroids;
   private static Double[] norms;
   private static int k;
 
@@ -83,6 +84,18 @@ public class SubmitKMeansTest {
         e.printStackTrace();
       }
     }
+  }
+
+  private static Object getKeyFrom(EnsembleCache ensembleCache, Object key) {
+    Object result = null;
+    for(Object s : ensembleCache.sites()){
+      EnsembleCache siteCache  = ((Site)s).getCache(ensembleCache.getName());
+      result = siteCache.get(key);
+      if(result != null) {
+        return result;
+      }
+    }
+    return result;
   }
 
   public static void main(String[] args) {
@@ -119,7 +132,7 @@ public class SubmitKMeansTest {
 
     k = LQPConfiguration.getInstance().getConfiguration().getInt("k", 2);
     System.out.println("k " + k);
-    centers = new Map[k];
+    centroids = new Map[k];
     norms = new Double[k];
 
     //set the default microclouds
@@ -185,6 +198,7 @@ public class SubmitKMeansTest {
       for (String mc : activeMicroClouds) {
         ensembleString += activeIps.get(mc) + ":11222|";
       }
+//      ensembleString += "80.156.222.26" + ":11222|" + "87.190.238.120" + ":11222|";
       ensembleString = ensembleString.substring(0, ensembleString.length() - 1);
 
       if (loadData) {
@@ -195,9 +209,9 @@ public class SubmitKMeansTest {
       String[] clusters = new String[k];
       while (true) {
         for (int i = 0; i < k; i++) {
-          Map center = centers[i];
+          Map centroid = centroids[i];
           jsonObject.getObject("operator").getObject("configuration")
-              .putObject("center" + String.valueOf(i), new JsonObject(center))
+              .putObject("centroid" + String.valueOf(i), new JsonObject(centroid))
               .putNumber("norm" + String.valueOf(i), norms[i]);
         }
 
@@ -227,10 +241,11 @@ public class SubmitKMeansTest {
 
         Map<String, Double>[] newCenters = new Map[k];
         for (int i = 0; i < k; i++) {
-          Tuple t = (Tuple) cache.get(String.valueOf(i));
+//          Tuple t = (Tuple) cache.get(String.valueOf(i));
+          Tuple t = (Tuple) getKeyFrom(cache, String.valueOf(i));
           norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
           clusters[i] = t.getAttribute("cluster" + i);
-          Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("document"));
+          Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("newCentroid"));
           newCenters[i] = new HashMap<>();
           for (String key : valueTuple.getFieldNames()) {
             newCenters[i].put(key, valueTuple.getNumberAttribute(key).doubleValue());
@@ -242,12 +257,12 @@ public class SubmitKMeansTest {
           break;
         }
         for (int i = 0; i < k; i++) {
-          centers[i] = newCenters[i];
+          centroids[i] = newCenters[i];
         }
         System.out.println("\nRecalculating");
       }
 
-      for (int i = 0; i < centers.length; i++) {
+      for (int i = 0; i < centroids.length; i++) {
         System.out.println("cluster" + i + ": " + clusters[i]);
       }
 
@@ -266,7 +281,7 @@ public class SubmitKMeansTest {
   private static boolean centersChanged(Map<String, Double>[] newCenters) {
     for (int i = 0; i < k; i++) {
       Map<String, Double> newCenter = newCenters[i];
-      Map<String, Double> oldCenter = centers[i];
+      Map<String, Double> oldCenter = centroids[i];
       if (newCenter.size() != oldCenter.size()) {
         return true;
       }
@@ -323,10 +338,15 @@ public class SubmitKMeansTest {
   }
 
   private static void printResults(String id) {
-//    System.out.println("\n\ndd1a");
-//    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
-//    RemoteCache results = remoteCacheManager.getCache(id);
-//    PrintUtilities.printMap(results);
+    System.out.println("\n\ndd1a");
+    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
+    RemoteCache results = remoteCacheManager.getCache(id);
+    PrintUtilities.printMap(results);
+
+    System.out.println("\n\ndd2a");
+    remoteCacheManager = createRemoteCacheManager(DD2A_IP);
+    results = remoteCacheManager.getCache(id);
+    PrintUtilities.printMap(results);
 //
 //    System.out.println("dresden");
 //    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
@@ -343,18 +363,23 @@ public class SubmitKMeansTest {
 //    results = remoteCacheManager.getCache(id);
 //    PrintUtilities.printMap(results);
 
-    System.out.println("\n\nlocalcluster");
-    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
-    RemoteCache results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);
+//    System.out.println("\n\nlocalcluster");
+//    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
+//    RemoteCache results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results);
 
   }
 
   private static void printResults(String id, int numOfItems) {
-//    System.out.println("\n\ndd1a");
-//    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
-//    RemoteCache results = remoteCacheManager.getCache(id);
-//    PrintUtilities.printMap(results, numOfItems);
+    System.out.println("\n\ndd1a");
+    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
+    RemoteCache results = remoteCacheManager.getCache(id);
+    PrintUtilities.printMap(results, numOfItems);
+
+    System.out.println("\n\ndd2a");
+    remoteCacheManager = createRemoteCacheManager(DD2A_IP);
+    results = remoteCacheManager.getCache(id);
+    PrintUtilities.printMap(results, numOfItems);
 //
 //    System.out.println("dresden");
 //    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
@@ -371,10 +396,10 @@ public class SubmitKMeansTest {
 //    results = remoteCacheManager.getCache(id);
 //    PrintUtilities.printMap(results, numOfItems);
 
-    System.out.println("\n\nlocalcluster");
-    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
-    RemoteCache results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results, numOfItems);
+//    System.out.println("\n\nlocalcluster");
+//    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
+//    RemoteCache results = remoteCacheManager.getCache(id);
+//    PrintUtilities.printMap(results, numOfItems);
   }
 
   private static void PrintUsage() {
@@ -411,8 +436,7 @@ public class SubmitKMeansTest {
       while (true) {
         synchronized (files) {
           if (files.size() > 0) {
-            f = files.get(0);
-            files.remove(0);
+            f = files.remove(0);
             fileIsCenterIndex = --centerIndex;
           } else {
             break;
@@ -448,11 +472,11 @@ public class SubmitKMeansTest {
           Tuple data = new Tuple();
           data.asBsonObject().putAll(frequencies);
 //          System.out.println("Putting size " + frequencies.size());
-          System.out.println("Putting id " + frequencies.get("~"));
+//          System.out.println("Putting id " + frequencies.get("~"));
           ensembleCache.put(String.valueOf(id) + "-" + String.valueOf(putCount++), data);
 
           if (fileIsCenterIndex >= 0) {
-            centers[fileIsCenterIndex] = frequencies;
+            centroids[fileIsCenterIndex] = frequencies;
             Double norm = 0d;
             for (Map.Entry<String, Double> e : frequencies.entrySet()) {
               if (e.getKey().equals("~")) {

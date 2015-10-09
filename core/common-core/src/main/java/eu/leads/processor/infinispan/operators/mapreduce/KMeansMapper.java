@@ -16,7 +16,7 @@ import java.util.Random;
 public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
   int k;
-  Map<String, Double>[] centers;
+  Map<String, Double>[] centroids;
   Double[] norms;
   Random random;
 
@@ -43,8 +43,8 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
       }
     }
     Tuple res = new Tuple();
-    res.asBsonObject().put("document", document.asBsonObject());  // TODO can we avoid (de)serializations?
-    res.setAttribute("count", 1d);
+    res.asBsonObject().put("dimensions", document.asBsonObject());  // TODO can we avoid (de)serializations?
+    res.setAttribute("documentsCount", 1);
     collector.emit(String.valueOf(index), res);
   }
 
@@ -53,18 +53,18 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     super.initialize();
     k = conf.getInteger("k");
 
-    // Get centers from configuration
-    centers = new Map[k];
+    // Get centroids from configuration
+    centroids = new Map[k];
     norms = new Double[k];
 
     for (int i = 0; i < k; i++) {
       norms[i] = conf.getNumber("norm" + String.valueOf(i)).doubleValue();
       Map<String, Double> map = new HashMap<>();
-      JsonObject doc = conf.getField("center" + String.valueOf(i));
+      JsonObject doc = conf.getField("centroid" + String.valueOf(i));
       for (String word : doc.getFieldNames()) {
         map.put(word, doc.getNumber(word).doubleValue());
       }
-      centers[i] = map;
+      centroids[i] = map;
     }
     random = new Random();
   }
@@ -85,7 +85,7 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
         continue;
       }
 
-      Double centroidValue = centers[i].get(s);
+      Double centroidValue = centroids[i].get(s);
       if (centroidValue != null) {
         numerator += value.getNumberAttribute(s).doubleValue() * centroidValue;
       }

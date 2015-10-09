@@ -6,6 +6,7 @@ import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.infinispan.LeadsCombiner;
 import eu.leads.processor.infinispan.LeadsReducer;
+import eu.leads.processor.infinispan.operators.mapreduce.KMeansCombiner;
 import eu.leads.processor.infinispan.operators.mapreduce.KMeansMapper;
 import eu.leads.processor.infinispan.operators.mapreduce.KMeansReducer;
 
@@ -30,14 +31,14 @@ public class KMeansOperator extends MapReduceOperator {
     super.init(conf);
     setMapper(new KMeansMapper(conf.toString()));
 //    kMeansReducer = new KMeansReducer(conf.toString());
-    setLocalReducer(new KMeansReducer(conf.toString()));
+    setLocalReducer(new KMeansCombiner(conf.toString()));
     setFederationReducer(new KMeansReducer(conf.toString()));
     init_statistics(this.getClass().getCanonicalName());
   }
 
   @Override
   public void setupMapCallable() {
-    LeadsCombiner kMeansCombiner = new KMeansReducer(conf.toString());
+    LeadsCombiner kMeansCombiner = new KMeansCombiner(conf.toString());
     setCombiner(kMeansCombiner);
     setMapper(new KMeansMapper(conf.toString()));
     super.setupMapCallable();
@@ -45,7 +46,7 @@ public class KMeansOperator extends MapReduceOperator {
 
   @Override
   public void setupReduceLocalCallable() {
-    setLocalReducer(new KMeansReducer(conf.toString()));
+    setLocalReducer(new KMeansCombiner(conf.toString()));
     super.setupReduceLocalCallable();
   }
 
