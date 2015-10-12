@@ -132,7 +132,7 @@ public class BatchPutListener implements LeadsListener {
         while(!isok){
 
             try {
-                ensembleCacheUtilsSingle.waitForAllPuts();;
+                ensembleCacheUtilsSingle.waitForAuxPuts();
             } catch (Exception e) {
                 PrintUtilities.logStackTrace(log,e.getStackTrace());
             }
