@@ -129,7 +129,7 @@ public abstract class MapReduceOperator extends BasicOperator {
         createCache(mc, getOutput(), "batchputListener");
         //      createCache(mc, intermediateCacheName);
         //create Intermediate cache name for data on the same Sites as outputCache
-        if (!conf.containsField("skipMap")) {
+//        if (!conf.containsField("skipMap")) {
           //          if(!conf.getBoolean("skipMap")){
           if (!isRecCompReduce) {
             createCache(mc, intermediateCacheName + ".data", "localIndexListener:batchputListener");
@@ -146,10 +146,6 @@ public abstract class MapReduceOperator extends BasicOperator {
           } else {
             System.out.println("NO REDUCE LOCAL");
           }
-        } else {
-          if (!conf.getBoolean("skipMap")) {
-            createCache(mc, intermediateCacheName + ".data", "localIndexListener:batchputListener");
-          }
         }
         //create Intermediate  keys cache name for data on the same Sites as outputCache;
         //      createCache(mc,intermediateCacheName+".keys");
@@ -157,7 +153,7 @@ public abstract class MapReduceOperator extends BasicOperator {
         //      createCache(mc,intermediateCacheName+".indexed");
         //    indexSiteCache = (BasicCache)manager.getIndexedPersistentCache(intermediateCacheName+".indexed");
 
-      }
+
     }
   }
 
@@ -167,24 +163,26 @@ public abstract class MapReduceOperator extends BasicOperator {
 
     if (reduceLocal) {
       collector = new LeadsCollector(1000, intermediateLocalCacheName);
-      if (isRecCompReduceLocal) {
-        JsonObject reduceLocalConf = getContinuousReduceLocal();
-        String ensembleString = computeEnsembleHost(false);
-        String inputListener = intermediateLocalCacheName + ".data";
-        String outputListener = intermediateCacheName;
-        String window = "sizeBased";
-        int windowSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.continuous.windowSize", 1000);
-        int parallelism = LQPConfiguration.getInstance().getConfiguration().getInt("node.engine.parallelism", 4);
-        reduceLocalConf.putString("cache", inputListener);
-        reduceLocalConf.getObject("conf").putString("window", window);
-        reduceLocalConf.getObject("conf").putNumber("windowSize", windowSize);
-        reduceLocalConf.getObject("conf").putNumber("parallelism", parallelism);
-        reduceLocalConf.getObject("conf").putString("input", inputListener);
-        reduceLocalConf.getObject("conf").putString("ensembleHost", ensembleString);
-        reduceLocalConf.getObject("conf").getObject("operator").putString("ensembleString", ensembleString);
-        reduceLocalConf.getObject("conf").getObject("operator").putString("output", outputListener);
-        reduceLocalConf.getObject("conf").getObject("operator").putNumber("parallelism", parallelism);
-        WebUtils.addListener(inputListener, getContinuousListenerClass(), reduceLocalConf, globalConfig);
+      if(!isRemote) {
+        if (isRecCompReduceLocal) {
+          JsonObject reduceLocalConf = getContinuousReduceLocal();
+          String ensembleString = computeEnsembleHost(false);
+          String inputListener = intermediateLocalCacheName + ".data";
+          String outputListener = intermediateCacheName;
+          String window = "sizeBased";
+          int windowSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.continuous.windowSize", 1000);
+          int parallelism = LQPConfiguration.getInstance().getConfiguration().getInt("node.engine.parallelism", 4);
+          reduceLocalConf.putString("cache", inputListener);
+          reduceLocalConf.getObject("conf").putString("window", window);
+          reduceLocalConf.getObject("conf").putNumber("windowSize", windowSize);
+          reduceLocalConf.getObject("conf").putNumber("parallelism", parallelism);
+          reduceLocalConf.getObject("conf").putString("input", inputListener);
+          reduceLocalConf.getObject("conf").putString("ensembleHost", ensembleString);
+          reduceLocalConf.getObject("conf").getObject("operator").putString("ensembleString", ensembleString);
+          reduceLocalConf.getObject("conf").getObject("operator").putString("output", outputListener);
+          reduceLocalConf.getObject("conf").getObject("operator").putNumber("parallelism", parallelism);
+          WebUtils.addListener(inputListener, getContinuousListenerClass(), reduceLocalConf, globalConfig);
+        }
       }
     } else {
       collector = new LeadsCollector(1000, intermediateCacheName);

@@ -57,6 +57,7 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
     return result;
   }
 
+
   public void setMapper(LeadsMapper<K, V, kOut, vOut> mapper) {
     this.mapper = mapper;
   }
@@ -108,6 +109,25 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
   }
 
   public LeadsCombiner<?, ?> getCombiner() {
-    return combiner;
+    Class<?> combinerClass = collector.getCombiner().getClass();
+    Constructor<?> constructor = null;
+    try {
+      constructor = combinerClass.getConstructor();
+    } catch (NoSuchMethodException e) {
+      e.printStackTrace();
+    }
+    LeadsCombiner result = null;
+    try {
+      result = (LeadsCombiner) constructor.newInstance();
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    } catch (InvocationTargetException e) {
+      e.printStackTrace();
+    }
+    result.setConfigString(collector.getCombiner().configString);
+
+    return result;
   }
 }

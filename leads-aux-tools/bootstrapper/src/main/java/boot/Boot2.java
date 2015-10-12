@@ -884,7 +884,7 @@ public class Boot2 {
     else {
       logger.error("No ssh credentials, no password either key ");
       System.out.println("No ssh credentials, no password either key ");
-      System.exit(-1);
+//      System.exit(-1);
     }
     session.setConfig("StrictHostKeyChecking", "no");
     jsch.setKnownHosts("~/.ssh/known_hosts");
