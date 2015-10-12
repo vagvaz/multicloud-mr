@@ -4,7 +4,6 @@ import eu.leads.processor.common.infinispan.ClusterInfinispanManager;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.QualFilter;
 import eu.leads.processor.math.FilterOperatorTree;
-
 import org.infinispan.Cache;
 import org.infinispan.commons.util.CloseableIterable;
 import org.infinispan.context.Flag;
@@ -14,19 +13,14 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by vagvaz on 9/28/14.
  */
 public class JoinCallable<K, V> implements
 
-                                DistributedCallable<K, V, String>, Serializable {
+    DistributedCallable<K, V, String>, Serializable {
 
 
   transient protected Cache<K, V> inputCache;
@@ -49,16 +43,14 @@ public class JoinCallable<K, V> implements
   protected final String outerCacheName;
 
 
-  public JoinCallable(String configString, String outputCacheName, String outerCacheName,
-                      boolean left) {
+  public JoinCallable(String configString, String outputCacheName, String outerCacheName, boolean left) {
     this.configString = configString;
     this.output = outputCacheName;
     this.outerCacheName = outerCacheName;
     this.left = left;
   }
 
-  @Override
-  public void setEnvironment(Cache<K, V> cache, Set<K> set) {
+  @Override public void setEnvironment(Cache<K, V> cache, Set<K> set) {
     conf = new JsonObject(configString);
     this.inputCache = cache;
     ClusterInfinispanManager manager = new ClusterInfinispanManager(cache.getCacheManager());
@@ -77,17 +69,13 @@ public class JoinCallable<K, V> implements
     Iterator<Object> targetIterator = targets.iterator();
     while (targetIterator.hasNext()) {
       JsonObject target = (JsonObject) targetIterator.next();
-      List<JsonObject>
-          tars =
-          targetsMap.get(
-              target.getObject("expr").getObject("body").getObject("column").getString("name"));
+      List<JsonObject> tars =
+          targetsMap.get(target.getObject("expr").getObject("body").getObject("column").getString("name"));
       if (tars == null) {
         tars = new ArrayList<>();
       }
       tars.add(target);
-      targetsMap
-          .put(target.getObject("expr").getObject("body").getObject("column").getString("name"),
-               tars);
+      targetsMap.put(target.getObject("expr").getObject("body").getObject("column").getString("name"), tars);
     }
 
     //        if(left) {
@@ -101,38 +89,33 @@ public class JoinCallable<K, V> implements
     //        }
   }
 
-  @Override
-  public String call() throws Exception {
+  @Override public String call() throws Exception {
     CloseableIterable<Map.Entry<String, Tuple>> iterable = null;
     try {
       Map<String, List<Tuple>> buffer = new HashMap<String, List<Tuple>>();
       int size = 0;
       ArrayList<String> ignoreColumns = new ArrayList<>();
-//        ignoreColumns.add(innerColumn);
-//        ignoreColumns.add(outerColumn);
+      //        ignoreColumns.add(innerColumn);
+      //        ignoreColumns.add(outerColumn);
       String prefix = output + ":";
-      final ClusteringDependentLogic
-          cdl =
-          inputCache.getAdvancedCache().getComponentRegistry()
-              .getComponent(ClusteringDependentLogic.class);
+      final ClusteringDependentLogic cdl =
+          inputCache.getAdvancedCache().getComponentRegistry().getComponent(ClusteringDependentLogic.class);
       for (Object ikey : inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).keySet()) {
-        if (!cdl.localNodeIsPrimaryOwner(ikey)) {
+        if (!cdl.localNodeIsPrimaryOwner(ikey))
           continue;
-        }
         Tuple current = new Tuple((String) inputCache.get(ikey));
-//          String columnValue = current.getGenericAttribute(innerColumn).toString();
+        //          String columnValue = current.getGenericAttribute(innerColumn).toString();
         String key = (String) ikey;
         String currentKey = key.substring(key.indexOf(":") + 1);
         tree.getRoot().updateWith(current);
 
-//          CloseableIterable<Map.Entry<String, String>> iterable =
-//            outerCache.getAdvancedCache().filterEntries(new AttributeFilter(outerColumn,
-//                                                                             columnValue));
-        iterable =
-            outerCache.getAdvancedCache().filterEntries(new QualFilter(tree.getJson().toString()));
+        //          CloseableIterable<Map.Entry<String, String>> iterable =
+        //            outerCache.getAdvancedCache().filterEntries(new AttributeFilter(outerColumn,
+        //                                                                             columnValue));
+        iterable = outerCache.getAdvancedCache().filterEntries(new QualFilter(tree.getJson().toString()));
         for (Map.Entry<String, Tuple> outerEntry : iterable) {
           Tuple outerTuple = outerEntry.getValue();
-//            Tuple outerTuple = new Tuple(outerEntry.getValue());
+          //            Tuple outerTuple = new Tuple(outerEntry.getValue());
           Tuple resultTuple = new Tuple(current, outerTuple, ignoreColumns);
           String outerKey = outerEntry.getKey().substring(outerEntry.getKey().indexOf(":") + 1);
           String combinedKey = prefix + outerKey + "-" + currentKey;
@@ -142,16 +125,13 @@ public class JoinCallable<K, V> implements
         iterable.close();
       }
     } catch (Exception e) {
-      if (iterable != null) {
+      if (iterable != null)
         iterable.close();
-      }
-      System.err.println("Iterating over " + outerCacheName
-                         + " for batch resulted in Exception " + e.getClass().toString() + " " + e
-                             .getCause().toString() + "\n"
-                         + e.getMessage() + "\n from  " + outerCacheName);
-      return "Iterating over " + outerCacheName
-             + " for batch resulted in Exception "
-             + e.getMessage() + "\n from  " + outerCacheName;
+      System.err.println(
+          "Iterating over " + outerCacheName + " for batch resulted in Exception " + e.getClass().toString() + " " + e
+              .getCause().toString() + "\n" + e.getMessage() + "\n from  " + outerCacheName);
+      return "Iterating over " + outerCacheName + " for batch resulted in Exception " + e.getMessage() + "\n from  "
+          + outerCacheName;
     }
 
     return "Successful run over " + inputCache.getCacheManager().getAddress().toString();
@@ -164,29 +144,29 @@ public class JoinCallable<K, V> implements
 
     JsonObject result = new JsonObject();
     //WARNING
-//       System.err.println("out: " + tuple.asString());
+    //       System.err.println("out: " + tuple.asString());
 
     if (targetsMap.size() == 0) {
-//          System.err.println("s 0 ");
+      //          System.err.println("s 0 ");
       return tuple;
 
     }
-//       System.err.println("normal");
+    //       System.err.println("normal");
 
     //END OF WANRING
     List<String> toRemoveFields = new ArrayList<String>();
     Map<String, List<String>> toRename = new HashMap<String, List<String>>();
     for (String field : tuple.getFieldNames()) {
       List<JsonObject> ob = targetsMap.get(field);
-      if (ob == null) {
+      if (ob == null)
         toRemoveFields.add(field);
-      } else {
+      else {
         for (JsonObject obb : ob) {
           List<String> ren = toRename.get(field);
           if (ren == null) {
             ren = new ArrayList<>();
           }
-//               toRename.put(field, ob.getObject("column").getString("name"));
+          //               toRename.put(field, ob.getObject("column").getString("name"));
           ren.add(obb.getObject("column").getString("name"));
           toRename.put(field, ren);
         }
@@ -200,9 +180,8 @@ public class JoinCallable<K, V> implements
   protected void handlePagerank(Tuple t) {
 
     if (t.hasField("default.webpages.pagerank")) {
-      if (!t.hasField("url")) {
+      if (!t.hasField("url"))
         return;
-      }
       String pagerankStr = t.getAttribute("pagerank");
       //            Double d = Double.parseDouble(pagerankStr);
       //            if (d < 0.0) {

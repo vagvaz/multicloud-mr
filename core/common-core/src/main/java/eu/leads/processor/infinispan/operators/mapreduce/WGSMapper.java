@@ -7,7 +7,6 @@ import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsMapper;
-
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.util.CloseableIterable;
@@ -27,7 +26,6 @@ import java.util.Map;
  * Created by vagvaz on 9/26/14.
  */
 public class WGSMapper extends LeadsMapper<String, String, String, String> {
-
   public WGSMapper(String configString) {
     super(configString);
   }
@@ -44,8 +42,10 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
   protected transient Logger log;
   protected transient EnsembleCacheManager readManager;
 
-  @Override
-  public void initialize() {
+  public WGSMapper() {
+  }
+
+  @Override public void initialize() {
     imanager = InfinispanClusterSingleton.getInstance().getManager();
     isInitialized = true;
     super.initialize();
@@ -56,13 +56,12 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
     readManager.start();
     //      webCache = (Cache) imanager.getPersisentCache(conf.getString("webCache"));
     webCache = readManager.getCache(conf.getString("webCache"), new ArrayList(readManager.sites()),
-                                    EnsembleCacheManager.Consistency.DIST);
-    pagerankCache = readManager.getCache("pagerankCache", new ArrayList(readManager.sites()),
-                                         EnsembleCacheManager.Consistency.DIST);
+        EnsembleCacheManager.Consistency.DIST);
+    pagerankCache = readManager
+        .getCache("pagerankCache", new ArrayList(readManager.sites()), EnsembleCacheManager.Consistency.DIST);
     if (iteration < depth) {
-      outputCache =
-          readManager.getCache(conf.getString("outputCache"), new ArrayList(readManager.sites()),
-                               EnsembleCacheManager.Consistency.DIST);
+      outputCache = readManager.getCache(conf.getString("outputCache"), new ArrayList(readManager.sites()),
+          EnsembleCacheManager.Consistency.DIST);
     } else {
       outputCache = null;
     }
@@ -78,11 +77,9 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
     log = LoggerFactory.getLogger(WGSMapper.class);
   }
 
-  @Override
-  public void map(String key, String value, Collector<String, String> collector) {
-    if (!isInitialized) {
+  @Override public void map(String key, String value, Collector<String, String> collector) {
+    if (!isInitialized)
       this.initialize();
-    }
     //      String jsonString = (String) webCache.get(prefix+key);
     //      if (jsonString==null || jsonString.equals("")){
     //         return;
@@ -93,27 +90,27 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
     if (oo instanceof Tuple) {
       webpage = (Tuple) oo;
     } else {
-//      System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer " + oo.getClass().toString()  );
-//      Byte[] bytes = (Byte[]) oo;
+      //      System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer " + oo.getClass().toString()  );
+      //      Byte[] bytes = (Byte[]) oo;
       try {
-//        System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer " + bytes.length);
+        //        System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer " + bytes.length);
       } catch (Exception e) {
         System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer ");
         e.printStackTrace();
       }
       return;
-//      byte[] bytes = (byte[]) oo;
-//      ByteArrayInputStream bs = new ByteArrayInputStream(bytes);
-//      try {
-//        ObjectInputStream ois = new ObjectInputStream(bs);
-//        BasicBSONDecoder decoder = new BasicBSONDecoder();
-//        BSONObject bsonObject =  decoder.readObject(ois);
-//        webpage = new Tuple(bsonObject.toString());
-//        System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer unserialized " + webpage.toString());
-//
-//      } catch (IOException e) {
-//        e.printStackTrace();
-//      }
+      //      byte[] bytes = (byte[]) oo;
+      //      ByteArrayInputStream bs = new ByteArrayInputStream(bytes);
+      //      try {
+      //        ObjectInputStream ois = new ObjectInputStream(bs);
+      //        BasicBSONDecoder decoder = new BasicBSONDecoder();
+      //        BSONObject bsonObject =  decoder.readObject(ois);
+      //        webpage = new Tuple(bsonObject.toString());
+      //        System.err.println("\n\n\n\nSERIOUS ERROR WITH SERIALIZE GOT byte buffer unserialized " + webpage.toString());
+      //
+      //      } catch (IOException e) {
+      //        e.printStackTrace();
+      //      }
     }
     //      Tuple t = new Tuple(jsonString);
     if (webpage == null) {
@@ -126,7 +123,7 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
     result.putString("url", t.getAttribute("url"));
     result.putString("pagerank", computePagerank(result.getString("url")));
     result.putString("sentiment", t.getGenericAttribute("sentiment").toString());
-//    result.putString("microCluster",LQPConfiguration.getInstance().getMicroClusterName());
+    //    result.putString("microCluster",LQPConfiguration.getInstance().getMicroClusterName());
     ArrayList<String> microclouds = new ArrayList<>();
     microclouds.add("hamm5");
     microclouds.add("hamm6");
@@ -166,15 +163,9 @@ public class WGSMapper extends LeadsMapper<String, String, String, String> {
       computeTotalSum();
     }
     try {
-//      DSPMNode currentPagerank = (DSPMNode) pagerankCache.get(url);
 
-//    if(currentPagerank == null || totalSum <= 0)
-      {
 
-        return Double.toString((10000 / url.length()) / 10000);
-      }
-//    result = currentPagerank.getVisitCount()/totalSum;
-//    return Double.toString(result);
+      return Double.toString(result);
     } catch (Exception e) {
       return Double.toString((10000 / url.length()) / 10000);
 

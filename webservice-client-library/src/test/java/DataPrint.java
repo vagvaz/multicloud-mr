@@ -1,6 +1,5 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import eu.leads.processor.web.ObjectQuery;
 import eu.leads.processor.web.PutAction;
 import eu.leads.processor.web.WebServiceQuery;
@@ -12,7 +11,6 @@ import java.util.ArrayList;
  * Created by vagvaz on 2/4/15.
  */
 public class DataPrint {
-
   public static void main(String[] args) throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();
     mapper.writerWithDefaultPrettyPrinter();

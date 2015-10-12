@@ -9,7 +9,6 @@ import java.util.Collection;
  * Created by vagvaz on 8/4/14.
  */
 public interface Plan {
-
   public PlanNode getOutput();
 
   public void setOutput(PlanNode node);
@@ -29,6 +28,7 @@ public interface Plan {
   //   public void addToCurrent(PlanNode node) throws Exception;
   //
   //   public void addToCurrent();
+
 
   //   public void merge(Plan extracted) throws Exception;
 
@@ -65,6 +65,7 @@ public interface Plan {
   public JsonObject getNodeById(String id);
 
   public JsonObject getNodeByPid(int pid);
+
 
 
 }

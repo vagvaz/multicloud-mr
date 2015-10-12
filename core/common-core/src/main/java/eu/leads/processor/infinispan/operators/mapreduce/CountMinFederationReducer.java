@@ -3,7 +3,6 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsReducer;
-
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Iterator;
@@ -23,15 +22,14 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
     super(configString);
   }
 
-  @Override
-  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
+  @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     int[] singleRow = new int[w];
     while (iter.hasNext()) {
       Tuple t = iter.next();
       String coord = t.getAttribute("coord");
       int sum = t.getNumberAttribute("sum").intValue();
       int column = Integer.valueOf(coord.split(",")[1]);
-      singleRow[column]+= sum;
+      singleRow[column] += sum;
     }
 
     Tuple output = new Tuple();
@@ -46,14 +44,12 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
     collector.emit(reducedKey, output);
   }
 
-  @Override
-  public void initialize() {
+  @Override public void initialize() {
     super.initialize();
     w = conf.getInteger("w");
   }
 
-  @Override
-  protected void finalizeTask() {
+  @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
   }
 }

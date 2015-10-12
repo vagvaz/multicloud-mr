@@ -3,7 +3,6 @@ package eu.leads.processor.plugins;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
-
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.Encoder;
@@ -18,11 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +28,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by vagvaz on 4/11/15.
  */
-@Listener(clustered = false, sync = false, primaryOnly = true)
-public class NutchLocalListener {
-
+@Listener(clustered = false, sync = false, primaryOnly = true) public class NutchLocalListener {
   private InfinispanManager manager;
   private String outputCacheName;
   private Cache outputCache;
@@ -63,8 +56,7 @@ public class NutchLocalListener {
   private ScheduledExecutorService scheduler;
   private boolean atleastonce = false;
 
-  public NutchLocalListener(InfinispanManager manager, String outputCacheName, String outputPrefix,
-                            String component) {
+  public NutchLocalListener(InfinispanManager manager, String outputCacheName, String outputPrefix, String component) {
     this.manager = manager;
     this.outputCacheName = outputCacheName;
     this.component = component;
@@ -72,9 +64,7 @@ public class NutchLocalListener {
     webpagesTuple = new HashMap<>();
     nutchTuples = new HashMap<>();
     outputCache = (Cache) this.manager.getPersisentCache(outputCacheName);
-    List<String>
-        mappings =
-        LQPConfiguration.getInstance().getConfiguration().getList("nutch.mappings");
+    List<String> mappings = LQPConfiguration.getInstance().getConfiguration().getList("nutch.mappings");
     Map<String, String> nutchToLQE = new HashMap<String, String>();
 
     for (String mapping : mappings) {
@@ -82,11 +72,10 @@ public class NutchLocalListener {
       nutchToLQE.put(keyValue[0].trim(), keyValue[1].trim());
     }
     transformer = new NutchTransformer(nutchToLQE);
-//      rolloverFiles();
+    //      rolloverFiles();
     scheduler = Executors.newScheduledThreadPool(1);
     scheduler.scheduleAtFixedRate(new Runnable() {
-      @Override
-      public void run() {
+      @Override public void run() {
         spillAndRollOver();
       }
     }, 1, 1, TimeUnit.MINUTES);
@@ -108,6 +97,7 @@ public class NutchLocalListener {
         for (Map.Entry<byte[], GenericData.Record> rec : nutchTuples.entrySet()) {
           outputToFile(rec.getKey(), rec.getValue());
         }
+
 
         System.err.println("SPitting");
         rolloverFiles();
@@ -151,57 +141,38 @@ public class NutchLocalListener {
 
   public void rolloverFiles() {
     try {
-      if (tupleOutputData == null || tupleOutputKeys == null || nutchData == null
-          || nutchKeys == null) {
+      if (tupleOutputData == null || tupleOutputKeys == null || nutchData == null || nutchKeys == null) {
 
-        File
-            file =
-            getOrCreate(
-                prefix + "/" + component + "-" + webpageFileName + "-" + nutchCounter + ".data");
+        File file = getOrCreate(prefix + "/" + component + "-" + webpageFileName + "-" + nutchCounter + ".data");
 
         tupleOutputData = new FileOutputStream(file);
         tupleDataWriter = new ObjectOutputStream((tupleOutputData));
-        file =
-            getOrCreate(
-                prefix + "/" + component + "-" + webpageFileName + "-" + nutchCounter + ".keys");
+        file = getOrCreate(prefix + "/" + component + "-" + webpageFileName + "-" + nutchCounter + ".keys");
         tupleOutputKeys = new FileOutputStream(file);
         tupleKeysWriter = new ObjectOutputStream((tupleOutputKeys));
-        file =
-            getOrCreate(prefix + "/" + component + "-" + nutchOutputFileName + "-" + nutchCounter
-                        + ".keys");
+        file = getOrCreate(prefix + "/" + component + "-" + nutchOutputFileName + "-" + nutchCounter + ".keys");
         nutchKeys = new FileOutputStream(file);
         nutchKeysWriter = new ObjectOutputStream((nutchKeys));
-        file =
-            getOrCreate(prefix + "/" + component + "-" + nutchOutputFileName + "-" + nutchCounter
-                        + ".data");
+        file = getOrCreate(prefix + "/" + component + "-" + nutchOutputFileName + "-" + nutchCounter + ".data");
         nutchData = new FileOutputStream(file);
         nutchDataWriter = new ObjectOutputStream((nutchData));
 
       } else {
 
         nutchCounter++;
-        File
-            file =
-            getOrCreate(
-                prefix + "/" + component + "-" + webpageFileName + "-" + nutchCounter + ".data");
+        File file = getOrCreate(prefix + "/" + component + "-" + webpageFileName + "-" + nutchCounter + ".data");
         tupleDataWriter.close();
         tupleOutputData = new FileOutputStream(file);
         tupleDataWriter = new ObjectOutputStream((tupleOutputData));
-        file =
-            getOrCreate(
-                prefix + "/" + component + "-" + webpageFileName + "-" + nutchCounter + ".keys");
+        file = getOrCreate(prefix + "/" + component + "-" + webpageFileName + "-" + nutchCounter + ".keys");
         tupleKeysWriter.close();
         tupleOutputKeys = new FileOutputStream(file);
         tupleKeysWriter = new ObjectOutputStream((tupleOutputKeys));
-        file =
-            getOrCreate(prefix + "/" + component + "-" + nutchOutputFileName + "-" + nutchCounter
-                        + ".keys");
+        file = getOrCreate(prefix + "/" + component + "-" + nutchOutputFileName + "-" + nutchCounter + ".keys");
         nutchKeysWriter.close();
         nutchKeys = new FileOutputStream(file);
         nutchKeysWriter = new ObjectOutputStream((nutchKeys));
-        file =
-            getOrCreate(prefix + "/" + component + "-" + nutchOutputFileName + "-" + nutchCounter
-                        + ".data");
+        file = getOrCreate(prefix + "/" + component + "-" + nutchOutputFileName + "-" + nutchCounter + ".data");
         nutchDataWriter.close();
         nutchData = new FileOutputStream(file);
         nutchDataWriter = new ObjectOutputStream((nutchData));
@@ -236,53 +207,52 @@ public class NutchLocalListener {
     return result;
   }
 
-  @CacheEntryCreated
-  public void created(CacheEntryCreatedEvent event) {
-    if (event.isPre()) {
+  @CacheEntryCreated public void created(CacheEntryCreatedEvent event) {
+    if (event.isPre())
       return;
-    }
     processWebPage(event.getKey(), event.getValue());
   }
 
   public void processWebPage(Object key, Object value) {
 
+
     GenericData.Record page = (GenericData.Record) value;
     //System.err.println("LIstener  " +  new String((byte[]) key) + " " + value.getClass().toString());
 
-//      if(page!=null) {
+    //      if(page!=null) {
     Tuple object = transformer.transform(page);
-//         BasicBSONEncoder encoder = new BasicBSONEncoder();
-//         byte[] array = encoder.encode(object);
+    //         BasicBSONEncoder encoder = new BasicBSONEncoder();
+    //         byte[] array = encoder.encode(object);
     //output to outputCache Tuple repr
+
+
 
     //output to outputFile for our repr
     if (page.get("content") != null) {
       if (globalCounter % nextRoll == 0) {
-//            rolloverFiles();
+        //            rolloverFiles();
         spillAndRollOver();
       }
       globalCounter = (globalCounter + 1) % (Long.MAX_VALUE - 1);
       if (object.getAttribute("body") == null) {
         System.err.println("content not null but tuple body is null ");
       }
-//          System.err.println("outputting to " + outputCacheName + "tuple " + object.toString());
+      //          System.err.println("outputting to " + outputCacheName + "tuple " + object.toString());
       webpagesTuple.put(outputCacheName + ":" + object.getAttribute("url"), object);
       nutchTuples.put((byte[]) key, page);
       outputCache.put(outputCacheName + ":" + object.getAttribute("url"), object);
       System.err.println("Stored " + globalCounter + " tuples till now");
     }
-//         outputToFile(outputCacheName+":"+object.getAttribute("url"),object);
+    //         outputToFile(outputCacheName+":"+object.getAttribute("url"),object);
 
-//         outputToFile((byte[])key, page);
+    //         outputToFile((byte[])key, page);
 
-//      }
+    //      }
   }
 
-  @CacheEntryModified
-  public void modified(CacheEntryModifiedEvent<Object, Object> event) {
-    if (event.isPre()) {
+  @CacheEntryModified public void modified(CacheEntryModifiedEvent<Object, Object> event) {
+    if (event.isPre())
       return;
-    }
     processWebPage(event.getKey(), event.getValue());
   }
 }

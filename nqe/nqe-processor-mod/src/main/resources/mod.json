@@ -1,8 +1,9 @@
 {
-
   // Java verticle
   "main": "eu.leads.processor.nqe.NQEProcessorManage",
-
+  "includes": "gr.tuc.softnet~nqe-comp-mod~1.0-SNAPSHOT",
+  "worker": true,
+  "multi-threaded": true,
   // If your module is going to be registered in the Vert.x module registry you will also need the following
   // mandatory fields
   "description": "Put description of your module here",
@@ -10,7 +11,6 @@
     "The Apache Software License Version 2.0"
   ],
   "author": "Joe Bloggs",
-
   // Optional fields
   "developers": [
     "Other Dev 1",
@@ -25,6 +25,5 @@
     "herring"
   ],
   "homepage": "url to your project page",
-
   "auto-redeploy": true
 }

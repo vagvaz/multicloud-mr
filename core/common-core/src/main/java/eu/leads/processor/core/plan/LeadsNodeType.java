@@ -1,34 +1,6 @@
 package eu.leads.processor.core.plan;
 
-import org.apache.tajo.plan.logical.AlterTableNode;
-import org.apache.tajo.plan.logical.AlterTablespaceNode;
-import org.apache.tajo.plan.logical.CreateDatabaseNode;
-import org.apache.tajo.plan.logical.CreateTableNode;
-import org.apache.tajo.plan.logical.DistinctGroupbyNode;
-import org.apache.tajo.plan.logical.DropDatabaseNode;
-import org.apache.tajo.plan.logical.DropTableNode;
-import org.apache.tajo.plan.logical.EvalExprNode;
-import org.apache.tajo.plan.logical.ExceptNode;
-import org.apache.tajo.plan.logical.GroupbyNode;
-import org.apache.tajo.plan.logical.HavingNode;
-import org.apache.tajo.plan.logical.IndexScanNode;
-import org.apache.tajo.plan.logical.InsertNode;
-import org.apache.tajo.plan.logical.IntersectNode;
-import org.apache.tajo.plan.logical.JoinNode;
-import org.apache.tajo.plan.logical.LimitNode;
-import org.apache.tajo.plan.logical.LogicalNode;
-import org.apache.tajo.plan.logical.LogicalRootNode;
-import org.apache.tajo.plan.logical.NodeType;
-import org.apache.tajo.plan.logical.PartitionedTableScanNode;
-import org.apache.tajo.plan.logical.ProjectionNode;
-import org.apache.tajo.plan.logical.ScanNode;
-import org.apache.tajo.plan.logical.SelectionNode;
-import org.apache.tajo.plan.logical.SortNode;
-import org.apache.tajo.plan.logical.StoreTableNode;
-import org.apache.tajo.plan.logical.TableSubQueryNode;
-import org.apache.tajo.plan.logical.TruncateTableNode;
-import org.apache.tajo.plan.logical.UnionNode;
-import org.apache.tajo.plan.logical.WindowAggNode;
+import org.apache.tajo.plan.logical.*;
 
 /**
  * Created by vagvaz on 8/29/14.
@@ -53,6 +25,7 @@ public enum LeadsNodeType {
   BST_INDEX_SCAN(IndexScanNode.class),
   STORE(StoreTableNode.class),
   INSERT(InsertNode.class),
+  CREATE_INDEX(CreateIndexNode.class),
   DISTINCT_GROUP_BY(DistinctGroupbyNode.class),
 
   CREATE_DATABASE(CreateDatabaseNode.class),

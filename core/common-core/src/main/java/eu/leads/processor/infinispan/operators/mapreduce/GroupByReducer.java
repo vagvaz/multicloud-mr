@@ -2,33 +2,31 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 
 import eu.leads.processor.common.infinispan.ClusterInfinispanManager;
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
+import eu.leads.processor.common.utils.ProfileEvent;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsReducer;
 import eu.leads.processor.math.MathUtils;
-
 import org.infinispan.Cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
 //import eu.leads.processor.common.utils.SQLUtils;
 
+
 /**
- * Created with IntelliJ IDEA. User: vagvaz Date: 11/4/13 Time: 9:36 AM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: vagvaz
+ * Date: 11/4/13
+ * Time: 9:36 AM
+ * To change this template use File | Settings | File Templates.
  */
 public class GroupByReducer extends LeadsReducer<String, Tuple> {
+
 
 
   transient Cache<String, String> data;
@@ -44,6 +42,12 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
   transient Set<String> inputFields;
   transient ArrayList<String> aggregateInferred;
   transient Logger log = null;
+  transient ProfileEvent groupReducerEvent;
+  transient ProfileEvent reducerEvent;
+  transient boolean isCountStar = false;
+
+  public GroupByReducer() {
+  }
 
   public GroupByReducer(JsonObject configuration) {
     super(configuration);
@@ -53,17 +57,15 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
     super(configString);
   }
 
-  @Override
-  public void initialize() {
+  @Override public void initialize() {
 
     isInitialized = true;
     super.initialize();
     log = LoggerFactory.getLogger(GroupByReducer.class);
     imanager = new ClusterInfinispanManager(manager);
     prefix = outputCacheName + ":";
-    data =
-        (Cache<String, String>) InfinispanClusterSingleton.getInstance().getManager()
-            .getPersisentCache(outputCacheName);
+    data = (Cache<String, String>) InfinispanClusterSingleton.getInstance().getManager()
+        .getPersisentCache(outputCacheName);
     aggregateValues = new ArrayList<>();
     functionType = new ArrayList<>();
     columnTypes = new ArrayList<>();
@@ -79,7 +81,8 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
       JsonObject columnObject = (JsonObject) columnIterator.next();
       groupByColumns.add(columnObject.getString("name"));
     }
-
+    if (groupByColumns.size() == 0)
+      isCountStar = true;
     JsonArray functions = conf.getObject("body").getArray("aggrFunctions");
     Iterator<Object> funcIterator = functions.iterator();
     while (funcIterator.hasNext()) {
@@ -89,7 +92,7 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
 
       JsonObject argument = null;
       if (current.getArray("argEvals").size() > 0) {
-//         if( ((JsonObject) current).getArray("argEvals").size() > 0){
+        //         if( ((JsonObject) current).getArray("argEvals").size() > 0){
         argument = current.getArray("argEvals").get(0);
       } else { // handling empty parameters for count(*)
         argument = new JsonObject();
@@ -114,38 +117,30 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
         count++;
       }
       typesOfaggregates.put(funcType, count);
-      JsonArray
-          params =
-          ((JsonObject) current.getObject("funcDesc")).getObject("signature")
-              .getArray("paramTypes");
+      JsonArray params = ((JsonObject) current.getObject("funcDesc")).getObject("signature").getArray("paramTypes");
       JsonObject parameter = null;
       if (params.size() > 0) {
         parameter = params.get(0);
         columnTypes.add(parameter.getString("type"));
-        Object
-            object =
-            MathUtils.getInitialValue(parameter.getString("type"),
-                                      current.getObject("funcDesc").getObject("signature")
-                                          .getString("name"));
+        Object object = MathUtils.getInitialValue(parameter.getString("type"),
+            current.getObject("funcDesc").getObject("signature").getString("name"));
         aggregateValues.add(object);
       } else {
         //Should be done only for count
         columnTypes.add("INT8");
-        Object
-            object =
-            MathUtils.getInitialValue("INT8", current.getObject("funcDesc").getObject("signature")
-                .getString("name"));
+        Object object =
+            MathUtils.getInitialValue("INT8", current.getObject("funcDesc").getObject("signature").getString("name"));
         aggregateValues.add(object);
       }
     }
     aggregateInferred = inferFinalAggNames();
+    reducerEvent = new ProfileEvent("reduceEvent", log);
+    groupReducerEvent = new ProfileEvent("groupReducer", log);
   }
 
   private ArrayList<String> inferFinalAggNames() {
     ArrayList<String> result = new ArrayList<>(aggregateNames.size());
-    Iterator<Object>
-        inputIterator =
-        conf.getObject("body").getObject("inputSchema").getArray("fields").iterator();
+    Iterator<Object> inputIterator = conf.getObject("body").getObject("inputSchema").getArray("fields").iterator();
     Set<String> inputColumns = new HashSet<String>();
     while (inputIterator.hasNext()) {
       JsonObject field = (JsonObject) inputIterator.next();
@@ -155,9 +150,7 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
     int counter = 0;
     while (targetIterator.hasNext()) {
       JsonObject target = (JsonObject) targetIterator.next();
-      String
-          targetName =
-          target.getObject("expr").getObject("body").getObject("column").getString("name");
+      String targetName = target.getObject("expr").getObject("body").getObject("column").getString("name");
 
       if (!inputColumns.contains(targetName)) {
         result.add(targetName);
@@ -168,25 +161,24 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
     return result;
   }
 
-  @Override
-  public void reduce(String key, Iterator<Tuple> iterator, LeadsCollector collector) {
+  @Override public void reduce(String key, Iterator<Tuple> iterator, LeadsCollector collector) {
     //Reduce takes all the grouped Typles per key
-
+    reducerEvent.start("reduceEvent_1");
     if (key == null || key.equals("")) {
       log.error("reduce called with null key? " + (key == null));
       return;
     }
-    log.error("Computing values for group " + key + " .");
-    if (!isInitialized) {
-      initialize();
-    }
+    //      log.error("Computing values for group " + key + " .");
+    //      if (!isInitialized) initialize();
     resetValues();
     Tuple t = null;
-//        progress();
+    //        progress();
     //Iterate overall values
     int tuplecounter = 0;
+    reducerEvent.end();
     while (true) {
       try {
+        reducerEvent.start("reduceEvent_2");
         tuplecounter++;
         Tuple itTuple = iterator.next();
         if (itTuple == null) {
@@ -195,7 +187,7 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
           continue;
         }
         t = (itTuple);
-
+        reducerEvent.end();
         Iterator<String> funcTypeIterator = functionType.iterator();
         //           Iterator<Object> aggValuesIterator = aggregateValues.iterator();
         Iterator<String> columnTypesIterator = columnTypes.iterator();
@@ -208,30 +200,41 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
           String columnType = columnTypesIterator.next();
           String column = columnNameiterator.next();
           //set new aggvalue according to function type, columnt Type, old agg value, currentValue
-          aggregateValues.set(counter, MathUtils.updateFunctionValue(funcType, columnType,
-                                                                     aggregateValues.get(counter),
-                                                                     t.getGenericAttribute(
-                                                                         column)));
+          if (funcType.equals("count") && isCountStar) {
+            aggregateValues.set(counter,
+                ((Number) aggregateValues.get(counter)).longValue() + ((Number) t.getGenericAttribute("__count"))
+                    .longValue());
+          } else {
+            aggregateValues.set(counter, MathUtils
+                .updateFunctionValue(funcType, columnType, aggregateValues.get(counter),
+                    t.getGenericAttribute(column)));
+          }
           counter++; //inc counter for the next agg value
         }
 
       } catch (Exception e) {
         if (e instanceof NoSuchElementException) {
-          log.info("End of leadsIntermidateIterator " + e.getMessage());
+          //               log.info("End of leadsIntermidateIterator " + e.getMessage());
           break;
+        }
+        if (e instanceof InterruptedException) {
+          //profilerLog.error(this.imanager.getCacheManager().getAddress().toString() + " was interrupted ");
+          log.error(this.imanager.getCacheManager().getAddress().toString() + " was interrupted ");
+          throw e;
         }
         log.error("EXCEPTION WHILE updating agg value");
         log.error(e.getClass() + " " + e.getMessage());
         log.error(iterator.toString());
-//            log.error(t.toString());
+        //            log.error(t.toString());
         break;
       }
+
     }
 
     Iterator<String> nameIterator = aggregateInferred.iterator();
     Iterator<Object> aggValuesIterator = aggregateValues.iterator();
     Iterator<String> funcTypeIterator = functionType.iterator();
-    log.error("Computing final agg values for group " + key + " after " + tuplecounter + " tuples");
+    //      log.error("Computing final agg values for group " + key + " after " + tuplecounter + " tuples");
     //compute final values and put agg values to tuple
     try {
       while (nameIterator.hasNext()) {
@@ -248,11 +251,16 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
         t.setAttribute(name, tupleValue);
       }
     } catch (Exception e) {
-
+      if (e instanceof InterruptedException) {
+        //profilerLog.error(this.imanager.getCacheManager().getAddress().toString() + " was interrupted ");
+        log.error(this.imanager.getCacheManager().getAddress().toString() + " was interrupted ");
+        throw e;
+      }
       log.error("EXCEPTION ON FINAL setting agg value");
       log.error(e.getClass() + " " + e.getMessage());
       log.error(iterator.toString());
-//            log.error(t.toString());
+      //            log.error(t.toString());
+      reducerEvent.end();
       return;
 
     }
@@ -262,14 +270,19 @@ public class GroupByReducer extends LeadsReducer<String, Tuple> {
     //        System.err.println("tout: " + t.toString());
     //        collector.emit(prefix + key, t.asString());
     collector.emit(prefix + key, t);
-
     return;
   }
+
 
 
   private void resetValues() {
     for (int i = 0; i < aggregateValues.size(); i++) {
       aggregateValues.set(i, MathUtils.getInitialValue(columnTypes.get(i), functionType.get(i)));
     }
+  }
+
+  @Override protected void finalizeTask() {
+    groupReducerEvent.end();
+    super.finalizeTask();
   }
 }

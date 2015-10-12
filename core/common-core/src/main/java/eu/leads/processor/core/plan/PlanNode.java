@@ -1,7 +1,6 @@
 package eu.leads.processor.core.plan;
 
 import eu.leads.processor.core.DataType;
-
 import org.apache.tajo.plan.logical.LogicalNode;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -22,9 +21,8 @@ public class PlanNode extends DataType {
 
   public PlanNode(JsonObject node) {
     super(node);
-    if (!node.containsField("status")) {
+    if (!node.containsField("status"))
       setStatus(NodeStatus.PENDING);
-    }
     if (!node.containsField("site")) {
       setSite("C&H micro-cloud 0");
     }
@@ -80,9 +78,8 @@ public class PlanNode extends DataType {
 
   public void addInput(String input) {
     JsonArray array = data.getArray("inputs");
-    if (array == null) {
+    if (array == null)
       array = new JsonArray();
-    }
     array.add(input);
     data.putArray("inputs", array);
   }

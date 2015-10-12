@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 /**
  * Created by vagvaz on 3/10/14.
  */
-@JsonAutoDetect
-public class RecursiveCallRestQuery {
-
+@JsonAutoDetect public class RecursiveCallRestQuery {
   String url;
   String depth;
   String user;

@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 /**
  * Created by vagvaz on 3/10/14.
  */
-@JsonAutoDetect
-public class WebServiceWorkflow {
-
+@JsonAutoDetect public class WebServiceWorkflow {
   private String user;
   private String workflow; //json format
 

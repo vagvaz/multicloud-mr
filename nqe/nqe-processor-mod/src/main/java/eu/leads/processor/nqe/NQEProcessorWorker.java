@@ -15,15 +15,9 @@ import eu.leads.processor.core.net.Node;
 import eu.leads.processor.core.plan.QueryState;
 import eu.leads.processor.core.plan.QueryStatus;
 import eu.leads.processor.imanager.IManagerConstants;
-import eu.leads.processor.nqe.handlers.CompletedMRActionHandler;
-import eu.leads.processor.nqe.handlers.DeployRemoteOpActionHandler;
-import eu.leads.processor.nqe.handlers.ExecuteMRActionHandler;
-import eu.leads.processor.nqe.handlers.ExecuteMapReduceJobActionHandler;
-import eu.leads.processor.nqe.handlers.GetQueryStatusActionHandler;
-import eu.leads.processor.nqe.handlers.OperatorActionHandler;
-import eu.leads.processor.nqe.handlers.PutObjectActionHandler;
+import eu.leads.processor.imanager.RemoveListenerActionHandler;
+import eu.leads.processor.nqe.handlers.*;
 import eu.leads.processor.web.WebServiceClient;
-
 import org.infinispan.Cache;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
@@ -59,13 +53,11 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
   JsonObject globalConfig;
   private Cache jobsCache;
 
-  @Override
-  public void start() {
+  @Override public void start() {
     super.start();
     activeActions = new HashMap<String, Action>();
     leadsHandler = new LeadsMessageHandler() {
-      @Override
-      public void handle(JsonObject event) {
+      @Override public void handle(JsonObject event) {
         if (event.getString("type").equals("unregister")) {
           JsonObject msg = new JsonObject();
           msg.putString("processor", id + ".process");
@@ -76,8 +68,7 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
           switch (valueOf(action.getStatus())) {
             case COMPLETED:
               if (action.getLabel().equals(NQEConstants.DEPLOY_OPERATOR)) {
-                log.info(
-                    "Operator: " + action.getData().getString("operatorType") + " is completed");
+                log.info("Operator: " + action.getData().getString("operatorType") + " is completed");
                 com.sendTo(action.getData().getString("monitor"), action.asJsonObject());
                 activeActions.remove(action.getId());
               } else if (action.getLabel().equals(NQEConstants.DEPLOY_REMOTE_OPERATOR)) {
@@ -85,10 +76,9 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
                 String coordinator = action.asJsonObject().getString("coordinator");
                 replyAction.getData().putString("microcloud", currentCluster); //reduncdany to speed
                 // up debuggin
-//                       replyAction.getData().putString("microcloud",currentCluster);
+                //                       replyAction.getData().putString("microcloud",currentCluster);
                 replyAction.getData().putString("STATUS", "SUCCESS");
-                replyAction.getData()
-                    .putString("replyGroup", action.asJsonObject().getString("replyGroup"));
+                replyAction.getData().putString("replyGroup", action.asJsonObject().getString("replyGroup"));
 
                 String webaddress = getURIFromGlobal(coordinator);
                 try {
@@ -96,18 +86,21 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
                 } catch (IOException e) {
                   e.printStackTrace();
                 }
-//                       System.err.println("Remote DEPLOY of " + action.getData().getObject("operator").getObject
-//                                                                                                         ("configuration").toString() + " was successful");
+                //                       System.err.println("Remote DEPLOY of " + action.getData().getObject("operator").getObject
+                //                                                                                                         ("configuration").toString() + " was successful");
                 log.error("Remote DEPLOY of " + action.getId() + " was successful");
               } else if (action.getLabel().equals(NQEConstants.EXECUTE_MAP_REDUCE_JOB)) {
                 String id = action.getData().getObject("operator").getString("id");
                 String s = (String) jobsCache.get(id);
-                QueryStatus queryStatus = new QueryStatus(new JsonObject(s));
+                JsonObject o = new JsonObject(s);
+                QueryStatus queryStatus = new QueryStatus(o.getObject("status"));
                 queryStatus.setStatus(QueryState.COMPLETED);
-                jobsCache.put(id, queryStatus.toString());
+                o.putObject("status",queryStatus.asJsonObject());
+//                QueryStatus queryStatus = new QueryStatus(new JsonObject(s));
+//                queryStatus.setStatus(QueryState.COMPLETED);
+                jobsCache.put(id, o.toString());
               } else {
-                log.error("COMPLETED Action " + action.toString()
-                          + "Received by NQEProcessor but cannot be handled");
+                log.error("COMPLETED Action " + action.toString() + "Received by NQEProcessor but cannot be handled");
               }
               break;
             case PENDING:
@@ -122,13 +115,11 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
                 runningAction.setStatus(INPROCESS.toString());
                 com.sendTo(action.getData().getString("replyTo"), runningAction.asJsonObject());
               } else {
-                log.error("PENDING Action " + action.toString()
-                          + "Received by NQEProcessor but cannot be handled");
+                log.error("PENDING Action " + action.toString() + "Received by NQEProcessor but cannot be handled");
               }
               break;
             case INPROCESS:
-              log.error("INPROCESS Action " + action.toString()
-                        + "Received by NQEProcessor but cannot be handled");
+              log.error("INPROCESS Action " + action.toString() + "Received by NQEProcessor but cannot be handled");
               break;
             case FAILED:
               if (action.getLabel().equals(NQEConstants.DEPLOY_OPERATOR)) {
@@ -148,8 +139,7 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
                 }
                 log.error("Remote DEPLOY of " + action.getId() + " failed");
               } else {
-                log.error("FAILED Action " + action.toString()
-                          + "Received by NQEProcessor but cannot be handled");
+                log.error("FAILED Action " + action.toString() + "Received by NQEProcessor but cannot be handled");
               }
               break;
             default:
@@ -172,14 +162,11 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     com.initialize(id, gr, null, leadsHandler, leadsHandler, vertx);
     bus.registerHandler(id + ".process", this);
     LQPConfiguration.initialize();
-    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component",
-                                                                  "nqe." + id);
+    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component", "nqe." + id);
 
-    String publicIP = ConfigurationUtilities.getPublicIPFromGlobal(LQPConfiguration.getInstance()
-                                                                       .getMicroClusterName(),
-                                                                   globalConfig);
-    LQPConfiguration.getInstance().getConfiguration().setProperty(StringConstants.PUBLIC_IP,
-                                                                  publicIP);
+    String publicIP = ConfigurationUtilities
+        .getPublicIPFromGlobal(LQPConfiguration.getInstance().getMicroClusterName(), globalConfig);
+    LQPConfiguration.getInstance().getConfiguration().setProperty(StringConstants.PUBLIC_IP, publicIP);
     currentCluster = LQPConfiguration.getInstance().getMicroClusterName();
     persistence = InfinispanClusterSingleton.getInstance().getManager();
     jobsCache = (Cache) persistence.getPersisentCache(StringConstants.QUERIESCACHE);
@@ -187,29 +174,25 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     msg.putString("processor", id + ".process");
     log = new LogProxy(config.getString("log"), com);
     handlers = new HashMap<String, ActionHandler>();
-//     ActionHandler pluginHandler = new DeployPluginActionHandler(com, log, persistence, id, globalConfig);
-    handlers.put(NQEConstants.DEPLOY_OPERATOR,
-                 new OperatorActionHandler(com, log, persistence, id));
-//      handlers.put(NQEConstants.DEPLOY_PLUGIN,pluginHandler );
-//      handlers.put(NQEConstants.UNDEPLOY_PLUGIN,pluginHandler);
+    //     ActionHandler pluginHandler = new DeployPluginActionHandler(com, log, persistence, id, globalConfig);
+    handlers.put(NQEConstants.DEPLOY_OPERATOR, new OperatorActionHandler(com, log, persistence, id));
+    //      handlers.put(NQEConstants.DEPLOY_PLUGIN,pluginHandler );
+    //      handlers.put(NQEConstants.UNDEPLOY_PLUGIN,pluginHandler);
     handlers.put(NQEConstants.DEPLOY_REMOTE_OPERATOR,
-                 new DeployRemoteOpActionHandler(com, log, persistence, id, globalConfig));
-//
-    handlers.put(NQEConstants.EXECUTE_MAP_REDUCE_JOB,
-                 new ExecuteMapReduceJobActionHandler(com, log, persistence, id));
+        new DeployRemoteOpActionHandler(com, log, persistence, id, globalConfig));
+    //
+    handlers.put(NQEConstants.EXECUTE_MAP_REDUCE_JOB, new ExecuteMapReduceJobActionHandler(com, log, persistence, id));
 
-    handlers.put(IManagerConstants.EXECUTE_MAPREDUCE,
-                 new ExecuteMRActionHandler(com, log, persistence, id));
-    handlers.put(IManagerConstants.COMPLETED_MAPREDUCE,
-                 new CompletedMRActionHandler(com, log, persistence, id));
-    handlers.put(IManagerConstants.PUT_OBJECT,
-                 new PutObjectActionHandler(com, log, persistence, id));
-    handlers.put(IManagerConstants.GET_QUERY_STATUS,
-                 new GetQueryStatusActionHandler(com, log, persistence, id));
-
+    handlers.put(IManagerConstants.EXECUTE_MAPREDUCE, new ExecuteMRActionHandler(com, log, persistence, id));
+    handlers.put(IManagerConstants.COMPLETED_MAPREDUCE, new CompletedMRActionHandler(com, log, persistence, id));
+    handlers.put(IManagerConstants.PUT_OBJECT, new PutObjectActionHandler(com, log, persistence, id));
+    handlers.put(IManagerConstants.GET_QUERY_STATUS, new GetQueryStatusActionHandler(com, log, persistence, id));
+    handlers.put(IManagerConstants.STOP_CACHE, new StopCacheActionHandler(com, log, persistence, id, globalConfig));
+    handlers.put(IManagerConstants.ADD_LISTENER, new AddListenerActionHandler(com, log, persistence, id, globalConfig));
+    handlers.put(IManagerConstants.REMOVE_LISTENER,
+        new RemoveListenerActionHandler(com, log, persistence, id, globalConfig));
     bus.send(workqueue + ".register", msg, new Handler<Message<JsonObject>>() {
-      @Override
-      public void handle(Message<JsonObject> event) {
+      @Override public void handle(Message<JsonObject> event) {
         log.info(id + " Registration " + event.address().toString());
       }
     });
@@ -218,10 +201,8 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
   }
 
   private String getURIFromGlobal(String coordinator) {
-    System.err
-        .println("IN NQE getting URI from global for " + coordinator + " while " + globalConfig
-            .getObject
-                ("microclouds`"));
+    System.err.println(
+        "IN NQE getting URI from global for " + coordinator + " while " + globalConfig.getObject("microclouds`"));
     String uri = globalConfig.getObject("microclouds").getArray(coordinator).get(0);
 
     if (!uri.startsWith("http:")) {
@@ -243,8 +224,7 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     return uri;
   }
 
-  @Override
-  public void handle(Message<JsonObject> message) {
+  @Override public void handle(Message<JsonObject> message) {
     try {
       JsonObject body = message.body();
       if (body.containsField("type")) {
@@ -254,13 +234,11 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
           ActionHandler ac = handlers.get(action.getLabel());
           Action result = ac.process(action);
           result.setStatus(ActionStatus.COMPLETED.toString());
-          com.sendTo(logic,result.asJsonObject());
+          com.sendTo(logic, result.asJsonObject());
           message.reply();
         }
       } else {
-        log.error(id
-                  + " received message from eventbus that does not contain type field  \n"
-                  + message.toString());
+        log.error(id + " received message from eventbus that does not contain type field  \n" + message.toString());
       }
     } catch (Exception e) {
       e.printStackTrace();

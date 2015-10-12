@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 /**
  * Created by vagvaz on 3/10/14.
  */
-@JsonAutoDetect
-public class WebServiceQuery {
-
+@JsonAutoDetect public class WebServiceQuery {
   private String user;
   private String sql;
 

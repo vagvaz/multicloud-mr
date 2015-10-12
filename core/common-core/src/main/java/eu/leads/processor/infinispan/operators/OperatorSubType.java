@@ -1,8 +1,11 @@
 package eu.leads.processor.infinispan.operators;
 
 /**
- * Created with IntelliJ IDEA. User: vagvaz Date: 9/22/13 Time: 6:56 PM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: vagvaz
+ * Date: 9/22/13
+ * Time: 6:56 PM
+ * To change this template use File | Settings | File Templates.
  */
 public enum OperatorSubType {
   MAPREDUCE,
@@ -23,11 +26,10 @@ public enum OperatorSubType {
 
   public static OperatorSubType fromString(Object s) {
     OperatorSubType result = MAPREDUCE;
-    if (s.equals("MAPREDUCE")) {
+    if (s.equals("MAPREDUCE"))
       result = MAPREDUCE;
-    } else if (s.equals("STREAM")) {
+    else if (s.equals("STREAM"))
       result = STREAM;
-    }
     return result;
   }
 }

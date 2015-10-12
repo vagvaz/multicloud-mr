@@ -1,7 +1,6 @@
 package eu.leads.processor.core.plan;
 
 import com.google.gson.annotations.Expose;
-
 import org.apache.tajo.plan.logical.LogicalRootNode;
 
 /**
@@ -9,10 +8,8 @@ import org.apache.tajo.plan.logical.LogicalRootNode;
  */
 public class EncryptedPointQueryNode extends LogicalRootNode {
 
-  @Expose
-  String token;
-  @Expose
-  String cache;
+  @Expose String token;
+  @Expose String cache;
 
   public EncryptedPointQueryNode(int pid) {
     super(pid);

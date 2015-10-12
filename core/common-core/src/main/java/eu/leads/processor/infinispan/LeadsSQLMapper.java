@@ -7,7 +7,6 @@ import org.vertx.java.core.json.JsonObject;
  * Created by vagvaz on 2/18/15.
  */
 public class LeadsSQLMapper extends LeadsMapper<String, String, String, String> {
-
   public LeadsSQLMapper(JsonObject configuration) {
     super(configuration);
   }
@@ -16,8 +15,10 @@ public class LeadsSQLMapper extends LeadsMapper<String, String, String, String> 
     super(configString);
   }
 
-  @Override
-  public void map(String key, String value, Collector<String, String> collector) {
+  public LeadsSQLMapper() {
+  }
+
+  @Override public void map(String key, String value, Collector<String, String> collector) {
 
   }
 }

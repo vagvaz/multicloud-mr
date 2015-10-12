@@ -2,7 +2,6 @@ package eu.leads.processor.common.test;
 
 
 import eu.leads.processor.infinispan.LeadsReducer;
-
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Iterator;
@@ -24,11 +23,10 @@ public class WordCountReducer extends LeadsReducer<String, Integer> {
         Integer i = iter.next();
         sum += i;
       }
-    }catch (Exception e){
-      if(e instanceof NoSuchElementException){
+    } catch (Exception e) {
+      if (e instanceof NoSuchElementException) {
 
-      }
-      else{
+      } else {
         e.printStackTrace();
       }
     }

@@ -6,7 +6,6 @@ import org.vertx.java.core.json.JsonObject;
  * Created by vagvaz on 11/13/14.
  */
 public class MessageWrapper {
-
   private long messageId;
   private JsonObject message;
   private int retries;

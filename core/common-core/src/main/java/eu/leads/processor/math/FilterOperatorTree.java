@@ -1,7 +1,6 @@
 package eu.leads.processor.math;
 
 import eu.leads.processor.core.Tuple;
-
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.HashMap;
@@ -9,8 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA. User: vagvaz Date: 10/29/13 Time: 5:17 AM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: vagvaz
+ * Date: 10/29/13
+ * Time: 5:17 AM
+ * To change this template use File | Settings | File Templates.
  */
 //This class has the root node of the a tree produced by a where clause in a sql command
 // for example let the where part of an sql query be where webpages.pagerank > 0.2
@@ -19,7 +21,6 @@ import java.util.Map;
 //All the job is done into the MathOperatorTreeNode
 
 public class FilterOperatorTree {
-
   FilterOperatorNode root;
 
   public FilterOperatorTree(String treeAsDoc) {
@@ -70,33 +71,33 @@ public class FilterOperatorTree {
   public void renameTableDatum(String tableName, String toRename) {
     root.renameTableReference(tableName, toRename);
   }
-//    public MathOperatorTree(MathOperatorTreeNode root) {
-//        this.root = root;
-//    }
-//
-//    public MathOperatorTreeNode getRoot() {
-//        return root;
-//    }
-//
-//    public void setRoot(MathOperatorTreeNode root) {
-//        this.root = root;
-//    }
-//
-//    private MathOperatorTreeNode root;
-//
-//    @JsonCreator
-//    public MathOperatorTree(@JsonProperty("root") JsonNode node) {
-//        root = new MathOperatorTreeNode(node);
-//    }
-//
-//    @Override
-//    public String toString() {
-//        String result = root.toString();
-//        return result;
-//    }
-//
-//    @JsonIgnore
-//    public boolean accept(Tuple tuple, QueryContext context) {
-//        return root.accept(tuple, context);
-//    }
+  //    public MathOperatorTree(MathOperatorTreeNode root) {
+  //        this.root = root;
+  //    }
+  //
+  //    public MathOperatorTreeNode getRoot() {
+  //        return root;
+  //    }
+  //
+  //    public void setRoot(MathOperatorTreeNode root) {
+  //        this.root = root;
+  //    }
+  //
+  //    private MathOperatorTreeNode root;
+  //
+  //    @JsonCreator
+  //    public MathOperatorTree(@JsonProperty("root") JsonNode node) {
+  //        root = new MathOperatorTreeNode(node);
+  //    }
+  //
+  //    @Override
+  //    public String toString() {
+  //        String result = root.toString();
+  //        return result;
+  //    }
+  //
+  //    @JsonIgnore
+  //    public boolean accept(Tuple tuple, QueryContext context) {
+  //        return root.accept(tuple, context);
+  //    }
 }

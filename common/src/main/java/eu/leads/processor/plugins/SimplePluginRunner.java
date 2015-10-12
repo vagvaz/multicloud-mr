@@ -5,7 +5,6 @@ import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.common.utils.FSUtilities;
 import eu.leads.processor.conf.ConfigurationUtilities;
-
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
@@ -19,31 +18,23 @@ import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vertx.java.core.json.JsonObject;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
-import static eu.leads.processor.plugins.EventType.CREATED;
-import static eu.leads.processor.plugins.EventType.MODIFIED;
-import static eu.leads.processor.plugins.EventType.REMOVED;
+import static eu.leads.processor.plugins.EventType.*;
 
 /**
  * Created by vagvaz on 6/3/14. This is a the listener that is able to run plugins it is an
  * infinsipan listeners that registeres to create,modify,remove events is asynchronous and NOT
  * clustered.
  */
-@Listener(clustered = false, sync = false, primaryOnly = true)
-public class
-    SimplePluginRunner implements LeadsListener {
+@Listener(clustered = false, sync = false, primaryOnly = true) public class SimplePluginRunner
+    implements LeadsListener {
 
   transient protected Configuration configuration;
   transient protected Set<PluginInterface> deployedPlugins;
@@ -64,17 +55,13 @@ public class
     this.id = id;
   }
 
-  @CacheEntryModified
-  public void entryModified(CacheEntryModifiedEvent<Object, Object> event) {
-    if (event.isPre()) {
+  @CacheEntryModified public void entryModified(CacheEntryModifiedEvent<Object, Object> event) {
+    if (event.isPre())
       return;
-    }
-    if (event.isCreated()) {
+    if (event.isCreated())
       return;
-    }
-    if (event.isCommandRetried()) {
+    if (event.isCommandRetried())
       return;
-    }
     List<PluginInterface> mplugins = plugins.get(MODIFIED);
     for (PluginInterface plugin : mplugins) {
       plugin.modified(event.getKey(), event.getValue(), event.getCache());
@@ -82,14 +69,11 @@ public class
 
   }
 
-  @CacheEntryCreated
-  public void entryCreated(CacheEntryCreatedEvent<Object, Object> event) {
-    if (event.isPre()) {
+  @CacheEntryCreated public void entryCreated(CacheEntryCreatedEvent<Object, Object> event) {
+    if (event.isPre())
       return;
-    }
-    if (event.isCommandRetried()) {
+    if (event.isCommandRetried())
       return;
-    }
     List<PluginInterface> cplugins = plugins.get(CREATED);
     for (PluginInterface plugin : cplugins) {
       plugin.created(event.getKey(), event.getValue(), event.getCache());
@@ -97,27 +81,22 @@ public class
 
   }
 
-  @CacheEntryRemoved
-  public void entryRemoved(CacheEntryRemovedEvent<Object, Object> event) {
-    if (event.isCommandRetried()) {
+  @CacheEntryRemoved public void entryRemoved(CacheEntryRemovedEvent<Object, Object> event) {
+    if (event.isCommandRetried())
       return;
-    }
-    if (event.isPre()) {
+    if (event.isPre())
       return;
-    }
     List<PluginInterface> rplugins = plugins.get(REMOVED);
     for (PluginInterface plugin : rplugins) {
       plugin.removed(event.getKey(), event.getValue(), event.getCache());
     }
   }
 
-  private void writeObject(java.io.ObjectOutputStream out)
-      throws IOException {
+  private void writeObject(java.io.ObjectOutputStream out) throws IOException {
     out.defaultWriteObject();
   }
 
-  private void readObject(java.io.ObjectInputStream in)
-      throws IOException, ClassNotFoundException {
+  private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
     in.defaultReadObject();
     //        Cache cache = (Cache) InfinispanClusterSingleton.getInstance().getManager().getPersisentCache(configCacheName);
   }
@@ -142,34 +121,33 @@ public class
   /**
    * {@inheritDoc}
    */
-  @Override
-  public InfinispanManager getManager() {
+  @Override public InfinispanManager getManager() {
     return this.manager;
   }
 
   /**
    * {@inheritDoc}
    */
-  @Override
-  public void setManager(InfinispanManager manager) {
+  @Override public void setManager(InfinispanManager manager) {
     this.manager = manager;
+  }
+
+  @Override public void initialize(InfinispanManager manager, JsonObject conf) {
+    initialize(manager);
   }
 
   /**
    * {@inheritDoc}
    */
-  @Override
-  public void initialize(InfinispanManager manager) {
+  @Override public void initialize(InfinispanManager manager) {
     Cache cache = (Cache) manager.getPersisentCache(configCacheName);
     this.manager = manager;
     for (Object listener : cache.getListeners()) {
       if (listener.getClass().equals(SimplePluginRunner.class)) {
         SimplePluginRunner runner = (SimplePluginRunner) listener;
         if (runner.id.equals(this.id)) {
-          log.info("There is already a SimplePluginRunner running on "
-                   + InfinispanClusterSingleton.getInstance().getManager()
-                       .getMemberName().toString() + " for  cache "
-                   + targetCacheName);
+          log.info("There is already a SimplePluginRunner running on " + InfinispanClusterSingleton.getInstance()
+              .getManager().getMemberName().toString() + " for  cache " + targetCacheName);
         }
 
       }
@@ -193,26 +171,23 @@ public class
   private void initializePlugin(Cache cache, String plugin) {
     String jarFileName = null;
     if (plugin.equals("eu.leads.processor.plugins.pagerank.PagerankPlugin")) {
-//            ConfigurationUtilities
-//                    .addToClassPath(System.getProperty("java.io.tmpdir") + "/leads/plugins/" + "pagerank-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar");
-      jarFileName =
-          System.getProperty("java.io.tmpdir") + "/leads/plugins/"
+      //            ConfigurationUtilities
+      //                    .addToClassPath(System.getProperty("java.io.tmpdir") + "/leads/plugins/" + "pagerank-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar");
+      jarFileName = System.getProperty("java.io.tmpdir") + "/leads/plugins/"
           + "pagerank-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar";
     } else if (plugin.equals("eu.leads.processor.plugins.sentiment.SentimentAnalysisPlugin")) {
-//            ConfigurationUtilities
-//                    .addToClassPath(System.getProperty("java.io.tmpdir") + "/leads/plugins/" + "sentiment-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar");
-      jarFileName =
-          System.getProperty("java.io.tmpdir") + "/leads/plugins/"
+      //            ConfigurationUtilities
+      //                    .addToClassPath(System.getProperty("java.io.tmpdir") + "/leads/plugins/" + "sentiment-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar");
+      jarFileName = System.getProperty("java.io.tmpdir") + "/leads/plugins/"
           + "sentiment-plugin-1.0-SNAPSHOT-jar-with-dependencies.jar";
     } else {
       byte[] jarAsBytes = (byte[]) cache.get(plugin + ":jar");
       FSUtilities.flushPluginToDisk(plugin + ".jar", jarAsBytes);
 
-//            ConfigurationUtilities
-//                    .addToClassPath(System.getProperty("java.io.tmpdir") + "/leads/plugins/" + plugin
-//                            + ".jar");
-      jarFileName = System.getProperty("java.io.tmpdir") + "/leads/plugins/" + plugin
-                    + ".jar";
+      //            ConfigurationUtilities
+      //                    .addToClassPath(System.getProperty("java.io.tmpdir") + "/leads/plugins/" + plugin
+      //                            + ".jar");
+      jarFileName = System.getProperty("java.io.tmpdir") + "/leads/plugins/" + plugin + ".jar";
     }
     ClassLoader classLoader = null;
     try {
@@ -225,17 +200,14 @@ public class
     FSUtilities.flushToTmpDisk("/leads/tmp/" + plugin + "-conf.xml", config);
     XMLConfiguration pluginConfig = null;
     try {
-      pluginConfig =
-          new XMLConfiguration(System.getProperty("java.io.tmpdir") + "/leads/tmp/" + plugin
-                               + "-conf.xml");
+      pluginConfig = new XMLConfiguration(System.getProperty("java.io.tmpdir") + "/leads/tmp/" + plugin + "-conf.xml");
     } catch (ConfigurationException e) {
       e.printStackTrace();
     }
     String className = (String) cache.get(plugin + ":className");
     if (className != null && !className.equals("")) {
       try {
-        Class<?> plugClass =
-            Class.forName(className, true, classLoader);
+        Class<?> plugClass = Class.forName(className, true, classLoader);
         Constructor<?> con = plugClass.getConstructor();
         PluginInterface plug = (PluginInterface) con.newInstance();
         plug.initialize(pluginConfig, manager);
@@ -298,9 +270,16 @@ public class
   /**
    * {@inheritDoc}
    */
-  @Override
-  public String getId() {
+  @Override public String getId() {
     return SimplePluginRunner.class.getCanonicalName();
+  }
+
+  @Override public void close() {
+
+  }
+
+  @Override public void setConfString(String s) {
+
   }
 
   public void addPlugin(PluginInterface plugin, XMLConfiguration config, int eventmask) {

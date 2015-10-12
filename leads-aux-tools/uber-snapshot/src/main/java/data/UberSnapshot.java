@@ -5,7 +5,6 @@ import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.plugins.pagerank.node.DSPMNode;
-
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.commons.util.CloseableIterable;
@@ -13,22 +12,14 @@ import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.cache.EnsembleCache;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Map;
 
 /**
  * Created by vagvaz on 10/29/14.
  */
-public class
-    UberSnapshot {
+public class UberSnapshot {
 
   static EnsembleCacheManager manager;
   static InfinispanManager imanager;
@@ -118,7 +109,7 @@ public class
       return;
     }
     FileWriter keyOut = new FileWriter(dir + "/" + "approx_sum_cache" + ".keys");
-//      FileWriter sizeOut = new FileWriter(dir+"/"+"approx_sum_cache"+".keys");
+    //      FileWriter sizeOut = new FileWriter(dir+"/"+"approx_sum_cache"+".keys");
     FileWriter valueOut = new FileWriter(dir + "/" + "approx_sum_cache" + ".values");
 
     FileWriter writer;
@@ -145,10 +136,9 @@ public class
       return;
     }
     FileWriter keyOut = new FileWriter(dir + "/" + "pagerankCache" + ".keys");
-//      FileWriter sizeOut = new FileWriter(dir+"/"+"pagerankCache"+".sizes");
-//      FileWriter valueOut = new FileWriter(dir+"/"+"pagerankCache"+".values");
-    ObjectOutputStream
-        outstream =
+    //      FileWriter sizeOut = new FileWriter(dir+"/"+"pagerankCache"+".sizes");
+    //      FileWriter valueOut = new FileWriter(dir+"/"+"pagerankCache"+".values");
+    ObjectOutputStream outstream =
         new ObjectOutputStream(new FileOutputStream(dir + "/" + "pagerankCache" + ".values"));
 
     FileWriter writer;
@@ -160,22 +150,22 @@ public class
       keyOut.write(entry.getKey() + "\n");
       DSPMNode tmp = entry.getValue();
       outstream.writeObject(tmp);
-////         int zero = tmp.getFipVisits();
-////         outstream.writeInt(zero);
-//         int one = tmp.getDspmVisits();
-//         outstream.writeInt(one);
-//         int two = tmp.getPend();
-//         outstream.writeInt(two);
-//
-//         int four = tmp.getFipVisits();
-//         outstream.writeInt(four);
-//         TObjectIntHashMap five = tmp.getStepChoices();
-//         outstream.writeObject(five);
-//         THashMap<Object, TreeMap<Integer, Object>> six = tmp.getFip_map();
-//         outstream.writeObject(six);
-//
-//         THashSet seven = tmp.getNeighbours();
-//         outstream.writeObject(seven);
+      ////         int zero = tmp.getFipVisits();
+      ////         outstream.writeInt(zero);
+      //         int one = tmp.getDspmVisits();
+      //         outstream.writeInt(one);
+      //         int two = tmp.getPend();
+      //         outstream.writeInt(two);
+      //
+      //         int four = tmp.getFipVisits();
+      //         outstream.writeInt(four);
+      //         TObjectIntHashMap five = tmp.getStepChoices();
+      //         outstream.writeObject(five);
+      //         THashMap<Object, TreeMap<Integer, Object>> six = tmp.getFip_map();
+      //         outstream.writeObject(six);
+      //
+      //         THashSet seven = tmp.getNeighbours();
+      //         outstream.writeObject(seven);
       System.out.println(counter++);
     }
     keyOut.flush();
@@ -197,7 +187,7 @@ public class
       newArgs[2] = LQPConfiguration.getInstance().getConfiguration().getString("node.ip");
       newArgs[3] = "11222";
       loadDataWithRemote(newArgs);
-//         loadDataEmbedded(args);
+      //         loadDataEmbedded(args);
     }
     System.out.println("loading fin");
 
@@ -221,15 +211,11 @@ public class
   private static void loadCacheTo(String s, String arg) throws IOException {
     String cacheName = s;
     Map cache = manager.getCache(cacheName);
-    BufferedReader
-        keyReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(arg + "/" + cacheName + ".keys")));
-//        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
-    BufferedReader
-        valueReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(arg + "/" + cacheName + ".values")));
+    BufferedReader keyReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(arg + "/" + cacheName + ".keys")));
+    //        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
+    BufferedReader valueReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(arg + "/" + cacheName + ".values")));
 
     String keyLine = "";
     String valueLine = "";
@@ -259,7 +245,7 @@ public class
 
             }
             Thread.sleep(delay);
-//                  cache.put(keyLine.trim(), valueLine.trim());
+            //                  cache.put(keyLine.trim(), valueLine.trim());
           }
         }
 
@@ -288,18 +274,13 @@ public class
     loadPagerank(args[1], cache);
   }
 
-  private static void loadPagerank(String arg, Map cache)
-      throws IOException, ClassNotFoundException {
+  private static void loadPagerank(String arg, Map cache) throws IOException, ClassNotFoundException {
     String cacheName = "pagerankCache";
 
-    BufferedReader
-        keyReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(arg + "/" + cacheName + ".keys")));
-//        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
-    ObjectInputStream
-        instream =
-        new ObjectInputStream(new FileInputStream(arg + "/" + cacheName + ".values"));
+    BufferedReader keyReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(arg + "/" + cacheName + ".keys")));
+    //        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
+    ObjectInputStream instream = new ObjectInputStream(new FileInputStream(arg + "/" + cacheName + ".values"));
 
     String keyLine = "";
     DSPMNode tmp = new DSPMNode("");
@@ -309,25 +290,25 @@ public class
       tmp = new DSPMNode(keyLine.trim());
       tmp = (DSPMNode) instream.readObject();
       cache.put(keyLine.trim(), tmp);
-//         int zero = instream.readInt();
-//         int one = instream.readInt();
-//         int two = instream.readInt();
-////         int three = instream.readInt();
-//         int four = instream.readInt();
-//         TObjectIntHashMap five =(TObjectIntHashMap)instream.readObject();
-////         five.readExternal(instream);
-//         THashMap<Object, TreeMap<Integer, Object>> six = new THashMap<>();
-//         six = (THashMap<Object, TreeMap<Integer, Object>>)instream.readObject();
-//         THashSet seven = (THashSet)instream.readObject();
-////         tmp.setFipVisits(zero);
-//         tmp.setDspmVisits(one);
-//         tmp.setPend(two);
-//         tmp.setFipVisits(four);
-//         tmp.setStepChoices(five);
-//         tmp.setFip_map(six);
-//         tmp.setNeighbours(seven);
-//         cache.put(keyLine.trim(),tmp);
-//         tmp = new DSPMNode("");
+      //         int zero = instream.readInt();
+      //         int one = instream.readInt();
+      //         int two = instream.readInt();
+      ////         int three = instream.readInt();
+      //         int four = instream.readInt();
+      //         TObjectIntHashMap five =(TObjectIntHashMap)instream.readObject();
+      ////         five.readExternal(instream);
+      //         THashMap<Object, TreeMap<Integer, Object>> six = new THashMap<>();
+      //         six = (THashMap<Object, TreeMap<Integer, Object>>)instream.readObject();
+      //         THashSet seven = (THashSet)instream.readObject();
+      ////         tmp.setFipVisits(zero);
+      //         tmp.setDspmVisits(one);
+      //         tmp.setPend(two);
+      //         tmp.setFipVisits(four);
+      //         tmp.setStepChoices(five);
+      //         tmp.setFip_map(six);
+      //         tmp.setNeighbours(seven);
+      //         cache.put(keyLine.trim(),tmp);
+      //         tmp = new DSPMNode("");
     } catch (IOException e) {
       keyReader.close();
       instream.close();
@@ -344,22 +325,22 @@ public class
           tmp = new DSPMNode(keyLine.trim());
           tmp = (DSPMNode) instream.readObject();
           System.out.println(counter);
-//         int zero = instream.readInt();
-//               int one = instream.readInt();
-//               int two = instream.readInt();
-//               int three = instream.readInt();
-//               int four = instream.readInt();
-//               TObjectIntHashMap five = new TObjectIntHashMap();
-//               five.readExternal(instream);
-//               THashMap<Object, TreeMap<Integer, Object>> six = new THashMap<>();
-//               THashSet seven = new THashSet();
-////         tmp.setFipVisits(zero);
-//               tmp.setDspmVisits(one);
-//               tmp.setPend(two);
-//               tmp.setFipVisits(four);
-//               tmp.setStepChoices(five);
-//               tmp.setFip_map(six);
-//               tmp.setNeighbours(seven);
+          //         int zero = instream.readInt();
+          //               int one = instream.readInt();
+          //               int two = instream.readInt();
+          //               int three = instream.readInt();
+          //               int four = instream.readInt();
+          //               TObjectIntHashMap five = new TObjectIntHashMap();
+          //               five.readExternal(instream);
+          //               THashMap<Object, TreeMap<Integer, Object>> six = new THashMap<>();
+          //               THashSet seven = new THashSet();
+          ////         tmp.setFipVisits(zero);
+          //               tmp.setDspmVisits(one);
+          //               tmp.setPend(two);
+          //               tmp.setFipVisits(four);
+          //               tmp.setStepChoices(five);
+          //               tmp.setFip_map(six);
+          //               tmp.setNeighbours(seven);
           cache.put(keyLine.trim(), tmp);
 
         }
@@ -376,15 +357,11 @@ public class
   private static void loadApproxSum(String arg, Map cache) throws IOException {
     String cacheName = "approx_sum_cache";
 
-    BufferedReader
-        keyReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(arg + "/" + cacheName + ".keys")));
-//        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
-    BufferedReader
-        valueReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(arg + "/" + cacheName + ".values")));
+    BufferedReader keyReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(arg + "/" + cacheName + ".keys")));
+    //        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
+    BufferedReader valueReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(arg + "/" + cacheName + ".values")));
 
     String keyLine = "";
     String valueLine = "";
@@ -421,15 +398,11 @@ public class
 
   private static void loadCache(String cacheName, String dir) throws IOException {
     Cache cache = (Cache) imanager.getPersisentCache(cacheName);
-    BufferedReader
-        keyReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".keys")));
-//        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
-    BufferedReader
-        valueReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".values")));
+    BufferedReader keyReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".keys")));
+    //        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
+    BufferedReader valueReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".values")));
 
     String keyLine = "";
     String valueLine = "";
@@ -450,7 +423,7 @@ public class
             JsonObject ob = new JsonObject(valueLine);
             Tuple tuple = new Tuple(valueLine.trim());
             cache.put(keyLine.trim(), tuple);
-//                  cache.put(keyLine.trim(), valueLine.trim());
+            //                  cache.put(keyLine.trim(), valueLine.trim());
             System.out.println(counter++);
           }
         }
@@ -466,25 +439,18 @@ public class
     }
   }
 
-  private static void loadFromTo(String cacheName, String dir, String host, String port)
-      throws IOException {
+  private static void loadFromTo(String cacheName, String dir, String host, String port) throws IOException {
 
     LQPConfiguration.initialize();
-//      InfinispanManager manager = InfinispanClusterSingleton.getInstance().getManager();
+    //      InfinispanManager manager = InfinispanClusterSingleton.getInstance().getManager();
     EnsembleCacheManager manager = createRemoteCacheManager(host, port);
-    EnsembleCache
-        cache =
-        manager.getCache(cacheName, new ArrayList<>(manager.sites()),
-                         EnsembleCacheManager.Consistency.DIST);
-    BufferedReader
-        keyReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".keys")));
-//        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
-    BufferedReader
-        valueReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".values")));
+    EnsembleCache cache =
+        manager.getCache(cacheName, new ArrayList<>(manager.sites()), EnsembleCacheManager.Consistency.DIST);
+    BufferedReader keyReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".keys")));
+    //        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
+    BufferedReader valueReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".values")));
 
     String keyLine = "";
     String valueLine = "";
@@ -505,7 +471,7 @@ public class
             JsonObject ob = new JsonObject(valueLine);
             Tuple tuple = new Tuple(valueLine.trim());
             cache.put(keyLine.trim(), tuple);
-//                  cache.put(keyLine.trim(), valueLine.trim());
+            //                  cache.put(keyLine.trim(), valueLine.trim());
           }
         }
 

@@ -2,13 +2,11 @@ package data;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
-
 import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
-
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -18,26 +16,12 @@ import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.cache.EnsembleCache;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
 import static data.LoadCsv.plugs.PAGERANK;
@@ -45,12 +29,14 @@ import static data.LoadCsv.plugs.SENTIMENT;
 
 //import eu.leads.processor.sentiment.SentimentAnalysisModule;
 
+
 /**
  * Created by vagvaz on 10/29/14.
  */
 public class LoadCsv {
 
   enum plugs {SENTIMENT, PAGERANK}
+
 
   ;
   transient protected static Random r;
@@ -74,10 +60,8 @@ public class LoadCsv {
           " Syntax:\tconvertadd filename {inputcollumn conversion}+ \n where convertion type: sentiment, pagerank");
       System.err.println("or  \t\t$prog loadIspn dir (delay per put)\n ");
       System.err.println("or  \t\t$prog loadRemote dir host port (delay per put)\n ");
-      System.err
-          .println("or  \t\t$prog loadEnsemble dir host:port(|host:port)+ (delay per put)\n ");
-      System.err
-          .println("or  \t\t$prog loadEnsembleMulti dir host:port(|host:port)+ (delay per put)\n ");
+      System.err.println("or  \t\t$prog loadEnsemble dir host:port(|host:port)+ (delay per put)\n ");
+      System.err.println("or  \t\t$prog loadEnsembleMulti dir host:port(|host:port)+ (delay per put)\n ");
 
       System.exit(-1);
     }
@@ -93,15 +77,14 @@ public class LoadCsv {
 
       } else if (args[0].equals("loadRemote")) {
         if (args.length != 2 && args.length < 4) {
-          System.err.println(
-              "wrong number of arguments for load $prog load dir/ $prog load dir host port (delay per put)");
+          System.err
+              .println("wrong number of arguments for load $prog load dir/ $prog load dir host port (delay per put)");
           System.exit(-1);
         }
         remoteCacheManager = createRemoteCacheManager(args[2], args[3]);
       } else if (args[0].startsWith("loadEnsemble")) {
         if (args.length < 3) {
-          System.err.println(
-              "or  \t\t$prog loadEnsemble(Multi) dir host:port(|host:port)+ (delay per put)\n ");
+          System.err.println("or  \t\t$prog loadEnsemble(Multi) dir host:port(|host:port)+ (delay per put)\n ");
           System.exit(-1);
         }
 
@@ -137,7 +120,7 @@ public class LoadCsv {
     String tableName = fulltableName[fulltableName.length - 1];
     String keysFilename = filename[0] + ".keys";
     Path path = Paths.get(keysFilename);
-//        SentimentAnalysisModule sentimentAnalysisModule = null;
+    //        SentimentAnalysisModule sentimentAnalysisModule = null;
 
     if (args.length % 2 != 0) {
       System.err.print(
@@ -179,7 +162,7 @@ public class LoadCsv {
       }
     }
 
-//        SentimentAnalysisModule module;
+    //        SentimentAnalysisModule module;
     HashSet<Integer> errorenousline = new HashSet<Integer>();
     try {
       CSVReader reader = new CSVReader(new FileReader(initfilename));
@@ -281,11 +264,10 @@ public class LoadCsv {
                   content = content.substring(0, maximumSentimentStringLength);
                 }
                                 /*newStringData[counter++]*/
-                newValue =
-                    String.valueOf(nextFloat(-5,
-                                             5)); // String.valueOf(sentimentAnalysisModule.getOverallSentiment(content).getValue());
+                newValue = String.valueOf(nextFloat(-5,
+                    5)); // String.valueOf(sentimentAnalysisModule.getOverallSentiment(content).getValue());
               } catch (StackOverflowError er) {
-//                                newStringData[counter++] = "0";
+                //                                newStringData[counter++] = "0";
                 newValue = "0";
                 CSVWriter errorwriter = new CSVWriter(new FileWriter(errinitfilename, true));
                 String[] err = new String[1];
@@ -302,10 +284,9 @@ public class LoadCsv {
           writer.writeNext(newStringData);
 
           if (convertedrows % 100 == 0) {
-            System.out.print(
-                "Converted " + convertedrows + " Mean process time: " + DurationFormatUtils
-                    .formatDuration((long) ((System.currentTimeMillis() - filestartTime) / (float) (
-                        convertedrows - alreadyconvertedrows + 1)), "HH:mm:ss,SSS"));
+            System.out.print("Converted " + convertedrows + " Mean process time: " + DurationFormatUtils.formatDuration(
+                    (long) ((System.currentTimeMillis() - filestartTime) / (float) (convertedrows - alreadyconvertedrows
+                        + 1)), "HH:mm:ss,SSS"));
             //System.out.println(" bad: " + errorenousline.size() + " charout: " + cutoffchars + " "+((float)cutoffchars/allchars)*100+ "%");
             System.out.print("\n");
             System.out.flush();
@@ -323,8 +304,8 @@ public class LoadCsv {
       e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
+      //        } catch (InterruptedException e) {
+      //            e.printStackTrace();
     }
   }
 
@@ -339,10 +320,7 @@ public class LoadCsv {
         files.add(entry.toFile());
       }
     } catch (IOException x) {
-      throw new RuntimeException(String.format("error reading folder %s: %s",
-                                               dir,
-                                               x.getMessage()),
-                                 x);
+      throw new RuntimeException(String.format("error reading folder %s: %s", dir, x.getMessage()), x);
     }
     for (File csvfile : files) {
       System.out.print("Loading file: " + csvfile.getName());
@@ -351,12 +329,12 @@ public class LoadCsv {
       System.out.println("Loading time: " + DurationFormatUtils
           .formatDuration(System.currentTimeMillis() - filestartTime, "HH:mm:ss,SSS"));
     }
-//      System.out.println("Loading entities remotely");
-//      if(args.length > 2 ){
-//         loadDataWithRemote(args);
-//      }else{
-//         loadDataEmbedded(args);
-//      }
+    //      System.out.println("Loading entities remotely");
+    //      if(args.length > 2 ){
+    //         loadDataWithRemote(args);
+    //      }else{
+    //         loadDataEmbedded(args);
+    //      }
     System.out.println("Loading finished.");
     System.out.println("Overall Folder Loading time: " + DurationFormatUtils
         .formatDuration(System.currentTimeMillis() - startTime, "HH:mm:ss,SSS"));
@@ -409,8 +387,8 @@ public class LoadCsv {
             for (String keyTypePair : keysTypePairs) {
               String[] pair = keyTypePair.trim().split("\\s+");
               if (pair.length != 2) {
-                System.err.print(
-                    "Column Key Data are not correct! Key line must be at ,Column name space ColumnType, form");
+                System.err
+                    .print("Column Key Data are not correct! Key line must be at ,Column name space ColumnType, form");
                 continue;
               } else {
                 columns.add(pair[0]);
@@ -482,8 +460,8 @@ public class LoadCsv {
           if (StringData.length != columns.size()) {
 
             System.err.println(
-                "Line: " + lines + " Columns size: " + columns.size() + ", data column:"
-                + StringData.length + " size mismatch, continue importing");
+                "Line: " + lines + " Columns size: " + columns.size() + ", data column:" + StringData.length
+                    + " size mismatch, continue importing");
             continue;
           }
           JsonObject data = new JsonObject();
@@ -542,12 +520,12 @@ public class LoadCsv {
             System.out.println("Imported: " + numofEntries + " -- size: " + sizeE);
           }
 
-//                    numofEntries++;
-//                    if (delay > 50) {
-//                        System.out.println("Cache put: " + numofEntries);
-//                    }
-//                    if (numofEntries % 1000 == 0) {
-//                        System.out.println("Imported: " + numofEntries);
+          //                    numofEntries++;
+          //                    if (delay > 50) {
+          //                        System.out.println("Cache put: " + numofEntries);
+          //                    }
+          //                    if (numofEntries % 1000 == 0) {
+          //                        System.out.println("Imported: " + numofEntries);
           //cache.endBatch(true);
           if (numofEntries % 300 == 0) {
             return;
@@ -591,29 +569,27 @@ public class LoadCsv {
 
   private static boolean initialize_cache(String tableName) {
 
-    System.out.println(" Tablename: " + tableName + " Trying to create cache: "
-                       + StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
+    System.out.println(
+        " Tablename: " + tableName + " Trying to create cache: " + StringConstants.DEFAULT_DATABASE_NAME + "."
+            + tableName);
     if (remoteCacheManager != null) {
       try {
-        remoteCache =
-            remoteCacheManager.getCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
+        remoteCache = remoteCacheManager.getCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
       } catch (Exception e) {
         System.err.println("Error " + e.getMessage() + " Terminating file loading.");
         return false;
       }
     } else if (imanager != null) {
-      embeddedCache =
-          imanager.getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
+      embeddedCache = imanager.getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
     } else if (emanager != null)
-//            if(ensemple_multi)
+    //            if(ensemple_multi)
     {
-      ensembleCache =
-          emanager.getCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName,
-                            new ArrayList<>(emanager.sites()),
-                            EnsembleCacheManager.Consistency.DIST);
+      ensembleCache = emanager
+          .getCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName, new ArrayList<>(emanager.sites()),
+              EnsembleCacheManager.Consistency.DIST);
     }
-//            else
-//                ensembleCache = emanager.getCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
+    //            else
+    //                ensembleCache = emanager.getCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
     else {
       System.err.println("Not recognised type, stop importing");
       return false;
@@ -668,13 +644,13 @@ public class LoadCsv {
     return min + r.nextFloat() * (max - min);
   }
 
-//    protected String getRandomDomain() {
-//        int l = 10;
-//        String result = "";
-//        for (int i = 0; i < l; i++) {
-//            result += loc[r.nextInt(loc.length)];
-//        }
-//        return "www." + result + ".com";
-//    }
+  //    protected String getRandomDomain() {
+  //        int l = 10;
+  //        String result = "";
+  //        for (int i = 0; i < l; i++) {
+  //            result += loc[r.nextInt(loc.length)];
+  //        }
+  //        return "www." + result + ".com";
+  //    }
 
 }

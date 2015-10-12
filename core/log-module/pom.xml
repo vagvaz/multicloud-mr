@@ -11,7 +11,7 @@
 
     <parent>
         <groupId>gr.tuc.softnet</groupId>
-        <artifactId>multicloud-mr-core</artifactId>
+        <artifactId>leads-query-processor-core</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>

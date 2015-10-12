@@ -135,13 +135,11 @@ public class Action extends DataType {
     return data.getObject("globalConfig");
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     return getId().hashCode();
   }
 
-  @Override
-  public boolean equals(Object obj) {
+  @Override public boolean equals(Object obj) {
     if (obj instanceof Action) {
       Action other = (Action) obj;
       return other.getId().equals(this.getId());

@@ -5,7 +5,6 @@ import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
-
 import org.bson.BasicBSONObject;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -16,20 +15,9 @@ import org.infinispan.ensemble.cache.EnsembleCache;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * Created by Apostolos Nydriotis on 2015/07/10.
@@ -88,10 +76,10 @@ public class SubmitKMeansTest {
 
   private static Object getKeyFrom(EnsembleCache ensembleCache, Object key) {
     Object result = null;
-    for(Object s : ensembleCache.sites()){
-      EnsembleCache siteCache  = ((Site)s).getCache(ensembleCache.getName());
+    for (Object s : ensembleCache.sites()) {
+      EnsembleCache siteCache = ((Site) s).getCache(ensembleCache.getName());
       result = siteCache.get(key);
-      if(result != null) {
+      if (result != null) {
         return result;
       }
     }
@@ -112,22 +100,18 @@ public class SubmitKMeansTest {
 
     LQPConfiguration.getInstance().initialize();
     LQPConfiguration.getInstance().loadFile(propertiesFile);
-    host = LQPConfiguration.getInstance().getConfiguration().getString("webservice-address",
-                                                                       "http://" + DD1A_IP);
+    host = LQPConfiguration.getInstance().getConfiguration().getString("webservice-address", "http://" + DD1A_IP);
     System.out.println("webservice host: " + host);
     port = 8080;
     String dataPath = LQPConfiguration.getInstance().getConfiguration().getString("data-path", ".");
     System.out.println("data path " + dataPath);
-    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data",
-                                                                                    false);
+    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data", false);
     System.out.println("load data " + loadData);
 
-    boolean reduceLocal =
-        LQPConfiguration.getInstance().getConfiguration().getBoolean("use-reduce-local", false);
+    boolean reduceLocal = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-reduce-local", false);
     System.out.println("use reduce local " + reduceLocal);
 
-    boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine",
-                                                                                   true);
+    boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine", true);
     System.out.println("use combine " + combine);
 
     k = LQPConfiguration.getInstance().getConfiguration().getInt("k", 2);
@@ -138,8 +122,7 @@ public class SubmitKMeansTest {
     //set the default microclouds
     List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dd2a", "dresden2"));
     //read the microcloud to run the job
-    activeMicroClouds =
-        LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
+    activeMicroClouds = LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
     System.out.println("active mc ");
     PrintUtilities.printList(activeMicroClouds);
     //initialize default values
@@ -153,8 +136,7 @@ public class SubmitKMeansTest {
     activeIps = new HashMap<>();
     //read the ips from configuration or use the default
     for (String mc : activeMicroClouds) {
-      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration()
-          .getString(mc, microcloudAddresses.get(mc)));
+      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration().getString(mc, microcloudAddresses.get(mc)));
     }
     System.out.println("active ips");
     PrintUtilities.printMap(activeIps);
@@ -177,8 +159,7 @@ public class SubmitKMeansTest {
     jsonObject.getObject("operator").putString("output", "testOutputCache");
 
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
-    jsonObject.getObject("operator")
-        .putObject("scheduling", scheduling);
+    jsonObject.getObject("operator").putObject("scheduling", scheduling);
 
     if (combine) {
       jsonObject.getObject("operator").putString("combine", "1");
@@ -198,7 +179,7 @@ public class SubmitKMeansTest {
       for (String mc : activeMicroClouds) {
         ensembleString += activeIps.get(mc) + ":11222|";
       }
-//      ensembleString += "80.156.222.26" + ":11222|" + "87.190.238.120" + ":11222|";
+      //      ensembleString += "80.156.222.26" + ":11222|" + "87.190.238.120" + ":11222|";
       ensembleString = ensembleString.substring(0, ensembleString.length() - 1);
 
       if (loadData) {
@@ -236,12 +217,12 @@ public class SubmitKMeansTest {
         }
 
         EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
-        EnsembleCache cache = ensembleCacheManager.getCache(id, new ArrayList<>(
-            ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
+        EnsembleCache cache = ensembleCacheManager
+            .getCache(id, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
 
         Map<String, Double>[] newCenters = new Map[k];
         for (int i = 0; i < k; i++) {
-//          Tuple t = (Tuple) cache.get(String.valueOf(i));
+          //          Tuple t = (Tuple) cache.get(String.valueOf(i));
           Tuple t = (Tuple) getKeyFrom(cache, String.valueOf(i));
           norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
           clusters[i] = t.getAttribute("cluster" + i);
@@ -266,12 +247,11 @@ public class SubmitKMeansTest {
         System.out.println("cluster" + i + ": " + clusters[i]);
       }
 
-//        printResults(id, 5);
+      //        printResults(id, 5);
       Date end = new Date();
-      System.out.println("\nDONE IN: "
-                         + ((double) (end.getTime() - start.getTime()) / 1000.0) + " sec");
+      System.out.println("\nDONE IN: " + ((double) (end.getTime() - start.getTime()) / 1000.0) + " sec");
 
-//      printResults("metrics");
+      //      printResults("metrics");
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -296,8 +276,7 @@ public class SubmitKMeansTest {
     return false;
   }
 
-  private static JsonObject getScheduling(List<String> activeMicroClouds,
-                                          Map<String, String> activeIps) {
+  private static JsonObject getScheduling(List<String> activeMicroClouds, Map<String, String> activeIps) {
     JsonObject result = new JsonObject();
     for (String mc : activeMicroClouds) {
       result.putArray(mc, new JsonArray().add(activeIps.get(mc)));
@@ -307,8 +286,8 @@ public class SubmitKMeansTest {
 
   private static void verifyResults(String id, String[] resultWords, String ensembleString) {
     EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
-    EnsembleCache cache = ensembleCacheManager.getCache(id, new ArrayList<>(
-        ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
+    EnsembleCache cache = ensembleCacheManager
+        .getCache(id, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
     for (String word : resultWords) {
       Object result = cache.get(word);
       if (result != null) {
@@ -347,26 +326,26 @@ public class SubmitKMeansTest {
     remoteCacheManager = createRemoteCacheManager(DD2A_IP);
     results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results);
-//
-//    System.out.println("dresden");
-//    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
-//    results = remoteCacheManager.getCache(id);
-//    PrintUtilities.printMap(results);
+    //
+    //    System.out.println("dresden");
+    //    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
+    //    results = remoteCacheManager.getCache(id);
+    //    PrintUtilities.printMap(results);
 
 /*    System.out.println("hamm5");
     remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
     results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results);*/
 
-//    System.out.println("hamm6");
-//    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
-//    results = remoteCacheManager.getCache(id);
-//    PrintUtilities.printMap(results);
+    //    System.out.println("hamm6");
+    //    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
+    //    results = remoteCacheManager.getCache(id);
+    //    PrintUtilities.printMap(results);
 
-//    System.out.println("\n\nlocalcluster");
-//    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
-//    RemoteCache results = remoteCacheManager.getCache(id);
-//    PrintUtilities.printMap(results);
+    //    System.out.println("\n\nlocalcluster");
+    //    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
+    //    RemoteCache results = remoteCacheManager.getCache(id);
+    //    PrintUtilities.printMap(results);
 
   }
 
@@ -380,31 +359,31 @@ public class SubmitKMeansTest {
     remoteCacheManager = createRemoteCacheManager(DD2A_IP);
     results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results, numOfItems);
-//
-//    System.out.println("dresden");
-//    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
-//    results = remoteCacheManager.getCache(id);
-//    PrintUtilities.printMap(results, numOfItems);
+    //
+    //    System.out.println("dresden");
+    //    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
+    //    results = remoteCacheManager.getCache(id);
+    //    PrintUtilities.printMap(results, numOfItems);
 
 /*    System.out.println("hamm5");
     remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
     results = remoteCacheManager.getCache(id);
     PrintUtilities.printMap(results);*/
 
-//    System.out.println("hamm6");
-//    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
-//    results = remoteCacheManager.getCache(id);
-//    PrintUtilities.printMap(results, numOfItems);
+    //    System.out.println("hamm6");
+    //    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
+    //    results = remoteCacheManager.getCache(id);
+    //    PrintUtilities.printMap(results, numOfItems);
 
-//    System.out.println("\n\nlocalcluster");
-//    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
-//    RemoteCache results = remoteCacheManager.getCache(id);
-//    PrintUtilities.printMap(results, numOfItems);
+    //    System.out.println("\n\nlocalcluster");
+    //    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
+    //    RemoteCache results = remoteCacheManager.getCache(id);
+    //    PrintUtilities.printMap(results, numOfItems);
   }
 
   private static void PrintUsage() {
-    System.out.println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>"
-                       + " <LOAD_DATA> <REDUCE_LOCAL>");
+    System.out
+        .println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>" + " <LOAD_DATA> <REDUCE_LOCAL>");
     System.out.println("Defaults:");
     System.out.println("java -cp tests.SubmitWordCountTest http://80.156.222.4 8080 . false false");
   }
@@ -423,16 +402,13 @@ public class SubmitKMeansTest {
       fileIsCenterIndex = -1;
     }
 
-    @Override
-    public void run() {
+    @Override public void run() {
       File f;
 
       EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
 
-      EnsembleCache ensembleCache =
-          ensembleCacheManager.getCache(CACHE_NAME,
-                                        new ArrayList<>(ensembleCacheManager.sites()),
-                                        EnsembleCacheManager.Consistency.DIST);
+      EnsembleCache ensembleCache = ensembleCacheManager
+          .getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
       while (true) {
         synchronized (files) {
           if (files.size() > 0) {
@@ -446,8 +422,7 @@ public class SubmitKMeansTest {
         System.out.println(id + ": files.get(0).getAbsolutePath() = " + f.getAbsolutePath());
 
         try {
-          BufferedReader bufferedReader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+          BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           String line;
           Map<String, Double> frequencies = new HashMap<>();
@@ -471,8 +446,8 @@ public class SubmitKMeansTest {
           frequencies.put("~", Double.valueOf(f.getName().hashCode()));
           Tuple data = new Tuple();
           data.asBsonObject().putAll(frequencies);
-//          System.out.println("Putting size " + frequencies.size());
-//          System.out.println("Putting id " + frequencies.get("~"));
+          //          System.out.println("Putting size " + frequencies.size());
+          //          System.out.println("Putting id " + frequencies.get("~"));
           ensembleCache.put(String.valueOf(id) + "-" + String.valueOf(putCount++), data);
 
           if (fileIsCenterIndex >= 0) {

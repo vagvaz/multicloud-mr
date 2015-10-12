@@ -1,7 +1,6 @@
 package eu.leads.processor.core;
 
 import com.mongodb.util.JSON;
-
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.vertx.java.core.json.JsonObject;
@@ -10,7 +9,6 @@ import org.vertx.java.core.json.JsonObject;
  * Created by vagvaz on 8/4/14.
  */
 public abstract class DataType_bson {
-
   protected BSONObject data;
 
   public DataType_bson(BSONObject other) {
@@ -42,8 +40,7 @@ public abstract class DataType_bson {
     data.putAll(other);
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return data.toString();
   }
 

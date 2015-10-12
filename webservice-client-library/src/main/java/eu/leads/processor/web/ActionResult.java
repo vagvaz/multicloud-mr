@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 /**
  * Created by vagvaz on 3/7/14.
  */
-@JsonAutoDetect
-public class ActionResult {
-
+@JsonAutoDetect public class ActionResult {
   String result;
   String message;
 

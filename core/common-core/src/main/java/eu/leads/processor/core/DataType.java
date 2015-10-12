@@ -33,8 +33,7 @@ public abstract class DataType {
     data = other.copy();
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return data.toString();
   }
 }

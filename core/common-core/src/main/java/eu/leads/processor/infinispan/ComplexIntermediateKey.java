@@ -20,8 +20,7 @@ public class ComplexIntermediateKey implements Comparable, Serializable {
     this.cache = cache;
   }
 
-  public ComplexIntermediateKey(String site, String node, String key, String cache,
-                                Integer counter) {
+  public ComplexIntermediateKey(String site, String node, String key, String cache, Integer counter) {
     this.site = site;
     this.node = node;
     this.key = key;
@@ -107,13 +106,11 @@ public class ComplexIntermediateKey implements Comparable, Serializable {
     this.counter = new Integer(counter);
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     return key.hashCode();// site.hashCode()+node.hashCode()+key.hashCode()+counter.hashCode();
   }
 
-  @Override
-  public boolean equals(Object o) {
+  @Override public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
@@ -138,8 +135,7 @@ public class ComplexIntermediateKey implements Comparable, Serializable {
     //     return that.toString().equals(this.toString());
   }
 
-  @Override
-  public int compareTo(Object o) {
+  @Override public int compareTo(Object o) {
     if (o == null || getClass() != o.getClass()) {
       return -1;
     }
@@ -191,8 +187,7 @@ public class ComplexIntermediateKey implements Comparable, Serializable {
     //     return new ComplexIntermediateKey(site,node,key,counter);
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return key.toString();
   }
 

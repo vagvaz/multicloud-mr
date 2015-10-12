@@ -5,7 +5,6 @@ import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
-
 import org.apache.commons.lang.time.DurationFormatUtils;
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -15,14 +14,7 @@ import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.cache.EnsembleCache;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,6 +30,7 @@ import java.util.concurrent.ConcurrentMap;
 public class LoadAmplab2 {
 
   enum plugs {SENTIMENT, PAGERANK}
+
 
   ;
   transient protected static Random r;
@@ -61,10 +54,8 @@ public class LoadAmplab2 {
           " Syntax:\tconvertadd filename {inputcollumn conversion}+ \n where convertion type: sentiment, pagerank");
       System.err.println("or  \t\t$prog loadIspn dir (delay per put)\n ");
       System.err.println("or  \t\t$prog loadRemote dir host port (delay per put)\n ");
-      System.err
-          .println("or  \t\t$prog loadEnsemble dir host:port(|host:port)+ (delay per put)\n ");
-      System.err
-          .println("or  \t\t$prog loadEnsembleMulti dir host:port(|host:port)+ (delay per put)\n ");
+      System.err.println("or  \t\t$prog loadEnsemble dir host:port(|host:port)+ (delay per put)\n ");
+      System.err.println("or  \t\t$prog loadEnsembleMulti dir host:port(|host:port)+ (delay per put)\n ");
 
       System.exit(-1);
     }
@@ -77,15 +68,14 @@ public class LoadAmplab2 {
 
       } else if (args[0].equals("loadRemote")) {
         if (args.length != 2 && args.length < 4) {
-          System.err.println(
-              "wrong number of arguments for load $prog load dir/ $prog load dir host port (delay per put)");
+          System.err
+              .println("wrong number of arguments for load $prog load dir/ $prog load dir host port (delay per put)");
           System.exit(-1);
         }
         remoteCacheManager = createRemoteCacheManager(args[2], args[3]);
       } else if (args[0].startsWith("loadEnsemble")) {
         if (args.length < 3) {
-          System.err.println(
-              "or  \t\t$prog loadEnsemble(Multi) dir host:port(|host:port)+ (delay per put)\n ");
+          System.err.println("or  \t\t$prog loadEnsemble(Multi) dir host:port(|host:port)+ (delay per put)\n ");
           System.exit(-1);
         }
 
@@ -109,21 +99,18 @@ public class LoadAmplab2 {
   }
 
 
-  private static void loadData(String path, String arg5, String arg6)
-      throws IOException, ClassNotFoundException {
+  private static void loadData(String path, String arg5, String arg6) throws IOException, ClassNotFoundException {
     Long startTime = System.currentTimeMillis();
     Path dir = Paths.get(path);
     List<File> files = new ArrayList<>();
 
     DirectoryStream.Filter<Path> filter = new DirectoryStream.Filter<Path>() {
-      @Override
-      public boolean accept(Path file) throws IOException {
+      @Override public boolean accept(Path file) throws IOException {
         return (Files.isDirectory(file));
       }
     };
 
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir,
-                                                                 filter)) {
+    try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, filter)) {
       for (Path path1 : stream) {
         // Iterate over the paths in the directory and print filenames
         //System.out.println(path1.getFileName());
@@ -135,8 +122,7 @@ public class LoadAmplab2 {
             files.add(entry.toFile());
           }
         } catch (IOException x) {
-          throw new RuntimeException(
-              String.format("error reading folder %s: %s", dir, x.getMessage()), x);
+          throw new RuntimeException(String.format("error reading folder %s: %s", dir, x.getMessage()), x);
         }
         for (File csvfile : files) {
           System.out.print("Loading file: " + csvfile.getName());
@@ -200,8 +186,8 @@ public class LoadAmplab2 {
             for (String keyTypePair : keysTypePairs) {
               String[] pair = keyTypePair.trim().split("\\s+");
               if (pair.length != 2) {
-                System.err.print(
-                    "Column Key Data are not correct! Key line must be at ,Column name space ColumnType, form");
+                System.err
+                    .print("Column Key Data are not correct! Key line must be at ,Column name space ColumnType, form");
                 continue;
               } else {
                 columns.add(pair[0]);
@@ -296,8 +282,7 @@ public class LoadAmplab2 {
               return;
             }
           } catch (NumberFormatException e) {
-            System.err
-                .println("Line: " + lines + "Parsing error, put random generated float number");
+            System.err.println("Line: " + lines + "Parsing error, put random generated float number");
             data.putNumber(fullCollumnName, nextFloat(-3, 3));
           }
         }
@@ -307,11 +292,11 @@ public class LoadAmplab2 {
           key += ":" + dataline[primaryKeysPos[i]];
         }
 
-//                try {
-//                    System.out.println("putting... pageURL:" + data.getField("default." + tableName + ".pageURL").toString() + " -- pageRank:" + data.getField("default." + tableName + ".pageRank").toString());
-//                } catch(NullPointerException npe){
-//                    System.out.println("putting... sourceIP:" + data.getField("default." + tableName + ".sourceIP").toString() + " -- destURL:" + data.getField("default." + tableName + ".destURL").toString());
-//                }
+        //                try {
+        //                    System.out.println("putting... pageURL:" + data.getField("default." + tableName + ".pageURL").toString() + " -- pageRank:" + data.getField("default." + tableName + ".pageRank").toString());
+        //                } catch(NullPointerException npe){
+        //                    System.out.println("putting... sourceIP:" + data.getField("default." + tableName + ".sourceIP").toString() + " -- destURL:" + data.getField("default." + tableName + ".destURL").toString());
+        //                }
         put(key, data.toString());
 
         try {
@@ -402,24 +387,22 @@ public class LoadAmplab2 {
 
   private static boolean initialize_cache(String tableName) {
 
-    System.out.println(" Tablename: " + tableName + " Trying to create cache: "
-                       + StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
+    System.out.println(
+        " Tablename: " + tableName + " Trying to create cache: " + StringConstants.DEFAULT_DATABASE_NAME + "."
+            + tableName);
     if (remoteCacheManager != null) {
       try {
-        remoteCache =
-            remoteCacheManager.getCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
+        remoteCache = remoteCacheManager.getCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
       } catch (Exception e) {
         System.err.println("Error " + e.getMessage() + " Terminating file loading.");
         return false;
       }
     } else if (imanager != null) {
-      embeddedCache =
-          imanager.getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
+      embeddedCache = imanager.getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName);
     } else if (emanager != null) {
-      ensembleCache =
-          emanager.getCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName,
-                            new ArrayList<>(emanager.sites()),
-                            EnsembleCacheManager.Consistency.DIST);
+      ensembleCache = emanager
+          .getCache(StringConstants.DEFAULT_DATABASE_NAME + "." + tableName, new ArrayList<>(emanager.sites()),
+              EnsembleCacheManager.Consistency.DIST);
     } else {
       System.err.println("Not recognised type, stop importing");
       return false;

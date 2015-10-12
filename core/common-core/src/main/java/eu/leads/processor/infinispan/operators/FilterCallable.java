@@ -2,7 +2,6 @@ package eu.leads.processor.infinispan.operators;
 
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.math.FilterOperatorTree;
-
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 import org.infinispan.distexec.DistributedCallable;
@@ -11,18 +10,12 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by vagvaz on 9/24/14.
  */
 public class FilterCallable<K, V> implements DistributedCallable<K, V, String>, Serializable {
-
   transient protected Cache<K, V> inputCache;
   transient protected Cache outputCache;
   transient protected FilterOperatorTree tree;
@@ -41,8 +34,7 @@ public class FilterCallable<K, V> implements DistributedCallable<K, V, String>, 
     this.qualString = qualString;
   }
 
-  @Override
-  public void setEnvironment(Cache<K, V> cache, Set<K> inputKeys) {
+  @Override public void setEnvironment(Cache<K, V> cache, Set<K> inputKeys) {
     inputCache = cache;
     outputCache = cache.getCacheManager().getCache(output);
     JsonObject object = new JsonObject(qualString);
@@ -57,44 +49,36 @@ public class FilterCallable<K, V> implements DistributedCallable<K, V, String>, 
       Iterator<Object> targetIterator = targets.iterator();
       while (targetIterator.hasNext()) {
         JsonObject target = (JsonObject) targetIterator.next();
-        List<JsonObject>
-            tars =
-            targetsMap.get(
-                target.getObject("expr").getObject("body").getObject("column").getString("name"));
+        List<JsonObject> tars =
+            targetsMap.get(target.getObject("expr").getObject("body").getObject("column").getString("name"));
         if (tars == null) {
           tars = new ArrayList<>();
         }
         tars.add(target);
-        targetsMap
-            .put(target.getObject("expr").getObject("body").getObject("column").getString("name"),
-                 tars);
+        targetsMap.put(target.getObject("expr").getObject("body").getObject("column").getString("name"), tars);
       }
     }
-//      JsonArray targets = conf.getObject("body").getArray("targets");
-//      Iterator<Object> targetIterator = targets.iterator();
-//      while (targetIterator.hasNext()) {
-//         JsonObject target = (JsonObject) targetIterator.next();
-//         targetsMap.put(target.getObject("expr").getObject("body").getObject("column").getString("name"), target);
-//      }
+    //      JsonArray targets = conf.getObject("body").getArray("targets");
+    //      Iterator<Object> targetIterator = targets.iterator();
+    //      while (targetIterator.hasNext()) {
+    //         JsonObject target = (JsonObject) targetIterator.next();
+    //         targetsMap.put(target.getObject("expr").getObject("body").getObject("column").getString("name"), target);
+    //      }
   }
 
-  @Override
-  public String call() throws Exception {
-    final ClusteringDependentLogic
-        cdl =
-        inputCache.getAdvancedCache().getComponentRegistry()
-            .getComponent(ClusteringDependentLogic.class);
+  @Override public String call() throws Exception {
+    final ClusteringDependentLogic cdl =
+        inputCache.getAdvancedCache().getComponentRegistry().getComponent(ClusteringDependentLogic.class);
     for (Object ikey : inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).keySet()) {
-      if (!cdl.localNodeIsPrimaryOwner(ikey)) {
+      if (!cdl.localNodeIsPrimaryOwner(ikey))
         continue;
-      }
       String key = (String) ikey;
-//          String value = (String)inputCache.get(key);
+      //          String value = (String)inputCache.get(key);
       Tuple tuple = (Tuple) inputCache.get(key);
 
-//         Tuple tuple = new Tuple(value);
+      //         Tuple tuple = new Tuple(value);
       if (tree.accept(tuple)) {
-//            tuple = prepareOutput(tuple);
+        //            tuple = prepareOutput(tuple);
         outputCache.put(key, tuple);
       }
 
@@ -109,29 +93,29 @@ public class FilterCallable<K, V> implements DistributedCallable<K, V, String>, 
 
     JsonObject result = new JsonObject();
     //WARNING
-//       System.err.println("out: " + tuple.asString());
+    //       System.err.println("out: " + tuple.asString());
 
     if (targetsMap.size() == 0) {
-//          System.err.println("s 0 ");
+      //          System.err.println("s 0 ");
       return tuple;
 
     }
-//       System.err.println("normal");
+    //       System.err.println("normal");
 
     //END OF WANRING
     List<String> toRemoveFields = new ArrayList<String>();
     Map<String, List<String>> toRename = new HashMap<String, List<String>>();
     for (String field : tuple.getFieldNames()) {
       List<JsonObject> ob = targetsMap.get(field);
-      if (ob == null) {
+      if (ob == null)
         toRemoveFields.add(field);
-      } else {
+      else {
         for (JsonObject obb : ob) {
           List<String> ren = toRename.get(field);
           if (ren == null) {
             ren = new ArrayList<>();
           }
-//               toRename.put(field, ob.getObject("column").getString("name"));
+          //               toRename.put(field, ob.getObject("column").getString("name"));
           ren.add(obb.getObject("column").getString("name"));
           toRename.put(field, ren);
         }
@@ -145,22 +129,21 @@ public class FilterCallable<K, V> implements DistributedCallable<K, V, String>, 
   protected void handlePagerank(Tuple t) {
 
     if (t.hasField("default.webpages.pagerank")) {
-      if (!t.hasField("url")) {
+      if (!t.hasField("url"))
         return;
-      }
       String pagerankStr = t.getAttribute("pagerank");
-//            Double d = Double.parseDouble(pagerankStr);
-//            if (d < 0.0) {
-//
-//                try {
-////                    d = LeadsPrGraph.getPageDistr(t.getAttribute("url"));
-//                    d = (double) LeadsPrGraph.getPageVisitCount(t.getAttribute("url"));
-//
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                t.setAttribute("pagerank", d.toString());
-//        }
+      //            Double d = Double.parseDouble(pagerankStr);
+      //            if (d < 0.0) {
+      //
+      //                try {
+      ////                    d = LeadsPrGraph.getPageDistr(t.getAttribute("url"));
+      //                    d = (double) LeadsPrGraph.getPageVisitCount(t.getAttribute("url"));
+      //
+      //                } catch (IOException e) {
+      //                    e.printStackTrace();
+      //                }
+      //                t.setAttribute("pagerank", d.toString());
+      //        }
     }
   }
 }

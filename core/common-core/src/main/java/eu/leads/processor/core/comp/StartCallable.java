@@ -6,7 +6,6 @@ import java.util.concurrent.Callable;
  * Created by vagvaz on 11/27/14.
  */
 public class StartCallable implements Callable {
-
   boolean callStart;
   ComponentControlVerticle owner;
 
@@ -15,11 +14,9 @@ public class StartCallable implements Callable {
     this.owner = componentControlVerticle;
   }
 
-  @Override
-  public Object call() throws Exception {
-    if (callStart) {
+  @Override public Object call() throws Exception {
+    if (callStart)
       owner.startUp();
-    }
     return null;
   }
 }

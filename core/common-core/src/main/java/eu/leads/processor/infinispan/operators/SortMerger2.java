@@ -3,26 +3,19 @@ package eu.leads.processor.infinispan.operators;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.core.TupleComparator;
-
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.ensemble.EnsembleCacheManager;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * Created by vagvaz on 11/24/14.
  */
 public class SortMerger2 {
-
   //    private Map<String, String> input;
-//    private String output;
+  //    private String output;
   private final String prefix;
   private final BasicCache outputCache;
   private Vector<Integer> counters;
@@ -42,17 +35,15 @@ public class SortMerger2 {
   private long counter = 0;
   private long rowcount = Long.MAX_VALUE;
 
-  public SortMerger2(List<String> inputCaches, String output, TupleComparator comp,
-                     InfinispanManager manager, EnsembleCacheManager emanager, JsonObject conf,
-                     long rc) {
+  public SortMerger2(List<String> inputCaches, String output, TupleComparator comp, InfinispanManager manager,
+      EnsembleCacheManager emanager, JsonObject conf, long rc) {
 
     prefix = output + ":";
-//        this.output = output;
-//        input = inputMap;
+    //        this.output = output;
+    //        input = inputMap;
     rowcount = rc;
     this.manager = manager;
-    outputCache = emanager.getCache(output, new ArrayList<>(emanager.sites()),
-                                    EnsembleCacheManager.Consistency.DIST);
+    outputCache = emanager.getCache(output, new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
     counters = new Vector<Integer>(inputCaches.size());
     values = new Vector<Tuple>(inputCaches.size());
     caches = new Vector<Map<String, Tuple>>();
@@ -76,28 +67,25 @@ public class SortMerger2 {
       values.add(t);
       cacheNames.add(entry);
     }
-    if (rowcount <= batchSize) {
+    if (rowcount <= batchSize && rc > 0)
       batchSize = 2 * rowcount;
-    }
-    if (caches.size() != 0) {
+    if (caches.size() != 0)
       perCache = batchSize / caches.size();
-    } else {
+    else
       perCache = 10;
-    }
   }
 
   private Tuple getCurrentValue(int cacheIndex) {
     String key = keys.get(cacheIndex);
     Integer counter = counters.get(cacheIndex);
-//      String tmp = caches.get(cacheIndex).get(key  + counter.toString());
-//      if(tmp == null || tmp.equals(""))
-//         return null;
+    //      String tmp = caches.get(cacheIndex).get(key  + counter.toString());
+    //      if(tmp == null || tmp.equals(""))
+    //         return null;
     System.out.println("Try reading " + key + counter.toString());
     Tuple tmp = caches.get(cacheIndex).get(key + counter.toString());
-    if (tmp == null || tmp.equals("")) {
+    if (tmp == null || tmp.equals(""))
       return null;
-    }
-//      return new Tuple(tmp);
+    //      return new Tuple(tmp);
     return tmp;
   }
 
@@ -105,59 +93,58 @@ public class SortMerger2 {
     String key = keys.get(cacheIndex);
     Integer counter = counters.get(cacheIndex);
     counter = counter + 1;
-//      String tmp = caches.get(cacheIndex).get(key +  counter.toString());
+    //      String tmp = caches.get(cacheIndex).get(key +  counter.toString());
     Tuple tmp = caches.get(cacheIndex).get(key + counter.toString());
-//      if (tmp == null) {
-//         counters.remove(cacheIndex);
-//         caches.remove(cacheIndex);
-//         manager.removePersistentCache(cacheNames.elementAt(cacheIndex));
-//         cacheNames.removeElementAt(cacheIndex);
-//         keys.remove(cacheIndex);
-//         values.remove(cacheIndex);
-//         return null;
-//      }
+    //      if (tmp == null) {
+    //         counters.remove(cacheIndex);
+    //         caches.remove(cacheIndex);
+    //         manager.removePersistentCache(cacheNames.elementAt(cacheIndex));
+    //         cacheNames.removeElementAt(cacheIndex);
+    //         keys.remove(cacheIndex);
+    //         values.remove(cacheIndex);
+    //         return null;
+    //      }
     counters.set(cacheIndex, counter);
-//        String tmp = caches.get(cacheIndex).get(key +  counter.toString());
-//      if(tmp!= null && !tmp.equals(""))
-//         return new Tuple(tmp);
-    if (tmp != null) {
+    //        String tmp = caches.get(cacheIndex).get(key +  counter.toString());
+    //      if(tmp!= null && !tmp.equals(""))
+    //         return new Tuple(tmp);
+    if (tmp != null)
       return tmp;
-    } else {
+    else
       return null;
-    }
   }
 
   public void merge() {
-//      Tuple nextValue = null;
-//      Tuple t = null;
-//      long counter = 0;
-//      while (caches.size() > 0) {
-//         int minIndex = findMinIndex(values);
-//
-//         t = values.get(minIndex);
-////            t = prepareOutput(t);
-//         outputCache.put(prefix + counter, t.asString());
-//         counter++;
-//         nextValue = getNextValue(minIndex);
-//         if (nextValue != null)
-//            values.set(minIndex, nextValue);
-//      }
-//      counters.clear();
-//      counters = null;
-//      for(String cache : keys){
-//         manager.removePersistentCache(cache);
-//      }
-//      keys.clear();
-//      keys = null;
-//      values.clear();
-//      values = null;
-//      cacheNames.clear();
-//      cacheNames = null;
-//      for (Map<String, String> map : caches) {
-//         map.clear();
-//      }
-//      caches.clear();
-//      caches = null;
+    //      Tuple nextValue = null;
+    //      Tuple t = null;
+    //      long counter = 0;
+    //      while (caches.size() > 0) {
+    //         int minIndex = findMinIndex(values);
+    //
+    //         t = values.get(minIndex);
+    ////            t = prepareOutput(t);
+    //         outputCache.put(prefix + counter, t.asString());
+    //         counter++;
+    //         nextValue = getNextValue(minIndex);
+    //         if (nextValue != null)
+    //            values.set(minIndex, nextValue);
+    //      }
+    //      counters.clear();
+    //      counters = null;
+    //      for(String cache : keys){
+    //         manager.removePersistentCache(cache);
+    //      }
+    //      keys.clear();
+    //      keys = null;
+    //      values.clear();
+    //      values = null;
+    //      cacheNames.clear();
+    //      cacheNames = null;
+    //      for (Map<String, String> map : caches) {
+    //         map.clear();
+    //      }
+    //      caches.clear();
+    //      caches = null;
     Tuple nextValue = null;
     Tuple t = null;
 
@@ -175,9 +162,8 @@ public class SortMerger2 {
       batchTuples = new ArrayList<>((int) batchSize);
       batchTuples.addAll(values);
       values.clear();
-      if (counter > rowcount) {
+      if (counter > rowcount)
         return;
-      }
     }
   }
 
@@ -197,31 +183,28 @@ public class SortMerger2 {
 
         Tuple t = batchTuples.remove(0);
         outputCache.put(prefix + counter, t);
-//            outputCache.put(prefix + counter, t.asString());
+        //            outputCache.put(prefix + counter, t.asString());
         if (batchTuples.size() == 0) {
           return;
         }
         counter++;
-        if (counter > rowcount) {
+        if (counter > rowcount)
           return;
-        }
         cmp = comparator.compare(batchTuples.get(0), values.get(minIndex));
       }
       if (oldcounter == counter) {
 
         Tuple t = currentTuple;
         outputCache.put(prefix + counter, t);
-//            outputCache.put(prefix + counter, t.asString());
+        //            outputCache.put(prefix + counter, t.asString());
         counter++;
-        if (counter > rowcount) {
+        if (counter > rowcount)
           return;
-        }
       }
 
       nextValue = getNextValueWithCleanUp(minIndex);
-      if (nextValue != null) {
+      if (nextValue != null)
         values.set(minIndex, nextValue);
-      }
     }
     if (values.size() == 0) {
       splitTuples(batchTuples);
@@ -243,19 +226,18 @@ public class SortMerger2 {
       return null;
     }
     counters.set(cacheIndex, counter);
-//        String tmp = caches.get(cacheIndex).get(key +  counter.toString());
+    //        String tmp = caches.get(cacheIndex).get(key +  counter.toString());
     return tmp;
   }
 
   private void splitTuples(List<Tuple> batchTuples) {
     for (Tuple t : batchTuples) {
-//            t = prepareOutput(t);
+      //            t = prepareOutput(t);
       outputCache.put(prefix + counter, t);
-//         outputCache.put(prefix + counter, t.asString());
+      //         outputCache.put(prefix + counter, t.asString());
       counter++;
-      if (rowcount < counter) {
+      if (rowcount < counter)
         return;
-      }
     }
   }
 
@@ -307,7 +289,7 @@ public class SortMerger2 {
     manager.removePersistentCache(cacheNames.elementAt(cacheIndex));
     cacheNames.removeElementAt(cacheIndex);
     keys.remove(cacheIndex);
-//         values.remove(cacheIndex);
+    //         values.remove(cacheIndex);
   }
 
   private int findMinIndex(List<Tuple> values) {
@@ -325,23 +307,4 @@ public class SortMerger2 {
 
   }
 
-//   protected Tuple prepareOutput(Tuple tuple){
-//      if(outputSchema.toString().equals(inputSchema.toString())){
-//         return tuple;
-//      }
-//      JsonObject result = new JsonObject();
-//      List<String> toRemoveFields = new ArrayList<String>();
-//      Map<String,String> toRename = new HashMap<String,String>();
-//      for (String field : tuple.getFieldNames()) {
-//         JsonObject ob = targetsMap.get(field);
-//         if (ob == null)
-//            toRemoveFields.add(field);
-//         else {
-//            toRename.put(field, ob.getObject("column").getString("name"));
-//         }
-//      }
-//      tuple.removeAtrributes(toRemoveFields);
-//      tuple.renameAttributes(toRename);
-//      return tuple;
-//   }
 }

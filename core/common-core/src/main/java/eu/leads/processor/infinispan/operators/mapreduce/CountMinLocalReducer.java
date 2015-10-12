@@ -3,7 +3,6 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsReducer;
-
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Iterator;
@@ -13,7 +12,7 @@ import java.util.Iterator;
  */
 public class CountMinLocalReducer extends LeadsReducer<String, Tuple> {
 
-
+  public CountMinLocalReducer(){super();}
   public CountMinLocalReducer(JsonObject configuration) {
     super(configuration);
   }
@@ -22,8 +21,7 @@ public class CountMinLocalReducer extends LeadsReducer<String, Tuple> {
     super(configuration);
   }
 
-  @Override
-  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
+  @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
 
     int sum = 0;
     while (iter.hasNext()) {
@@ -37,8 +35,7 @@ public class CountMinLocalReducer extends LeadsReducer<String, Tuple> {
     collector.emit(row, output);
   }
 
-  @Override
-  protected void finalizeTask() {
+  @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
   }
 }

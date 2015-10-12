@@ -1,14 +1,12 @@
 package eu.leads.processor.infinispan.operators;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.core.Action;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.infinispan.operators.mapreduce.GroupByMapper;
 import eu.leads.processor.infinispan.operators.mapreduce.GroupByReducer;
-
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -17,8 +15,11 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA. User: vagvaz Date: 10/29/13 Time: 1:19 AM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: vagvaz
+ * Date: 10/29/13
+ * Time: 1:19 AM
+ * To change this template use File | Settings | File Templates.
  */
 @JsonAutoDetect
 //@JsonDeserialize(converter = GroupByJsonDelegate.class)
@@ -48,36 +49,35 @@ public class GroupByOperator extends MapReduceOperator {
     }
   }
 
-  @Override
-  public void init(JsonObject config) {
+  @Override public void init(JsonObject config) {
     super.init(conf);
     setMapper(new GroupByMapper(conf.toString()));
-    setFederationReducer(new GroupByReducer(conf.toString()));
+    setReducer(new GroupByReducer(conf.toString()));
     init_statistics(this.getClass().getCanonicalName());
   }
 
-  @Override
-  public void execute() {
+  @Override public void execute() {
     super.execute();
 
   }
 
-  @Override
-  public void cleanup() {
+  @Override public void cleanup() {
     super.cleanup();
   }
 
+  @Override public String getContinuousListenerClass() {
+    return null;
+  }
 
-  @Override
-  public void setupMapCallable() {
-//      init(conf);
+
+  @Override public void setupMapCallable() {
+    //      init(conf);
     setMapper(new GroupByMapper(conf.toString()));
     super.setupMapCallable();
   }
 
-  @Override
-  public void setupReduceCallable() {
-    setFederationReducer(new GroupByReducer(conf.toString()));
+  @Override public void setupReduceCallable() {
+    setReducer(new GroupByReducer(conf.toString()));
     super.setupReduceCallable();
   }
 

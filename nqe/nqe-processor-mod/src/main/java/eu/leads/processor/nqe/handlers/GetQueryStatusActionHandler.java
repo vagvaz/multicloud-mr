@@ -7,23 +7,26 @@ import eu.leads.processor.core.ActionHandler;
 import eu.leads.processor.core.ActionStatus;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
-
+import eu.leads.processor.core.plan.QueryState;
+import eu.leads.processor.core.plan.QueryStatus;
 import org.infinispan.Cache;
 import org.vertx.java.core.json.JsonObject;
 
 /**
- * Created by Apostolos Nydriotis on 2015/06/24.
+ * Created by vagvaz on 8/6/14.
  */
 public class GetQueryStatusActionHandler implements ActionHandler {
-
   Node com;
   LogProxy log;
   InfinispanManager persistence;
   String id;
-  Cache<String, String> queriesCache;
+  Cache <String,String> queriesCache;
+  String queryId;
+  String queryJson;
+  JsonObject query;
 
   public GetQueryStatusActionHandler(Node com, LogProxy log, InfinispanManager persistence,
-                                     String id) {
+      String id) {
     this.com = com;
     this.log = log;
     this.persistence = persistence;
@@ -33,26 +36,36 @@ public class GetQueryStatusActionHandler implements ActionHandler {
 
   @Override
   public Action process(Action action) {
+    //      log.info("process get query status");
     Action result = action;
-    JsonObject actionResult = new JsonObject();
+
     try {
-      String queryId = action.getData().getString("queryId");
-//            JsonObject actionResult = persistence.get(StringConstants.QUERIESCACHE, queryId);
-      String queryJson = queriesCache.get(queryId);
+      queryId = action.getData().getString("queryId");
+      //            JsonObject actionResult = persistence.get(StringConstants.QUERIESCACHE, queryId);
+      //         log.info("read query"); SELECT sourceIP FROM Rankings AS R JOIN  uservisits UV  ON R.pageURL = UV.desturl WHERE pagerank < 10  LIMIT 1;
+      //         log.info("read query"); SELECT paeran     FROM Rankings  WHERE pagerank < 10  LIMIT 1;
+      queryJson = queriesCache.get(queryId);
 
-      if (queryJson == null) {
-        System.out.println("queryId = " + queryId);
+      if(queryJson != null) {
+        query = new JsonObject(queryJson);
+        result.setResult(query.getObject("status"));
+        query = null;
       }
+      else{
+        result.setResult( new QueryStatus(queryId, QueryState.PENDING,"NON-EXISTENT").asJsonObject());
+      }
+      queryJson = null;
 
-      JsonObject query = new JsonObject(queryJson);
-      result.setResult(query);
-
-    } catch (Exception e) {
+    }catch(Exception e){
+      log.info("exception in read");
+      e.printStackTrace();
+      JsonObject actionResult = new JsonObject();
       actionResult.putString("error", e.getMessage());
       result.setResult(actionResult);
-      e.printStackTrace();
     }
+
     result.setStatus(ActionStatus.COMPLETED.toString());
+    //      log.info("preturn query status");
     return result;
   }
 }

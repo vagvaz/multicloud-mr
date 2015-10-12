@@ -1,7 +1,6 @@
 package eu.leads.processor.core;
 
 import eu.leads.processor.core.comp.LeadsMessageHandler;
-
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonArray;
@@ -62,8 +61,7 @@ public class ReplyHandler implements Handler<Message<JsonObject>>, LeadsMessageH
   //      mutex.notify();
   //   }
 
-  @Override
-  public void handle(Message<JsonObject> msg) {
+  @Override public void handle(Message<JsonObject> msg) {
     System.err.println("pre rn");
     synchronized (mutex) {
       message = msg.body();
@@ -110,8 +108,7 @@ public class ReplyHandler implements Handler<Message<JsonObject>>, LeadsMessageH
 
   }
 
-  @Override
-  public void handle(JsonObject msg) {
+  @Override public void handle(JsonObject msg) {
     System.err.println("aapre rn");
     synchronized (mutex) {
       message = msg;

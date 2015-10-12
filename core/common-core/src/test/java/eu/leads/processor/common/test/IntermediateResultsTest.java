@@ -1,6 +1,5 @@
 package eu.leads.processor.common.test;
 
-import eu.leads.processor.common.infinispan.CacheManagerFactory;
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
@@ -21,7 +20,7 @@ public class IntermediateResultsTest {
   static BasicCache indexedCache;
   static BasicCache dataCache;
   static BasicCache keysCache;
-  static String[] nodes= null;//{"node0","node1","node2","node3","node00"};//,"node11","node22","node33"};
+  static String[] nodes = null;//{"node0","node1","node2","node3","node00"};//,"node11","node22","node33"};
   static String[] microClouds = null;//{"mc0"};//,"mc1"};//,"mc2","mc01","mc11","mc21"};
   static String[] keys;
   static String cacheName = "acache";
@@ -30,6 +29,7 @@ public class IntermediateResultsTest {
   static int numOfMicroClouds = 5; //10
   static int valuesPerKey = 4;
   static RemoteCacheManager rmanager;
+
   public static void main(String[] args) {
     LQPConfiguration.initialize();
     rmanager = createRemoteCacheManager();
@@ -40,8 +40,8 @@ public class IntermediateResultsTest {
     //    InfinispanManager manager14 = CacheManagerFactory.createCacheManager();
     // create required caches
     indexedCache = (BasicCache) manager.getPersisentCache("prefix.indexed");
-    dataCache = (BasicCache)manager.getPersisentCache("prefix.data");
-    keysCache = (BasicCache)manager.getPersisentCache("keysCache");
+    dataCache = (BasicCache) manager.getPersisentCache("prefix.data");
+    keysCache = (BasicCache) manager.getPersisentCache("keysCache");
 
     //get remote caches in order to emulate ensemble!
     indexedCache = rmanager.getCache("prefix.indexed");
@@ -51,8 +51,8 @@ public class IntermediateResultsTest {
     //generate keys
     keys = new String[numOfkeys];
     for (int index = 0; index < numOfkeys; index++) {
-      keys[index] = "key"+index;
-      keysCache.put(keys[index],keys[index]);
+      keys[index] = "key" + index;
+      keysCache.put(keys[index], keys[index]);
     }
 
     //generate nodes and micro clouds
@@ -60,33 +60,34 @@ public class IntermediateResultsTest {
     microClouds = new String[numOfMicroClouds];
 
     for (int i = 0; i < numOfMicroClouds; i++) {
-      microClouds[i] = "mc"+i;
+      microClouds[i] = "mc" + i;
     }
 
-    for(int i = 0; i < numOfNodes;i++){
-      nodes[i] = "node"+i;
+    for (int i = 0; i < numOfNodes; i++) {
+      nodes[i] = "node" + i;
     }
     //generate intermediate keyValuePairs
-    generateIntermKeyValue(keysCache, dataCache, indexedCache, valuesPerKey, keys, nodes,
-        microClouds);
+    generateIntermKeyValue(keysCache, dataCache, indexedCache, valuesPerKey, keys, nodes, microClouds);
 
     int counter = 0;
     System.err.println("Start Iteration");
-    for(String k : keys){
+    for (String k : keys) {
       int keyCounter = 0;
       //initialize iterator
-      LeadsIntermediateIterator iterator = new LeadsIntermediateIterator(k,"prefix",InfinispanClusterSingleton.getInstance().getManager(),numOfMicroClouds*numOfNodes);
+      LeadsIntermediateIterator iterator =
+          new LeadsIntermediateIterator(k, "prefix", InfinispanClusterSingleton.getInstance().getManager(),
+              numOfMicroClouds * numOfNodes);
 
-      while(true){
+      while (true) {
         try {
           //          System.out.println(keyCounter + ": " + iterator.next().toString());
           iterator.next();
           keyCounter++;
           counter++;
-          if(keyCounter % 10 == 0)
+          if (keyCounter % 10 == 0)
             System.out.print(".");
-        }catch(Exception e ){
-          if ( e instanceof NoSuchElementException){
+        } catch (Exception e) {
+          if (e instanceof NoSuchElementException) {
             //            System.err.println("End of Iteration");
             break;
           }
@@ -94,29 +95,29 @@ public class IntermediateResultsTest {
         }
       }
       //check if key iterated correctly
-      if(keyCounter != (valuesPerKey*numOfMicroClouds*numOfNodes))
-      {
-        System.err.println("key " + k + " iteration size: " + keyCounter + " instead of " + valuesPerKey*numOfMicroClouds*numOfNodes + " number of missed iterations" + (valuesPerKey*numOfMicroClouds*numOfNodes -keyCounter)/valuesPerKey );
+      if (keyCounter != (valuesPerKey * numOfMicroClouds * numOfNodes)) {
+        System.err.println("key " + k + " iteration size: " + keyCounter + " instead of "
+            + valuesPerKey * numOfMicroClouds * numOfNodes + " number of missed iterations"
+            + (valuesPerKey * numOfMicroClouds * numOfNodes - keyCounter) / valuesPerKey);
       }
     }
-    System.err.println("\nTotal counted " + counter + " total " + keys.length* microClouds.length*nodes.length*valuesPerKey);
+    System.err.println(
+        "\nTotal counted " + counter + " total " + keys.length * microClouds.length * nodes.length * valuesPerKey);
     int cc = 0;
-    for(String node : nodes){
-      for(String site : microClouds) {
+    for (String node : nodes) {
+      for (String site : microClouds) {
         for (String key : keys) {
-          IndexedComplexIntermediateKey ikey = new IndexedComplexIntermediateKey(site,node,cacheName,key);
-          IndexedComplexIntermediateKey ivalue =
-              (IndexedComplexIntermediateKey) indexedCache.get(ikey);
-          if(ivalue != null){
-            if(!ikey.equals(ivalue)){
-              System.out.println("Diff:ikey " + ikey.toString() +" ivalue " + ivalue.toString());
-            }else{
+          IndexedComplexIntermediateKey ikey = new IndexedComplexIntermediateKey(site, node, cacheName, key);
+          IndexedComplexIntermediateKey ivalue = (IndexedComplexIntermediateKey) indexedCache.get(ikey);
+          if (ivalue != null) {
+            if (!ikey.equals(ivalue)) {
+              System.out.println("Diff:ikey " + ikey.toString() + " ivalue " + ivalue.toString());
+            } else {
               cc++;
             }
 
-          }
-          else{
-            System.out.println("null for ikey " + ikey.toString() +" ivalue " + ivalue);
+          } else {
+            System.out.println("null for ikey " + ikey.toString() + " ivalue " + ivalue);
           }
         }
       }
@@ -126,13 +127,13 @@ public class IntermediateResultsTest {
     System.exit(0);
   }
 
-  private static void generateIntermKeyValue(BasicCache keysCache, BasicCache dataCache,
-      BasicCache indexedCache, int valuesPerKey, String[] keys,
-      String[] nodes, String[] microClouds) {
+  private static void generateIntermKeyValue(BasicCache keysCache, BasicCache dataCache, BasicCache indexedCache,
+      int valuesPerKey, String[] keys, String[] nodes, String[] microClouds) {
     //    IndexedComplexIntermediateKey indexedKey = new IndexedComplexIntermediateKey();
     //    ComplexIntermediateKey ikey = new ComplexIntermediateKey();
-    for(String node : nodes){
-      for(String site : microClouds) {
+
+    for (String node : nodes) {
+      for (String site : microClouds) {
         for (String key : keys) {
           keysCache.put(key, key);
           IndexedComplexIntermediateKey indexedKey = new IndexedComplexIntermediateKey();

@@ -5,7 +5,6 @@ import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
-
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
@@ -14,19 +13,9 @@ import org.infinispan.ensemble.cache.EnsembleCache;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * Created by Apostolos Nydriotis on 2015/06/22.
@@ -94,8 +83,7 @@ public class SubmitCountMinTest {
     LQPConfiguration.getInstance().initialize();
     LQPConfiguration.getInstance().loadFile(propertiesFile);
 
-    host = LQPConfiguration.getInstance().getConfiguration()
-        .getString("webservice-address", "http://" + DD1A_IP);
+    host = LQPConfiguration.getInstance().getConfiguration().getString("webservice-address", "http://" + DD1A_IP);
     System.out.println("webservice host: " + host);
 
     port = 8080;
@@ -103,16 +91,13 @@ public class SubmitCountMinTest {
     String dataPath = LQPConfiguration.getInstance().getConfiguration().getString("data-path", ".");
     System.out.println("data path " + dataPath);
 
-    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data",
-                                                                                    false);
+    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data", false);
     System.out.println("load data " + loadData);
 
-    boolean reduceLocal =
-        LQPConfiguration.getInstance().getConfiguration().getBoolean("use-reduce-local", false);
+    boolean reduceLocal = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-reduce-local", false);
     System.out.println("use reduce local " + reduceLocal);
 
-    boolean combine =
-        LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine", true);
+    boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine", true);
     System.out.println("use combine " + combine);
 
     double delta = LQPConfiguration.getInstance().getConfiguration().getDouble("delta", 0.02);
@@ -125,8 +110,7 @@ public class SubmitCountMinTest {
     List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dd2a", "dresden2"));
 
     //read the microcloud to run the job
-    activeMicroClouds =
-        LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
+    activeMicroClouds = LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
     System.out.println("active mc ");
     PrintUtilities.printList(activeMicroClouds);
     //initialize default values
@@ -140,8 +124,7 @@ public class SubmitCountMinTest {
     activeIps = new HashMap<>();
     //read the ips from configuration or use the default
     for (String mc : activeMicroClouds) {
-      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration()
-          .getString(mc, microcloudAddresses.get(mc)));
+      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration().getString(mc, microcloudAddresses.get(mc)));
     }
     System.out.println("active ips");
     PrintUtilities.printMap(activeIps);
@@ -174,8 +157,7 @@ public class SubmitCountMinTest {
 
     int[] wd = calculateSketchDimentions(delta, epsilon);
 
-    jsonObject.getObject("operator").getObject("configuration")
-        .putNumber("w", wd[0]).putNumber("d", wd[1]);
+    jsonObject.getObject("operator").getObject("configuration").putNumber("w", wd[0]).putNumber("d", wd[1]);
 
     JsonObject targetEndpoints = scheduling;
     jsonObject.getObject("operator").putObject("targetEndpoints", targetEndpoints);
@@ -212,8 +194,8 @@ public class SubmitCountMinTest {
       }
 
       printResults(id, 0);
-//      verifyResults(id, resultWords, ensembleString);
-//      printResults("metrics");
+      //      verifyResults(id, resultWords, ensembleString);
+      //      printResults("metrics");
 
       System.out.println("\nDONE IN: " + secs + " sec");
 
@@ -222,8 +204,7 @@ public class SubmitCountMinTest {
     }
   }
 
-  private static JsonObject getScheduling(List<String> activeMicroClouds,
-                                          Map<String, String> activeIps) {
+  private static JsonObject getScheduling(List<String> activeMicroClouds, Map<String, String> activeIps) {
     JsonObject result = new JsonObject();
     for (String mc : activeMicroClouds) {
       result.putArray(mc, new JsonArray().add(activeIps.get(mc)));
@@ -233,8 +214,8 @@ public class SubmitCountMinTest {
 
   private static void verifyResults(String id, String[] resultWords, String ensembleString) {
     EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
-    EnsembleCache cache = ensembleCacheManager.getCache(id, new ArrayList<>(
-        ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
+    EnsembleCache cache = ensembleCacheManager
+        .getCache(id, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
     for (String word : resultWords) {
       Object result = cache.get(word);
       if (result != null) {
@@ -288,8 +269,8 @@ public class SubmitCountMinTest {
   }
 
   private static void PrintUsage() {
-    System.out.println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>"
-                       + " <LOAD_DATA> <REDUCE_LOCAL>");
+    System.out
+        .println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>" + " <LOAD_DATA> <REDUCE_LOCAL>");
     System.out.println("Defaults:");
     System.out.println("java -cp tests.SubmitWordCountTest http://80.156.222.4 8080 . false false");
   }
@@ -304,17 +285,14 @@ public class SubmitCountMinTest {
       putCount = 0;
     }
 
-    @Override
-    public void run() {
+    @Override public void run() {
       int linesPerTupe = 100;
       File f = null;
 
       EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
 
-      EnsembleCache ensembleCache =
-          ensembleCacheManager.getCache(CACHE_NAME,
-                                        new ArrayList<>(ensembleCacheManager.sites()),
-                                        EnsembleCacheManager.Consistency.DIST);
+      EnsembleCache ensembleCache = ensembleCacheManager
+          .getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
 
       while (true) {
         try {
@@ -329,8 +307,7 @@ public class SubmitCountMinTest {
         System.out.println(id + ": files.get(0).getAbsolutePath() = " + f.getAbsolutePath());
 
         try {
-          BufferedReader bufferedReader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+          BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           JsonObject data = new JsonObject();
           String line;

@@ -1,14 +1,7 @@
 package eu.leads.processor.core.plan;
 
 import eu.leads.processor.core.DataType;
-
-import org.apache.tajo.plan.logical.BinaryNode;
-import org.apache.tajo.plan.logical.LogicalNode;
-import org.apache.tajo.plan.logical.LogicalRootNode;
-import org.apache.tajo.plan.logical.RelationNode;
-import org.apache.tajo.plan.logical.ScanNode;
-import org.apache.tajo.plan.logical.TableSubQueryNode;
-import org.apache.tajo.plan.logical.UnaryNode;
+import org.apache.tajo.plan.logical.*;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
@@ -21,7 +14,6 @@ import java.util.List;
  * Created by vagvaz on 8/4/14.
  */
 public class WorkflowPlan extends DataType implements Plan {
-
   public WorkflowPlan(JsonObject plan) {
     super(plan);
   }
@@ -89,8 +81,7 @@ public class WorkflowPlan extends DataType implements Plan {
 
       } else if (current instanceof RelationNode) {
         if (current instanceof ScanNode) {
-          result.putObject(String.valueOf(current.getPID()),
-                           new JsonObject(current.toJson()));
+          result.putObject(String.valueOf(current.getPID()), new JsonObject(current.toJson()));
         } else if (current instanceof TableSubQueryNode) {
           TableSubQueryNode tmp = (TableSubQueryNode) current;
           LogicalNode n = tmp.getSubQuery();
@@ -114,9 +105,9 @@ public class WorkflowPlan extends DataType implements Plan {
       result.getObject("body").removeField("rightChild");
     } else {
       if (current instanceof RelationNode) {
-        if (current instanceof ScanNode) {
+        if (current instanceof ScanNode)
           ;
-        } else if (current instanceof TableSubQueryNode) {
+        else if (current instanceof TableSubQueryNode) {
           result.getObject("body").getObject("subQuery").getObject("body").removeField("child");
         } else {
           System.err.println("PROBLEM WITH RELNODE TYPES");
@@ -136,6 +127,7 @@ public class WorkflowPlan extends DataType implements Plan {
     outputNode.setOutput("");
     outputNode.setNodeType(LeadsNodeType.OUTPUT_NODE);
     outputNode.setId(getQueryId() + ".output");
+
 
     PlanNode top = new PlanNode(rootNode, getQueryId());
     List<PlanNode> toProcess = new ArrayList<>();
@@ -186,8 +178,8 @@ public class WorkflowPlan extends DataType implements Plan {
           LogicalNode n = tmp.getSubQuery();
           PlanNode currentNode = new PlanNode(n, getQueryId());
           top.addInput(currentNode.getNodeId());
-          top.asJsonObject().getObject("configuration").getObject("body").getObject("subQuery")
-              .getObject("body").removeField("child");
+          top.asJsonObject().getObject("configuration").getObject("body").getObject("subQuery").getObject("body")
+              .removeField("child");
           result.putObject(top.getNodeId(), top.asJsonObject());
           currentNode.setOutput(top.getNodeId());
           visit(currentNode, n, result);
@@ -201,19 +193,16 @@ public class WorkflowPlan extends DataType implements Plan {
     }
   }
 
-  @Override
-  public PlanNode getOutput() {
+  @Override public PlanNode getOutput() {
     PlanNode result = new PlanNode(data.getObject("output"));
     return result;
   }
 
-  @Override
-  public void setOutput(PlanNode node) {
+  @Override public void setOutput(PlanNode node) {
     data.putObject("output", node.asJsonObject());
   }
 
-  @Override
-  public Collection<PlanNode> getNodes() {
+  @Override public Collection<PlanNode> getNodes() {
     JsonArray nodes = data.getArray("nodes");
     List<PlanNode> result = new ArrayList<>();
     Iterator<Object> it = nodes.iterator();
@@ -223,8 +212,7 @@ public class WorkflowPlan extends DataType implements Plan {
     return result;
   }
 
-  @Override
-  public PlanNode getNode(String nodeId) {
+  @Override public PlanNode getNode(String nodeId) {
     JsonObject jsonNode = data.getObject("plan").getObject(nodeId);
     if (jsonNode == null) {
       return null;
@@ -233,8 +221,7 @@ public class WorkflowPlan extends DataType implements Plan {
     return result;
   }
 
-  @Override
-  public Collection<String> getSources() {
+  @Override public Collection<String> getSources() {
     JsonArray sources = data.getArray("sources");
     List<String> result = new ArrayList<>();
     Iterator<Object> it = sources.iterator();
@@ -244,65 +231,53 @@ public class WorkflowPlan extends DataType implements Plan {
     return result;
   }
 
-  @Override
-  public JsonObject getRootNode() {
+  @Override public JsonObject getRootNode() {
     return data.getObject("rootNode");
   }
 
-  @Override
-  public void setRootNode(JsonObject rootNode) {
+  @Override public void setRootNode(JsonObject rootNode) {
     data.putObject("rootNode", rootNode);
   }
 
-  @Override
-  public void setRootNode(LogicalRootNode rootNode) {
+  @Override public void setRootNode(LogicalRootNode rootNode) {
     JsonObject jsonObject = new JsonObject(rootNode.toJson());
     setRootNode(jsonObject);
   }
 
-  @Override
-  public JsonObject getPlanGraph() {
+  @Override public JsonObject getPlanGraph() {
     JsonObject result = data.getObject("plan");
-    if (result == null) {
+    if (result == null)
       return null;
-    }
     return result;
   }
 
-  @Override
-  public void setPlanGraph(JsonObject planGraph) {
+  @Override public void setPlanGraph(JsonObject planGraph) {
     data.putObject("plan", planGraph);
   }
 
-  @Override
-  public String getQueryId() {
+  @Override public String getQueryId() {
     return data.getString("queryId");
   }
 
-  @Override
-  public void setQueryId(String queryId) {
+  @Override public void setQueryId(String queryId) {
     data.putString("queryId", queryId);
   }
 
-  @Override
-  public void addParentTo(String nodeId, PlanNode newNode) {
+  @Override public void addParentTo(String nodeId, PlanNode newNode) {
 
   }
 
-  @Override
-  public void addChildTo(String nodeId, PlanNode newNode) {
+  @Override public void addChildTo(String nodeId, PlanNode newNode) {
 
   }
 
-  @Override
-  public JsonObject getNodeById(String id) {
+  @Override public JsonObject getNodeById(String id) {
     JsonObject node = data.getObject("nodesByPID").getObject(id);
     return node;
 
   }
 
-  @Override
-  public JsonObject getNodeByPid(int pid) {
+  @Override public JsonObject getNodeByPid(int pid) {
     return getNodeById(Integer.toString(pid));
   }
 

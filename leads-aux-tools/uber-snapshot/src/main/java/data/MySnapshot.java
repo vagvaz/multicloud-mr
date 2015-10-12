@@ -4,7 +4,6 @@ import eu.leads.processor.common.infinispan.AcceptAllFilter;
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
-
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -12,12 +11,7 @@ import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.commons.util.CloseableIterable;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Map;
 
 /**
@@ -65,24 +59,19 @@ public class MySnapshot {
     return new RemoteCacheManager(builder.build());
   }
 
-  private static void loadFromTo(String cacheName, String dir, String host, String port)
-      throws IOException {
+  private static void loadFromTo(String cacheName, String dir, String host, String port) throws IOException {
     if (checkDirectory(dir)) {
       System.err.println("input is not a directory");
     }
     LQPConfiguration.initialize();
-//      InfinispanManager manager = InfinispanClusterSingleton.getInstance().getManager();
+    //      InfinispanManager manager = InfinispanClusterSingleton.getInstance().getManager();
     RemoteCacheManager manager = createRemoteCacheManager(host, port);
     RemoteCache cache = manager.getCache(cacheName, true);
-    BufferedReader
-        keyReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".keys")));
-//        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
-    BufferedReader
-        valueReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".values")));
+    BufferedReader keyReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".keys")));
+    //        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
+    BufferedReader valueReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".values")));
 
     String keyLine = "";
     String valueLine = "";
@@ -160,15 +149,11 @@ public class MySnapshot {
     LQPConfiguration.initialize();
     InfinispanManager manager = InfinispanClusterSingleton.getInstance().getManager();
     Cache cache = (Cache) manager.getPersisentCache(cacheName);
-    BufferedReader
-        keyReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".keys")));
-//        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
-    BufferedReader
-        valueReader =
-        new BufferedReader(
-            new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".values")));
+    BufferedReader keyReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".keys")));
+    //        BufferedReader sizeReader = new BufferedReader(new InputStreamReader(new FileInputStream(dir+"/"+cacheName+".sizes")));
+    BufferedReader valueReader =
+        new BufferedReader(new InputStreamReader(new FileInputStream(dir + "/" + cacheName + ".values")));
 
     String keyLine = "";
     String valueLine = "";

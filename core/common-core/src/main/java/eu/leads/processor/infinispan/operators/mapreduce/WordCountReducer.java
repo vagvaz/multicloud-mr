@@ -4,7 +4,6 @@ import eu.leads.processor.common.utils.ProfileEvent;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsCombiner;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
@@ -27,24 +26,25 @@ public class WordCountReducer extends LeadsCombiner<String, Tuple> {
     super(configString);
   }
 
+  public WordCountReducer() {super();
+  }
 
   @Override public void initialize() {
     super.initialize();
     log = LoggerFactory.getLogger(WordCountReducer.class);
   }
 
-  @Override
-  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
-//    System.out.println(getClass().getName() + ".reduce!");
+  @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
+    //    System.out.println(getClass().getName() + ".reduce!");
     int sum = 0;
-    ProfileEvent event = new ProfileEvent("WCRComputeSum",log);
+    ProfileEvent event = new ProfileEvent("WCRComputeSum", log);
     while (true) {
       try {
         Tuple input = iter.next();
         int count = Integer.valueOf(input.getAttribute("count"));
         sum += count;
-      }catch(Exception e){
-        if(e instanceof NoSuchElementException){
+      } catch (Exception e) {
+        if (e instanceof NoSuchElementException) {
           break;
         }
         e.printStackTrace();
@@ -58,8 +58,7 @@ public class WordCountReducer extends LeadsCombiner<String, Tuple> {
     event.end();
   }
 
-  @Override
-  protected void finalizeTask() {
+  @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
   }
 }

@@ -1,8 +1,6 @@
 {
-
   // Java verticle
   "main": "eu.leads.processor.core.LogSink",
-
   // In this example we also provide various other versions of the main verticle, you can uncomment this and
   // play around:
 
@@ -32,7 +30,6 @@
     "The Apache Software License Version 2.0"
   ],
   "author": "Joe Bloggs",
-
   // Optional fields
   "developers": [
     "Other Dev 1",
@@ -47,6 +44,5 @@
     "herring"
   ],
   "homepage": "url to your project page",
-
   "auto-redeploy": false
 }

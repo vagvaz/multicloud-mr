@@ -1,12 +1,9 @@
 package eu.leads.processor.conf;
 
 import eu.leads.processor.common.StringConstants;
-
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
+import eu.leads.processor.common.infinispan.EnsembleCacheUtils;
+import eu.leads.processor.core.TupleUtils;
+import org.apache.commons.configuration.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +15,6 @@ import java.util.Map;
  * Created by vagvaz on 5/25/14.
  */
 public class LQPConfiguration {
-
   private static volatile Object mutex = new Object();
   private static final LQPConfiguration instance = new LQPConfiguration();
   private static Logger log = LoggerFactory.getLogger(LQPConfiguration.class);
@@ -68,43 +64,52 @@ public class LQPConfiguration {
 
   public static void initialize(String base_dir, boolean lite) {
     synchronized (mutex) {
-      if (initialized) {
+      if (initialized)
         return;
-      }
       initialized = true;
       ConfigurationUtilities.addToClassPath(base_dir);
 
-      if (!base_dir.endsWith("/")) {
+      if (!base_dir.endsWith("/"))
         base_dir += "/";
-      }
       instance.setBaseDir(base_dir);
       //Get All important initialValues
       generateDefaultValues();
       resolveDyanmicParameters();
       loadSystemPropertiesFile();
-
+      readPublicIp();
       if (!lite) {
         updateConfigurationFiles();
       }
+      System.out.println("Initializing EnsembleCacheUtils");
+      EnsembleCacheUtils.initialize();
+      TupleUtils.initialize();
+    }
+  }
+
+  private static void readPublicIp() {
+    try {
+      PropertiesConfiguration publicProperties =
+          new PropertiesConfiguration(instance.getBaseDir() + "public_ip.properties");
+      instance.getConfiguration().setProperty(StringConstants.PUBLIC_IP,
+          publicProperties.getString(StringConstants.PUBLIC_IP, instance.getConfiguration().getString("node.ip")));
+    } catch (ConfigurationException e) {
+      System.out.println(e.getMessage());
+      log.error(e.getMessage());
     }
   }
 
   private static void generateDefaultValues() {
-    instance.getConfiguration()
-        .setProperty("node.cluster", StringConstants.DEFAULT_CLUSTER_NAME);
+    instance.getConfiguration().setProperty("node.cluster", StringConstants.DEFAULT_CLUSTER_NAME);
     instance.getConfiguration().setProperty("node.name", StringConstants.DEFAULT_NODE_NAME);
-    instance.getConfiguration()
-        .setProperty("processor.InfinispanFile", StringConstants.ISPN_DEFAULT_FILE);
-    instance.getConfiguration()
-        .setProperty("processor.JgroupsFile", StringConstants.JGROUPS_DEFAULT_TMPL);
+    instance.getConfiguration().setProperty("processor.InfinispanFile", StringConstants.ISPN_DEFAULT_FILE);
+    instance.getConfiguration().setProperty("processor.JgroupsFile", StringConstants.JGROUPS_DEFAULT_TMPL);
     instance.getConfiguration().setProperty("processor.debug", "INFO");
     instance.getConfiguration().setProperty("processor.infinispan.mode", "cluster");
   }
 
   private static void resolveDyanmicParameters() {
     String hostname = ConfigurationUtilities.resolveHostname();
-    instance.getConfiguration()
-        .setProperty("node.hostname", hostname);
+    instance.getConfiguration().setProperty("node.hostname", hostname);
     String ip = ConfigurationUtilities.resolveIp();
     instance.getConfiguration().setProperty("node.ip", ip);
     String broadcast = ConfigurationUtilities.resolveBroadCast(ip);
@@ -114,16 +119,12 @@ public class LQPConfiguration {
 
   private static void loadSystemPropertiesFile() {
     try {
-      PropertiesConfiguration config =
-          new PropertiesConfiguration(instance.getBaseDir() + "processor.properties");
-      if (config.containsKey("node.interface")) {
-        instance.getConfiguration().setProperty("node.ip", ConfigurationUtilities
-            .resolveIp(config
-                           .getString("node.interface")));
-      }
+      PropertiesConfiguration config = new PropertiesConfiguration(instance.getBaseDir() + "processor.properties");
+      if (config.containsKey("node.interface"))
+        instance.getConfiguration()
+            .setProperty("node.ip", ConfigurationUtilities.resolveIp(config.getString("node.interface")));
       instance.getConfiguration().addConfiguration(config);
-      instance.getConfigurations()
-          .put(instance.getBaseDir() + "processor.properties", config);
+      instance.getConfigurations().put(instance.getBaseDir() + "processor.properties", config);
     } catch (ConfigurationException e) {
       e.printStackTrace();
     }
@@ -136,11 +137,10 @@ public class LQPConfiguration {
       jgroups.setProperty("TCP[@bind_addr]", "${jgroups.tcp.address:" + ip + "}");
       //jgroups.setProperty("MPING[@bind_addr]", ip);
       String broadcast = instance.getConfiguration().getString("node.broadcast");
-//                instance.getConfiguration().getString("node.ip").substring(0, ip.lastIndexOf("."))
-//                    + ".255";
+      //                instance.getConfiguration().getString("node.ip").substring(0, ip.lastIndexOf("."))
+      //                    + ".255";
       jgroups.setProperty("BPING[@dest]", broadcast);
-      jgroups.save(System.getProperty("user.dir") + "/" + instance.getBaseDir()
-                   + "jgroups-tcp.xml");
+      jgroups.save(System.getProperty("user.dir") + "/" + instance.getBaseDir() + "jgroups-tcp.xml");
       //            jgroups.save(baseDir+"jgroups-tcp.xml");
     } catch (ConfigurationException e) {
       e.printStackTrace();
@@ -252,9 +252,9 @@ public class LQPConfiguration {
     if (!confFile.exists()) {
       confFile = new File(baseDir + filename);
       if (!confFile.exists()) {
-        log.error("File " + filename
-                  + "Could not be loaded because it does not exist neither in the working dir nor in "
-                  + baseDir);
+        log.error(
+            "File " + filename + "Could not be loaded because it does not exist neither in the working dir nor in "
+                + baseDir);
         return;
       }
     }

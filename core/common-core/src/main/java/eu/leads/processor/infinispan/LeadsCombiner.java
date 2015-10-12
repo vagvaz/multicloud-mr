@@ -7,6 +7,8 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class LeadsCombiner<K, V> extends LeadsReducer<K, V> {
 
+  public LeadsCombiner(){ super();}
+
   public LeadsCombiner(JsonObject configuration) {
     super(configuration);
   }

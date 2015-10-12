@@ -1,7 +1,6 @@
 package eu.leads.processor.infinispan.operators;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-
 import eu.leads.processor.common.infinispan.AcceptAllFilter;
 import eu.leads.processor.common.infinispan.EnsembleCacheUtils;
 import eu.leads.processor.common.infinispan.InfinispanManager;
@@ -10,7 +9,6 @@ import eu.leads.processor.core.Action;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
-
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.util.CloseableIterable;
@@ -21,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 //import eu.leads.processor.plan.ExecutionPlanNode;
 //import eu.leads.processor.sql.PlanNode;
@@ -28,12 +27,13 @@ import java.util.Set;
 
 
 /**
- * Created with IntelliJ IDEA. User: vagvaz Date: 10/29/13 Time: 1:00 AM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: vagvaz
+ * Date: 10/29/13
+ * Time: 1:00 AM
+ * To change this template use File | Settings | File Templates.
  */
-@JsonAutoDetect
-public class LimitOperator extends BasicOperator {
-
+@JsonAutoDetect public class LimitOperator extends BasicOperator {
   boolean sorted = false;
   //    Cache inputMap=null;
   BasicCache data = null;
@@ -55,14 +55,12 @@ public class LimitOperator extends BasicOperator {
     inputCache = (Cache) persistence.getPersisentCache(getInput());
     emanager = new EnsembleCacheManager(computeEnsembleHost());
     emanager.start();
-    data = emanager.getCache(getOutput(), new ArrayList<>(emanager.sites()),
-                             EnsembleCacheManager.Consistency.DIST);
+    data = emanager.getCache(getOutput(), new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
     //      data = persistence.getPersisentCache(getOutput());
     inputPrefix = inputCache.getName() + ":";
   }
 
-  @Override
-  public void init(JsonObject config) {
+  @Override public void init(JsonObject config) {
     super.init(conf);
     ///How to initialize what ?
     rowCount = conf.getObject("body").getLong("fetchFirstNum");
@@ -71,8 +69,7 @@ public class LimitOperator extends BasicOperator {
 
   }
 
-  @Override
-  public void executeMap() {
+  @Override public void executeMap() {
 
     subscribeToMapActions(pendingMMC);
     if (!isRemote) {
@@ -95,39 +92,45 @@ public class LimitOperator extends BasicOperator {
         for (counter = 0; counter < rowCount; counter++) {
           //                String tupleValue = (String) inputMap.get(inputPrefix + counter);
           Tuple tupleValue = (Tuple) inputCache.get(inputPrefix + counter);
-          if (tupleValue == null) {
+          if (tupleValue == null)
             break;
-          }
           //                System.err.println("Read " + inputPrefix + counter + " --> " +tupleValue);
           Tuple t = tupleValue;
           handlePagerank(t);
           //                System.err.println(prefix+counter);
-          EnsembleCacheUtils.putToCache(data, prefix + Integer.toString(counter), t);
+          EnsembleCacheUtils.putToCacheDirect(data, prefix + Integer.toString(counter), t);
           //                data.put(prefix + Integer.toString(counter), t.asString());
         }
       } else {
         CloseableIterable<Map.Entry<String, Tuple>> iterable =
-            inputCache.getAdvancedCache().filterEntries(new AcceptAllFilter());
+            inputCache.getAdvancedCache().filterEntries(new AcceptAllFilter(rowCount));
         for (Map.Entry<String, Tuple> entry : iterable) {
-          if (counter >= rowCount) {
+          if (counter >= rowCount)
             break;
-          }
           String tupleId = entry.getKey().substring(entry.getKey().indexOf(":") + 1);
           Tuple t = entry.getValue();
           handlePagerank(t);
-          EnsembleCacheUtils.putToCache(data, prefix + tupleId, t);
+          EnsembleCacheUtils.putToCacheDirect(data, prefix + tupleId, t);
           counter++;
         }
+        iterable.close();
 
       }
-      EnsembleCacheUtils.waitForAllPuts();
+      try {
+        EnsembleCacheUtils.waitForAllPuts();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        PrintUtilities.logStackTrace(log, e.getStackTrace());
+      } catch (ExecutionException e) {
+        e.printStackTrace();
+        PrintUtilities.logStackTrace(log, e.getStackTrace());
+      }
       replyForSuccessfulExecution(action);
     }
 
     synchronized (mmcMutex) {
       while (pendingMMC.size() > 0) {
-        System.out.println(
-            "Sleeping to executing " + this.getClass().toString() + " pending clusters ");
+        System.out.println("Sleeping to executing " + this.getClass().toString() + " pending clusters ");
         PrintUtilities.printList(Arrays.asList(pendingMMC));
         try {
           mmcMutex.wait(120000);
@@ -140,15 +143,13 @@ public class LimitOperator extends BasicOperator {
     for (Map.Entry<String, String> entry : mcResults.entrySet()) {
       System.out.println("Execution on " + entry.getKey() + " was " + entry.getValue());
       log.error("Execution on " + entry.getKey() + " was " + entry.getValue());
-      if (entry.getValue().equals("FAIL")) {
+      if (entry.getValue().equals("FAIL"))
         failed = true;
-      }
     }
 
   }
 
-  @Override
-  public void run() {
+  @Override public void run() {
     //      createCaches(isRemote,executeOnlyMap,executeOnlyReduce);
     long startTime = System.nanoTime();
     findPendingMMCFromGlobal();
@@ -172,9 +173,8 @@ public class LimitOperator extends BasicOperator {
 
   private void handlePagerank(Tuple t) {
     if (t.hasField("pagerank")) {
-      if (!t.hasField("url")) {
+      if (!t.hasField("url"))
         return;
-      }
       String pagerankStr = t.getAttribute("pagerank");
       //            Double d = Double.parseDouble(pagerankStr);
       //            if (d < 0.0) {
@@ -192,26 +192,26 @@ public class LimitOperator extends BasicOperator {
   }
 
 
-  @Override
-  public void createCaches(boolean isRemote, boolean executeOnlyMap, boolean executeOnlyReduce) {
+  @Override public void createCaches(boolean isRemote, boolean executeOnlyMap, boolean executeOnlyReduce) {
     Set<String> targetMC = getTargetMC();
     for (String mc : targetMC) {
-      createCache(mc, getOutput());
+      createCache(mc, getOutput(), "batchputListener");
     }
   }
 
-  @Override
-  public void setupMapCallable() {
+  @Override public String getContinuousListenerClass() {
+    return null;
+  }
+
+  @Override public void setupMapCallable() {
 
   }
 
-  @Override
-  public void setupReduceCallable() {
+  @Override public void setupReduceCallable() {
 
   }
 
-  @Override
-  public boolean isSingleStage() {
+  @Override public boolean isSingleStage() {
     return true;
   }
 }/*ExecutionPlanNode {

@@ -17,32 +17,32 @@ public enum FilterOpType {
   LEQ,
   GTH,
   GEQ,
-//   PLUS(BinaryEval.class, "+"),
-//   MINUS(BinaryEval.class, "-"),
-//   MODULAR(BinaryEval.class, "%"),
-//   MULTIPLY(BinaryEval.class, "*"),
-//   DIVIDE(BinaryEval.class, "/"),
+  //   PLUS(BinaryEval.class, "+"),
+  //   MINUS(BinaryEval.class, "-"),
+  //   MODULAR(BinaryEval.class, "%"),
+  //   MULTIPLY(BinaryEval.class, "*"),
+  //   DIVIDE(BinaryEval.class, "/"),
 
   // Binary Bitwise expressions
-//   BIT_AND(BinaryEval.class, "&"),
-//   BIT_OR(BinaryEval.class, "|"),
-//   BIT_XOR(BinaryEval.class, "|"),
+  //   BIT_AND(BinaryEval.class, "&"),
+  //   BIT_OR(BinaryEval.class, "|"),
+  //   BIT_XOR(BinaryEval.class, "|"),
 
   // Function
-//   WINDOW_FUNCTION(WindowFunctionEval.class),
+  //   WINDOW_FUNCTION(WindowFunctionEval.class),
   AGG_FUNCTION,
   FUNCTION,
 
   // String operator or pattern matching predicates
   LIKE,
-//   SIMILAR_TO,
-//   REGEX(RegexPredicateEval.class),
-//   CONCATENATE(BinaryEval.class, "||"),
+  //   SIMILAR_TO,
+  //   REGEX(RegexPredicateEval.class),
+  //   CONCATENATE(BinaryEval.class, "||"),
 
   // Other predicates
-//   BETWEEN(BetweenPredicateEval.class),
-//   CASE(CaseWhenEval.class),
-//   IF_THEN(CaseWhenEval.IfThenEval.class),
+  //   BETWEEN(BetweenPredicateEval.class),
+  //   CASE(CaseWhenEval.class),
+  //   IF_THEN(CaseWhenEval.IfThenEval.class),
   IN,
 
   // Value or Reference

@@ -2,7 +2,6 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsMapper;
-
 import org.infinispan.distexec.mapreduce.Collector;
 import org.vertx.java.core.json.JsonObject;
 
@@ -19,9 +18,11 @@ public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     super(configString);
   }
 
-  @Override
-  public void map(String key, Tuple value, Collector<String, Tuple> collector) {
-//    System.out.println(getClass().getName() + ".map!");
+  public WordCountMapper() {
+  }
+
+  @Override public void map(String key, Tuple value, Collector<String, Tuple> collector) {
+    //    System.out.println(getClass().getName() + ".map!");
     for (String attribute : value.getFieldNames()) {
       for (String word : value.getAttribute(attribute).split(" ")) {
         if (word != null && word.length() > 0) {
@@ -33,8 +34,7 @@ public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     }
   }
 
-  @Override
-  protected void finalizeTask() {
+  @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
   }
 }

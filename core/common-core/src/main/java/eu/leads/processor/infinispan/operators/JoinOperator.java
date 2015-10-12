@@ -3,13 +3,11 @@ package eu.leads.processor.infinispan.operators;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Action;
-import eu.leads.processor.core.Tuple;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsMapperCallable;
 import eu.leads.processor.math.FilterOperatorTree;
-
 import org.infinispan.Cache;
 import org.infinispan.distexec.DefaultExecutorService;
 import org.infinispan.distexec.DistributedExecutorService;
@@ -28,8 +26,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created with IntelliJ IDEA. User: vagvaz Date: 11/7/13 Time: 8:34 AM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: vagvaz
+ * Date: 11/7/13
+ * Time: 8:34 AM
+ * To change this template use File | Settings | File Templates.
  */
 
 public class JoinOperator extends MapReduceOperator {
@@ -88,53 +89,11 @@ public class JoinOperator extends MapReduceOperator {
   }
 
 
-  //    @Override
-  public void run2() {
-    long startTime = System.nanoTime();
-    Cache innerCache = (Cache) manager.getPersisentCache(innerCacheName);
-    Cache outerCache = (Cache) manager.getPersisentCache(outerCacheName);
-    Cache outputCache = (Cache) manager.getPersisentCache(getOutput());
-    DistributedExecutorService des = new DefaultExecutorService(innerCache);
-    JoinCallableUpdated<String, Tuple>
-        callable =
-        new JoinCallableUpdated(conf.toString(), getOutput(),
-                                outerCache
-                                    .getName(),
-                                isLeft);
-//        JoinCallable2 callable = new JoinCallable2(conf.toString(),getOutput(),outerCache.getName(),isLeft);
-    DistributedTaskBuilder builder = des.createDistributedTaskBuilder(callable);
-    builder.timeout(1, TimeUnit.HOURS);
-    DistributedTask task = builder.build();
-    List<Future<String>> res = des.submitEverywhere(task);
-    List<String> addresses = new ArrayList<String>();
-    try {
-      if (res != null) {
-        for (Future<String> result : res) {
-          addresses.add(result.get());
-          log.info(addresses.get(addresses.size() - 1));
-        }
-        //TODO log
-        log.info("Join Callable successfully run");
-      } else {
-        //TODO log
-        log.error("Join Callable did not run");
-      }
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (ExecutionException e) {
-      e.printStackTrace();
-    }
-    cleanup();
-    //Store Values for statistics
-    updateStatistics(innerCache, outerCache, outputCache);
-  }
-
-  @Override
-  public void init(JsonObject config) {
-//        super.init(config); //fix set correctly caches names
+  @Override public void init(JsonObject config) {
+    //        super.init(config); //fix set correctly caches names
     //fix configuration
-//        JsonObject correctQual = resolveQual(conf);
-//        conf.getObject("body").putObject("joinQual",correctQual);
+    //        JsonObject correctQual = resolveQual(conf);
+    //        conf.getObject("body").putObject("joinQual",correctQual);
     JsonArray inputsArray = action.getData().getObject("operator").getArray("inputs");
     Iterator<Object> inputIterator = inputsArray.iterator();
     List<String> inputs = new ArrayList<String>(2);
@@ -143,16 +102,16 @@ public class JoinOperator extends MapReduceOperator {
     }
     Cache left = (Cache) manager.getPersisentCache(inputs.get(0));
     Cache right = (Cache) manager.getPersisentCache(inputs.get(1));
-//       if(left.size() >= right.size()){
+    //       if(left.size() >= right.size()){
     innerCacheName = left.getName();
     outerCacheName = right.getName();
     isLeft = true;
-//       }
-//       else{
-//           innerCacheName = right.getName();
-//           outerCacheName = left.getName();
-//           isLeft = false;
-//       }
+    //       }
+    //       else{
+    //           innerCacheName = right.getName();
+    //           outerCacheName = left.getName();
+    //           isLeft = false;
+    //       }
     conf.putString("output", getOutput());
     init_statistics(this.getClass().getCanonicalName());
     super.init(config);
@@ -167,15 +126,11 @@ public class JoinOperator extends MapReduceOperator {
     boolean swap = true;
     String leftFieldName = leftExpr.getObject("body").getObject("column").getString("name");
     //if(leftSchema == null || leftSchema.getArray("fields") == null)
-    if (leftSchema == null || !leftSchema.containsField("fields")
-        || leftSchema.getArray("fields") == null) {
+    if (leftSchema == null || !leftSchema.containsField("fields") || leftSchema.getArray("fields") == null)
       return qual;
-    }
     Iterator<Object> iterator = leftSchema.getArray("fields").iterator();
-    if (leftSchema == null || !leftSchema.containsField("fields")
-        || leftSchema.getArray("fields") == null) {
+    if (leftSchema == null || !leftSchema.containsField("fields") || leftSchema.getArray("fields") == null)
       return qual;
-    }
     while (iterator.hasNext()) {
       JsonObject field = (JsonObject) iterator.next();
       if (field.getString("name").equals(leftFieldName)) {
@@ -185,36 +140,35 @@ public class JoinOperator extends MapReduceOperator {
     }
     if (swap) {
       log.info("Join  swap predicates");
-      conf.getObject("body").getObject("joinQual").getObject("body")
-          .putObject("leftExpr", rightExpr);
-      conf.getObject("body").getObject("joinQual").getObject("body")
-          .putObject("rightExpr", leftExpr);
+      conf.getObject("body").getObject("joinQual").getObject("body").putObject("leftExpr", rightExpr);
+      conf.getObject("body").getObject("joinQual").getObject("body").putObject("rightExpr", leftExpr);
     }
     log.info("Join Did not need to swap predicates");
     return conf.getObject("body").getObject("joinQual");
   }
 
-  @Override
-  public void execute() {
+  @Override public void execute() {
     super.execute();
 
   }
 
-  @Override
-  public void cleanup() {
+  @Override public void cleanup() {
     super.cleanup();
   }
 
-//   @Override
-//   public void createCaches(boolean isRemote, boolean executeOnlyMap, boolean executeOnlyReduce) {
-//      Set<String> targetMC = getTargetMC();
-//      for(String mc : targetMC){
-//         createCache(mc,getOutput());
-//      }
-//   }
+  @Override public String getContinuousListenerClass() {
+    return null;
+  }
 
-  @Override
-  public void setupMapCallable() {
+  //   @Override
+  //   public void createCaches(boolean isRemote, boolean executeOnlyMap, boolean executeOnlyReduce) {
+  //      Set<String> targetMC = getTargetMC();
+  //      for(String mc : targetMC){
+  //         createCache(mc,getOutput());
+  //      }
+  //   }
+
+  @Override public void setupMapCallable() {
     inputCacheName = innerCacheName;
     inputCache = (Cache) manager.getPersisentCache(innerCacheName);
     inputCache2 = (Cache) manager.getPersisentCache(outerCacheName);
@@ -230,14 +184,13 @@ public class JoinOperator extends MapReduceOperator {
     conf.putString("inputCache", leftTableName);
     setMapper(new JoinMapper(conf.toString()));
     super.setupMapCallable();
-//      mapperCallable = new JoinCallableUpdated(conf.toString(),getOutput(),
-//                                                      ,
-//                                                      isLeft);
+    //      mapperCallable = new JoinCallableUpdated(conf.toString(),getOutput(),
+    //                                                      ,
+    //                                                      isLeft);
 
   }
 
-  @Override
-  public void localExecuteMap() {
+  @Override public void localExecuteMap() {
 
     List<Future<String>> res = new ArrayList<>();
     List<String> addresses = new ArrayList<String>();
@@ -258,20 +211,21 @@ public class JoinOperator extends MapReduceOperator {
       //      Future<String> res = des.submit(callable);
 
     }
-//    replyForSuccessfulExecution(action);
+    //    replyForSuccessfulExecution(action);
 
     System.out.println("####### RUNNING 2nd CALLABLE #########");
     collector = new LeadsCollector(0, intermediateCacheName);
     conf.putString("inputCache", rightTableName);
-    mapperCallable =
-        new LeadsMapperCallable((Cache) inputCache2, collector, new JoinMapper(conf.toString()),
-                                LQPConfiguration.getInstance().getMicroClusterName());
+    mapperCallable = new LeadsMapperCallable((Cache) inputCache2, collector, new JoinMapper(conf.toString()),
+        LQPConfiguration.getInstance().getMicroClusterName());
+
+
 
     if (mapperCallable != null) {
-//      if (inputCache2.size() == 0) {
-//        replyForSuccessfulExecution(action);
-//        return;
-//      }
+      //      if (inputCache2.size() == 0) {
+      //        replyForSuccessfulExecution(action);
+      //        return;
+      //      }
       DistributedExecutorService des = new DefaultExecutorService(inputCache2);
 
       //      ScanCallable callable = new ScanCallable(conf.toString(),getOutput());
@@ -287,43 +241,36 @@ public class JoinOperator extends MapReduceOperator {
        */
       try {
         if (res != null) {
-          for (Future<?> result : res) {
-            System.out.println(result.get());
-            addresses.add((String) result.get());
-          }
+          double perc = handleCallables(res, mapperCallable);
           System.out.println("map " + mapperCallable.getClass().toString() +
-                             " Execution is done");
+              " Execution is done " + perc);
           log.info("map " + mapperCallable.getClass().toString() +
-                   " Execution is done");
+              " Execution is done " + perc);
         } else {
           System.out.println("map " + mapperCallable.getClass().toString() +
-                             " Execution not done");
+              " Execution not done ");
           log.info("map " + mapperCallable.getClass().toString() +
-                   " Execution not done");
+              " Execution not done");
           failed = true;
           //          replyForFailExecution(action);
         }
       } catch (InterruptedException e) {
-        log.error(
-            "Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
+        log.error("Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
             e.getClass().toString());
         log.error(e.getMessage());
-        System.err.println(
-            "Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
-            e.getClass().toString());
+        System.err.println("Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
+                e.getClass().toString());
         System.err.println(e.getMessage());
         log.error(e.getStackTrace().toString());
         e.printStackTrace();
         failed = true;
         //        replyForFailExecution(action);
       } catch (ExecutionException e) {
-        log.error(
-            "Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
+        log.error("Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
             e.getClass().toString());
         log.error(e.getMessage());
-        System.err.println(
-            "Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
-            e.getClass().toString());
+        System.err.println("Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
+                e.getClass().toString());
         System.err.println(e.getMessage());
         log.error(e.getStackTrace().toString());
         e.printStackTrace();
@@ -331,47 +278,40 @@ public class JoinOperator extends MapReduceOperator {
         //        replyForFailExecution(action);
       }
 
-      addresses = new ArrayList<String>();
+
+
       try {
         if (res2 != null) {
-          for (Future<?> result : res2) {
-            System.out.println(result.get());
-            addresses.add((String) result.get());
-          }
+          double perc = handleCallables(res2, mapperCallable);
           System.out.println("map " + mapperCallable.getClass().toString() +
-                             " Execution is done");
+              " Execution is done " + perc);
           log.info("map " + mapperCallable.getClass().toString() +
-                   " Execution is done");
+              " Execution is done " + perc);
         } else {
           System.out.println("map " + mapperCallable.getClass().toString() +
-                             " Execution not done");
+              " Execution not done");
           log.info("map " + mapperCallable.getClass().toString() +
-                   " Execution not done");
+              " Execution not done");
           failed = true;
           replyForFailExecution(action);
         }
       } catch (InterruptedException e) {
-        log.error(
-            "Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
+        log.error("Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
             e.getClass().toString());
         log.error(e.getMessage());
-        System.err.println(
-            "Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
-            e.getClass().toString());
+        System.err.println("Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
+                e.getClass().toString());
         System.err.println(e.getMessage());
         e.printStackTrace();
         log.error(e.getStackTrace().toString());
         failed = true;
         replyForFailExecution(action);
       } catch (ExecutionException e) {
-        log.error(
-            "Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
+        log.error("Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
             e.getClass().toString());
         log.error(e.getMessage());
-        System.err.println(
-            "Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n"
-            +
-            e.getClass().toString());
+        System.err.println("Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
+                e.getClass().toString());
         System.err.println(e.getMessage());
         e.printStackTrace();
         log.error(e.getStackTrace().toString());
@@ -382,9 +322,8 @@ public class JoinOperator extends MapReduceOperator {
     replyForSuccessfulExecution(action);
   }
 
-  @Override
-  public void setupReduceCallable() {
-    setFederationReducer(new JoinReducer(conf.toString()));
+  @Override public void setupReduceCallable() {
+    setReducer(new JoinReducer(conf.toString()));
     super.setupReduceCallable();
   }
 

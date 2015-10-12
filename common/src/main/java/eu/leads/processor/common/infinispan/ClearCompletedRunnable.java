@@ -13,39 +13,38 @@ import java.util.concurrent.ExecutionException;
 public class ClearCompletedRunnable extends Thread {
 
 
-  private final Set<Thread> threads;
-  private final Queue<NotifyingFuture<Void>> concurrentQueue;
-  private volatile Object mutex;
+    private final Set<Thread> threads;
+    private final Queue<NotifyingFuture<Void>> concurrentQueue;
+    private  volatile Object mutex;
 
-  public ClearCompletedRunnable(Queue<NotifyingFuture<Void>> concurrentQuue, Object mutex,
-                                Set<Thread> threads) {
-    this.concurrentQueue = concurrentQuue;
-    this.mutex = mutex;
-    this.threads = threads;
-  }
+    public ClearCompletedRunnable(Queue<NotifyingFuture<Void>> concurrentQuue, Object mutex,
+        Set<Thread> threads) {
+        this.concurrentQueue = concurrentQuue;
+        this.mutex = mutex;
+        this.threads = threads;
+    }
 
-  @Override
-  public void run() {
-    super.run();
-    Iterator<NotifyingFuture<Void>> iterator = concurrentQueue.iterator();
-    NotifyingFuture current = concurrentQueue.poll();
-    while (current != null) {
-      try {
+    @Override public void run() {
+        super.run();
+        Iterator<NotifyingFuture<Void>> iterator = concurrentQueue.iterator();
+        NotifyingFuture current = concurrentQueue.poll();
+        while(current != null){
+            try {
 //                iterator.next().get();
-        current.get();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      } catch (ExecutionException e) {
-        e.printStackTrace();
-      }
+                current.get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
 //            iterator.remove();
 //            if(iterator.next().isDone()){
 //                iterator.remove();
 //            }
-      current = concurrentQueue.poll();
-    }
+            current = concurrentQueue.poll();
+        }
 //        synchronized (mutex){
 //            threads.remove(this);
 //        }
-  }
+    }
 }

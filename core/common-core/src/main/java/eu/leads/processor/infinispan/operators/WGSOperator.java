@@ -13,7 +13,6 @@ import eu.leads.processor.infinispan.LeadsMapperCallable;
 import eu.leads.processor.infinispan.LeadsReducerCallable;
 import eu.leads.processor.infinispan.operators.mapreduce.WGSMapper;
 import eu.leads.processor.infinispan.operators.mapreduce.WGSReducer;
-
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.util.CloseableIterable;
@@ -26,23 +25,15 @@ import org.infinispan.ensemble.cache.EnsembleCache;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
-//import eu.leads.processor.plugins.pagerank.node.DSPMNode;
 
 /**
  * Created by vagvaz on 9/26/14.
  */
 public class WGSOperator extends MapReduceOperator {
-
   private JsonArray attributesArray;
   private double totalSum = -1.0f;
   private int iteration = -1;
@@ -64,33 +55,30 @@ public class WGSOperator extends MapReduceOperator {
 
   }
 
-  @Override
-  public void init(JsonObject config) {
+  @Override public void init(JsonObject config) {
     super.init(conf);
     init_statistics(this.getClass().getCanonicalName());
   }
 
-  public void setupMapReduceJob(String inputCacheName, String intermediateCacheName1,
-                                String outputCacheName) {
+  public void setupMapReduceJob(String inputCacheName, String intermediateCacheName1, String outputCacheName) {
     inputCache = (Cache) manager.getPersisentCache(inputCacheName);
     intermediateCache = (BasicCache) manager.getPersisentCache(intermediateCacheName1);
     //create Intermediate cache name for data on the same Sites as outputCache
-    intermediateDataCache =
-        (BasicCache) manager.getPersisentCache(intermediateCacheName1 + ".data");
+    intermediateDataCache = (BasicCache) manager.getPersisentCache(intermediateCacheName1 + ".data");
     //create Intermediate  keys cache name for data on the same Sites as outputCache;
-    keysCache = (BasicCache) manager.getPersisentCache(intermediateCacheName1 + ".keys");
+    //    keysCache = (BasicCache)manager.getPersisentCache(intermediateCacheName1+".keys");
     //createIndexCache for getting all the nodes that contain values with the same key! in a mc
-    indexSiteCache = (BasicCache) manager.getPersisentCache(intermediateCacheName1 + ".indexed");
+    //    indexSiteCache = (BasicCache)manager.getPersisentCache(intermediateCacheName1+".indexed");
     //    indexSiteCache = (BasicCache)manager.getIndexedPersistentCache(intermediateCacheName+".indexed");
     outputCache = (BasicCache) manager.getPersisentCache(outputCacheName);
     collector = new LeadsCollector(0, intermediateCacheName1);
     //     EnsembleCacheManager mm; mm.sites();
     //     EnsembleCacheManager mm = new EnsembleCacheManager(mm.getLocalSite().)
 
+
   }
 
-  @Override
-  public void run() {
+  @Override public void run() {
     //      int count = 0;
     //      String currentInput = getName() +".iter0";
     //      String currentOutput = "";
@@ -158,7 +146,7 @@ public class WGSOperator extends MapReduceOperator {
             executeReduce();
           }
           if (!failed) {
-//            cleanup();
+            //            cleanup();
             unsubscribeToMapActions("execution." + com.getId() + "." + action.getId());
           } else {
             failCleanup();
@@ -172,7 +160,7 @@ public class WGSOperator extends MapReduceOperator {
       findPendingRMCFromGlobal();
       iteration = conf.getObject("body").getInteger("iteration");
 
-//      createCaches(isRemote, executeOnlyMap, executeOnlyReduce);
+      //      createCaches(isRemote, executeOnlyMap, executeOnlyReduce);
       currentInput = getOutput() + ".iter" + iteration;
       currentOutput = getOutput() + ".iter" + (iteration + 1);
       currentIntermediate = getOutput() + ".intermediate" + iteration;
@@ -197,8 +185,7 @@ public class WGSOperator extends MapReduceOperator {
     cleanup();
   }
 
-  @Override
-  public void setupMapCallable() {
+  @Override public void setupMapCallable() {
     inputCacheName = currentInput;
     intermediateCacheName = currentIntermediate;
     configBody.putNumber("iteration", iteration);
@@ -212,10 +199,9 @@ public class WGSOperator extends MapReduceOperator {
       configBody.putString("outputCache", "");
     }
     if (iteration == 0) {
-      EnsembleCacheManager cacheManager = new EnsembleCacheManager(configBody.getString
-          ("outputEnsembleHost"));
-      EnsembleCache c = cacheManager.getCache(inputCacheName, new ArrayList<>(cacheManager.sites()),
-                                              EnsembleCacheManager.Consistency.DIST);
+      EnsembleCacheManager cacheManager = new EnsembleCacheManager(configBody.getString("outputEnsembleHost"));
+      EnsembleCache c = cacheManager
+          .getCache(inputCacheName, new ArrayList<>(cacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
       c.put(configBody.getString("url"), configBody.getString("url"));
       String url = (String) c.get(configBody.getString("url"));
       if (url != null) {
@@ -230,18 +216,17 @@ public class WGSOperator extends MapReduceOperator {
   }
 
 
-  @Override
-  public void setupReduceCallable() {
+
+  @Override public void setupReduceCallable() {
     outputCacheName = conf.getString("realOutput");
     configBody.putNumber("iteration", iteration);
     configBody.putString("realOutput", conf.getString("realOutput"));
     action.getData().getObject("operator").getObject("configuration").putObject("body", configBody);
-    setFederationReducer(new WGSReducer(configBody.toString()));
+    setReducer(new WGSReducer(configBody.toString()));
     super.setupReduceCallable();
   }
 
-  @Override
-  public void createCaches(boolean isRemote, boolean executeOnlyMap, boolean executeOnlyReduce) {
+  @Override public void createCaches(boolean isRemote, boolean executeOnlyMap, boolean executeOnlyReduce) {
 
     if (iteration == 0) {
       Set<String> targetMC = getTargetMC();
@@ -262,15 +247,19 @@ public class WGSOperator extends MapReduceOperator {
         }
         String tmpInputName = getOutput() + ".iter";
         for (String inputMC : getRunningMC()) {
-//          if(i < configBody.getInteger("depth")){
+          //          if(i < configBody.getInteger("depth")){
           tmpInputName = getOutput() + ".iter" + i;
           createCache(inputMC, tmpInputName);
           createCache(inputMC, getOutput() + ".iter" + (i + 1));
-//          }
+          //          }
         }
 
       }
     }
+  }
+
+  @Override public String getContinuousListenerClass() {
+    return null;
   }
 
   //   @Override
@@ -306,11 +295,9 @@ public class WGSOperator extends MapReduceOperator {
         result.putString("sentiment", t.getGenericAttribute("sentiment").toString());
         result.putValue("links", t.getGenericAttribute("links"));
         currentLevel.add(result);
-        if (count < 2) {
-          if (!result.getElement("links").isArray()) {
+        if (count < 2)
+          if (!result.getElement("links").isArray())
             continue;
-          }
-        }
         JsonArray links = result.getArray("links");
         Iterator<Object> iterator = links.iterator();
         while (iterator.hasNext()) {
@@ -333,14 +320,8 @@ public class WGSOperator extends MapReduceOperator {
     if (totalSum < 0) {
       computeTotalSum();
     }
-//    DSPMNode currentPagerank = (DSPMNode) pagerank.get(url);
-//    if(currentPagerank == null || totalSum <= 0)
-//    {
-//
-//      return Double.toString(0.0f);
-//    }
-//    result = currentPagerank.getVisitCount()/totalSum;
-    return Double.toString(result);
+
+      return Double.toString(0.0f);
 
   }
 
@@ -352,6 +333,7 @@ public class WGSOperator extends MapReduceOperator {
     for (Map.Entry<String, Integer> outerEntry : iterable) {
       totalSum += outerEntry.getValue();
     }
+    iterable.close();
     if (totalSum > 0) {
       totalSum += 1;
     }
@@ -364,14 +346,14 @@ public class WGSOperator extends MapReduceOperator {
     //     task.timeout(1, TimeUnit.HOURS);
     //     task.execute();
 
+
+
     DistributedExecutorService des = new DefaultExecutorService((Cache<?, ?>) inputCache);
     //    intermediateCacheName = inputCache.getName()+".intermediate";
 
-    LeadsMapperCallable
-        mapperCallable =
-        new LeadsMapperCallable((Cache) inputCache, collector, new WGSMapper
-            (jobConfig.toString()),
-                                LQPConfiguration.getInstance().getMicroClusterName());
+    LeadsMapperCallable mapperCallable =
+        new LeadsMapperCallable((Cache) inputCache, collector, new WGSMapper(jobConfig.toString()),
+            LQPConfiguration.getInstance().getMicroClusterName());
     DistributedTaskBuilder builder = des.createDistributedTaskBuilder(mapperCallable);
     builder.timeout(1, TimeUnit.HOURS);
     DistributedTask task = builder.build();
@@ -390,23 +372,17 @@ public class WGSOperator extends MapReduceOperator {
     } catch (ExecutionException e) {
       e.printStackTrace();
     }
-    System.err.println("keysCache " + keysCache.size());
-    System.err.println("dataCache " + intermediateDataCache.size());
-    System.err.println("indexedCache " + indexSiteCache.size());
+
     ////    //Reduce
     ////
-    LeadsReducerCallable
-        reducerCacllable =
+    LeadsReducerCallable reducerCacllable =
         new LeadsReducerCallable(outputCache.getName(), new WGSReducer(jobConfig.toString()),
-                                 intermediateCache.getName());
-    DistributedExecutorService des_inter = new DefaultExecutorService((Cache<?, ?>) keysCache);
-    DistributedTaskBuilder
-        reduceTaskBuilder =
-        des_inter.createDistributedTaskBuilder(reducerCacllable);
+            intermediateCache.getName());
+    DistributedExecutorService des_inter = new DefaultExecutorService((Cache<?, ?>) intermediateDataCache);
+    DistributedTaskBuilder reduceTaskBuilder = des_inter.createDistributedTaskBuilder(reducerCacllable);
     reduceTaskBuilder.timeout(1, TimeUnit.HOURS);
     DistributedTask reduceTask = reduceTaskBuilder.build();
-    List<Future<?>> reducers_res = des_inter
-        .submitEverywhere(reduceTask);
+    List<Future<?>> reducers_res = des_inter.submitEverywhere(reduceTask);
     try {
       if (reducers_res != null) {
         for (Future<?> result : reducers_res) {
@@ -414,9 +390,9 @@ public class WGSOperator extends MapReduceOperator {
           System.err.println(result.get());
           System.err.println("wait end" + System.currentTimeMillis());
         }
-        System.out.println("federationReducer Execution is done");
+        System.out.println("reducer Execution is done");
       } else {
-        System.out.println("federationReducer Execution not done");
+        System.out.println("reducer Execution not done");
       }
     } catch (InterruptedException e) {
       e.printStackTrace();
@@ -427,15 +403,14 @@ public class WGSOperator extends MapReduceOperator {
 
   }
 
-  @Override
-  public void execute() {
+  @Override public void execute() {
     super.execute();
   }
 
-  @Override
-  public void cleanup() {
+  @Override public void cleanup() {
     super.cleanup();
   }
+
 
 
 }

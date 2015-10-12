@@ -18,14 +18,12 @@ public class DefaultProcessor extends Verticle implements Handler<Message<JsonOb
   public DefaultProcessor() {
   }
 
-  @Override
-  public void start() {
+  @Override public void start() {
     super.start();
     bus.registerHandler(config.getString("workQueueAddress"), this);
   }
 
-  @Override
-  public void handle(Message<JsonObject> jsonObjectMessage) {
+  @Override public void handle(Message<JsonObject> jsonObjectMessage) {
     System.out.println("Working on " + jsonObjectMessage.toString());
 
     try {

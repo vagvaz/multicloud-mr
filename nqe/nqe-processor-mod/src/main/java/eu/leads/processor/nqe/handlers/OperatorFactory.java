@@ -29,7 +29,7 @@ public class OperatorFactory {
 //            result = new SSEPointQueryOperator(com,persistence,log,action);
       } else {
         //SQL Operators
-        result = SQLOperatorFactory.getOperator(com, persistence, log, action);
+//        result = SQLOperatorFactory.getOperator(com, persistence, log, action);
       }
 
     } catch (Exception e) {

@@ -7,7 +7,6 @@ import org.vertx.java.core.json.JsonObject;
  * Created by vagvaz on 7/13/14.
  */
 public class DefaultActionHandler implements LeadsMessageHandler {
-
   private EventBus bus;
   private String workQueueAddress;
   private Component owner;
@@ -18,8 +17,7 @@ public class DefaultActionHandler implements LeadsMessageHandler {
     this.workQueueAddress = workQueueAddress;
   }
 
-  @Override
-  public void handle(JsonObject jsonObject) {
+  @Override public void handle(JsonObject jsonObject) {
     //    owner.getLogUtil().info("Processing\n"+jsonObject.toString());
     bus.send(workQueueAddress, jsonObject);
   }

@@ -6,7 +6,6 @@ import eu.leads.processor.core.Tuple;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.math.FilterOperatorTree;
-
 import org.infinispan.Cache;
 import org.infinispan.distexec.DefaultExecutorService;
 import org.infinispan.distexec.DistributedExecutorService;
@@ -23,8 +22,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created with IntelliJ IDEA. User: vagvaz Date: 10/29/13 Time: 7:06 AM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: vagvaz
+ * Date: 10/29/13
+ * Time: 7:06 AM
+ * To change this template use File | Settings | File Templates.
  */
 //Filter Operator
 public class FilterOperator extends BasicOperator {
@@ -61,11 +63,9 @@ public class FilterOperator extends BasicOperator {
     Cache outputCache = (Cache) manager.getPersisentCache(getOutput());
 
     DistributedExecutorService des = new DefaultExecutorService(inputCache);
-    FilterCallableUpdated<String, Tuple>
-        callable =
-        new FilterCallableUpdated<>(conf.toString(), getOutput(),
-                                    conf.getObject("body").getObject("qual").toString());
-//      FilterCallable callable = new FilterCallable(conf.toString(),getOutput(),conf.getObject("body").getObject("qual").toString());
+    FilterCallableUpdated<String, Tuple> callable =
+        new FilterCallableUpdated<>(conf.toString(), getOutput(), conf.getObject("body").getObject("qual").toString());
+    //      FilterCallable callable = new FilterCallable(conf.toString(),getOutput(),conf.getObject("body").getObject("qual").toString());
     DistributedTaskBuilder builder = des.createDistributedTaskBuilder(callable);
     builder.timeout(1, TimeUnit.HOURS);
     DistributedTask task = builder.build();
@@ -93,52 +93,48 @@ public class FilterOperator extends BasicOperator {
     updateStatistics(inputCache, null, outputCache);
   }
 
-  @Override
-  public void init(JsonObject config) {
-//        super.init(conf);
+  @Override public void init(JsonObject config) {
+    //        super.init(conf);
     inputCache = (Cache) manager.getPersisentCache(getInput());
-//        conf.putString("output",getOutput());
-//        init_statistics(this.getClass().getCanonicalName());
+    //        conf.putString("output",getOutput());
+    //        init_statistics(this.getClass().getCanonicalName());
   }
 
-  @Override
-  public void execute() {
+  @Override public void execute() {
     super.execute();
   }
 
-  @Override
-  public void cleanup() {
+  @Override public void cleanup() {
     super.cleanup();
   }
 
-  @Override
-  public void createCaches(boolean isRemote, boolean executeOnlyMap, boolean executeOnlyReduce) {
+  @Override public void createCaches(boolean isRemote, boolean executeOnlyMap, boolean executeOnlyReduce) {
     Set<String> targetMC = getTargetMC();
     for (String mc : targetMC) {
-      createCache(mc, getOutput());
+      createCache(mc, getOutput(), "batchputListener");
     }
   }
 
-  @Override
-  public void setupMapCallable() {
+  @Override public String getContinuousListenerClass() {
+    return null;
+  }
+
+  @Override public void setupMapCallable() {
     inputCache = (Cache) manager.getPersisentCache(getInput());
     mapperCallable =
-        new FilterCallableUpdated<>(conf.toString(), getOutput(),
-                                    conf.getObject("body").getObject("qual").toString());
+        new FilterCallableUpdated<>(conf.toString(), getOutput(), conf.getObject("body").getObject("qual").toString());
   }
 
-  @Override
-  public void setupReduceCallable() {
+  @Override public void setupReduceCallable() {
 
   }
 
-  @Override
-  public boolean isSingleStage() {
+  @Override public boolean isSingleStage() {
     return true;
   }
 
-//    @Override
-//    public String toString() {
-//        return getType() + tree.toString();
-//    }
+  //    @Override
+  //    public String toString() {
+  //        return getType() + tree.toString();
+  //    }
 }

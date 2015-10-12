@@ -1,7 +1,6 @@
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.plugins.NutchTransformer;
-
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumReader;
@@ -14,14 +13,10 @@ import org.infinispan.ensemble.cache.EnsembleCache;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 //import org.apache.nutch.storage.WebPage;
+
 
 /**
  * Created by vagvaz on 4/13/15.
@@ -38,8 +33,8 @@ public class ReplayTool {
   private EnsembleCache webpageCache;
   private NutchTransformer nutchTransformer;
 
-  public ReplayTool(String baseDir, String webpagePrefixes, String nutchDataPrefixes,
-                    String ensembleString, boolean multicloud) {
+  public ReplayTool(String baseDir, String webpagePrefixes, String nutchDataPrefixes, String ensembleString,
+      boolean multicloud) {
     this.baseDir = baseDir;
     this.webpagePrefixes = webpagePrefixes;
     this.nutchDataPrefixes = nutchDataPrefixes;
@@ -47,20 +42,16 @@ public class ReplayTool {
     LQPConfiguration.initialize();
     emanager = new EnsembleCacheManager((ensembleString));
     emanager.start();
-    nutchCache = emanager.getCache("WebPage", new ArrayList<>(emanager.sites()),
-                                   EnsembleCacheManager.Consistency.DIST);
+    nutchCache = emanager.getCache("WebPage", new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
     if (multicloud) {
-      webpageCache =
-          emanager.getCache("default.webpages", new ArrayList<>(emanager.sites()),
-                            EnsembleCacheManager.Consistency.DIST);
+      webpageCache = emanager
+          .getCache("default.webpages", new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
     } else {
-      webpageCache = emanager.getCache("default.webpages", new ArrayList<>(emanager.sites()),
-                                       EnsembleCacheManager.Consistency.DIST);
+      webpageCache = emanager
+          .getCache("default.webpages", new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
     }
 
-    List<String>
-        mappings =
-        LQPConfiguration.getInstance().getConfiguration().getList("nutch.mappings");
+    List<String> mappings = LQPConfiguration.getInstance().getConfiguration().getList("nutch.mappings");
     Map<String, String> nutchToLQE = new HashMap<String, String>();
 
     for (String mapping : mappings) {
@@ -83,12 +74,9 @@ public class ReplayTool {
         try {
 
           File keyFile = new File(baseDir + "/" + nutchDataPrefix + "-" + currentCounter + ".keys");
-          File
-              dataFile =
-              new File(baseDir + "/" + nutchDataPrefix + "-" + currentCounter + ".data");
+          File dataFile = new File(baseDir + "/" + nutchDataPrefix + "-" + currentCounter + ".data");
           while (keyFile.exists() && dataFile.exists()) {
-            System.out
-                .println("Exists_both... " + nutchDataPrefix + "-" + currentCounter + ".keys/data");
+            System.out.println("Exists_both... " + nutchDataPrefix + "-" + currentCounter + ".keys/data");
             ObjectInputStream keyFileIS = new ObjectInputStream(new FileInputStream(keyFile));
             ObjectInputStream dataFileIS = new ObjectInputStream(new FileInputStream(dataFile));
             while (keyFileIS.available() > 0) {
@@ -100,15 +88,15 @@ public class ReplayTool {
               dataFileIS.readFully(schemaBytes);
               String schemaJson = new String(schemaBytes);
               Schema schema = new Schema.Parser().parse(schemaJson);
-//
-//                     // rebuild GenericData.Record
+              //
+              //                     // rebuild GenericData.Record
               DatumReader<Object> reader = new GenericDatumReader<>(schema);
               Decoder decoder = DecoderFactory.get().directBinaryDecoder(dataFileIS, null);
               GenericData.Record page = new GenericData.Record(schema);
               reader.read(page, decoder);
-//
+              //
               //                    System.err.println("Read key: " + new String(key) + "\n" + "value " + page.toString());
-//
+              //
               if (load) {
                 Tuple t = nutchTransformer.transform(page);
                 if (t == null) {
@@ -124,8 +112,7 @@ public class ReplayTool {
                         //System.err.print(" Put to cache");
                         try {
                           try {
-                            webpageCache
-                                .put(webpageCache.getName() + ":" + t.getAttribute("url"), t);
+                            webpageCache.put(webpageCache.getName() + ":" + t.getAttribute("url"), t);
                           } catch (org.infinispan.util.concurrent.TimeoutException | org.infinispan.client.hotrod.exceptions.HotRodClientException e) {
                             // e.printStackTrace();
                             delay *= 1.2;
@@ -158,9 +145,9 @@ public class ReplayTool {
 
               }
             }
-//                  else{
-//                     System.err.println("File"+ baseDir + "/" + nutchDataPrefix + "-" + currentCounter + ".keys"+ " No available bytes ");
-//                  }
+            //                  else{
+            //                     System.err.println("File"+ baseDir + "/" + nutchDataPrefix + "-" + currentCounter + ".keys"+ " No available bytes ");
+            //                  }
             currentCounter++;
             keyFileIS.close();
             dataFileIS.close();
@@ -170,9 +157,8 @@ public class ReplayTool {
 
           }
 
-          System.out
-              .println("read " + currentCounter + " files and rejected " + nocontent_counter + ""
-                       + " for having null body");
+          System.out.println(
+              "read " + currentCounter + " files and rejected " + nocontent_counter + "" + " for having null body");
           currentCounter = 0;
 
         } catch (Exception e) {
@@ -182,8 +168,8 @@ public class ReplayTool {
         }
       }
       System.out.println(
-          "Finally loaded: " + counter + " tuples, no content count: " + nocontent_counter
-          + " unique " + uniqueKeys.size());
+          "Finally loaded: " + counter + " tuples, no content count: " + nocontent_counter + " unique " + uniqueKeys
+              .size());
       break;
     }
   }

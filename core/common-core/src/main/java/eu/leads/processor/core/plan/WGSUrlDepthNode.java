@@ -1,18 +1,14 @@
 package eu.leads.processor.core.plan;
 
 import com.google.gson.annotations.Expose;
-
 import org.apache.tajo.plan.logical.LogicalRootNode;
 
 /**
  * Created by vagvaz on 9/8/14.
  */
 public class WGSUrlDepthNode extends LogicalRootNode {
-
-  @Expose
-  String url;
-  @Expose
-  int depth;
+  @Expose String url;
+  @Expose int depth;
 
   public WGSUrlDepthNode(int pid) {
     super(pid);

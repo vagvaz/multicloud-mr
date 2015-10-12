@@ -3,7 +3,6 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsCombiner;
-
 import org.bson.BasicBSONObject;
 import org.vertx.java.core.json.JsonObject;
 
@@ -16,6 +15,7 @@ import java.util.Map;
  */
 public class KMeansReducer extends LeadsCombiner<String, Tuple> {
 
+  public KMeansReducer(){super();}
   public KMeansReducer(JsonObject configuration) {
     super(configuration);
   }
@@ -24,8 +24,7 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
     super(configString);
   }
 
-  @Override
-  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
+  @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     System.out.println("REDUCER");
     int documentsCount = 0;
     Map<String, Double> dimensions = new HashMap<>();
@@ -67,8 +66,7 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
     collector.emit(reducedKey, r);
   }
 
-  @Override
-  protected void finalizeTask() {
+  @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
   }
 }

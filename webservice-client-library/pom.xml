@@ -51,11 +51,6 @@
         <!--</dependency>-->
 
         <dependency>
-            <groupId>gr.tuc.softnet</groupId>
-            <artifactId>multicloud-mr-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
             <version>${infinispan.version}</version>
@@ -65,7 +60,11 @@
             <artifactId>infinispan-commons</artifactId>
             <version>${infinispan.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>gr.tuc.softnet</groupId>
+            <artifactId>sse-module</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
         <!--Vertx provided dependencies-->
         <dependency>
             <groupId>io.vertx</groupId>
@@ -453,30 +452,22 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--<plugin>-->
-                <!--<artifactId>maven-assembly-plugin</artifactId>-->
-                <!--<configuration>-->
-                    <!--<descriptors>-->
-                        <!--<descriptor>src/main/assembly/mod.xml</descriptor>-->
-                    <!--</descriptors>-->
-                <!--</configuration>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>assemble</id>-->
-                        <!--<phase>package</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>single</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
+                    <descriptors>
+                        <descriptor>src/main/assembly/mod.xml</descriptor>
+                    </descriptors>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>assemble</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -486,6 +477,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
                 <version>${maven.surefire.report.plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven.javadoc.plugin.version}</version>
+                <configuration>
+                    <aggregate>true</aggregate>
+                </configuration>
             </plugin>
         </plugins>
     </reporting>

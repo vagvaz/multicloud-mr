@@ -5,8 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 /**
  * Created by vagvaz on 8/4/14.
  */
-@JsonAutoDetect
-public class PutObjectQuery {
+@JsonAutoDetect public class PutObjectQuery {
 
   String table;
   String key;
@@ -36,8 +35,7 @@ public class PutObjectQuery {
     this.object = object;
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return table + ":" + key + " -> \n->" + object;
   }
 }
