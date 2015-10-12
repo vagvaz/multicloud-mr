@@ -381,12 +381,12 @@ public class ClusterInfinispanManager implements InfinispanManager {
               }
             }
           });
-//          if(files.length > 0){
-//            uniquePath = files[0].getName().toString();
-//          }
-//          else{
+          if(files.length > 0){
+            uniquePath = files[0].getName().toString();
+          }
+          else{
             uniquePath = currentComponent +"-"+UUID.randomUUID().toString();
-//          }
+          }
           //          for(int i = 1; i < files.length;i++){
           //            files[i].delete();
           //          }
