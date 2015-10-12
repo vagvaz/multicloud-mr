@@ -3,9 +3,6 @@ package eu.leads.processor.infinispan;
 import eu.leads.processor.common.infinispan.EnsembleCacheUtilsSingle;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
-import eu.leads.processor.core.plan.LeadsNodeType;
-import eu.leads.processor.infinispan.operators.JoinMapper;
-import eu.leads.processor.infinispan.operators.mapreduce.GroupByMapper;
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.distexec.mapreduce.Collector;
@@ -13,31 +10,17 @@ import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.vertx.java.core.json.JsonObject;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import eu.leads.processor.common.infinispan.ClusterInfinispanManager;
-import eu.leads.processor.common.infinispan.EnsembleCacheUtils;
-import eu.leads.processor.common.infinispan.InfinispanManager;
 
-import eu.leads.processor.conf.LQPConfiguration;
-import org.infinispan.Cache;
-import org.infinispan.commons.api.BasicCache;
-import org.infinispan.distexec.mapreduce.Collector;
-import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.Site;
 import org.infinispan.ensemble.cache.EnsembleCache;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serializable {
 
@@ -56,7 +39,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   private transient Map<KOut,List<VOut>> buffer;
   private boolean onMap = true;
   private boolean isReduceLocal = false;
-  private boolean useCombiner = true;
+  private boolean useCombiner = false;
   private int indexSite=-1;
   private String localSite;
   private String site;
@@ -116,7 +99,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   public void setCombiner(LeadsCombiner<KOut, VOut> combiner) {
     this.combiner = combiner;
     maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
-    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent");
+    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent",75);
     percent /= 100;
   }
 
@@ -343,7 +326,9 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   }
 
   public void finalizeCollector(){
-    combine(true);
+    if(useCombiner) {
+      combine(true);
+    }
     spillMetricData();
     try {
       ensembleCacheUtilsSingle.waitForAllPuts();
@@ -356,26 +341,27 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     }
   }
   public void spillMetricData(){
-    EnsembleCache cache = emanager.getCache("metrics");
-    Long oldValue = (Long) cache.get(localSite+":"+indexSite+"-"+node+"-"+site+"-"+storeCache.getName()+".local");
-    if(oldValue == null){
-      oldValue = new Long(localData);
-    }
-    else{
-      oldValue += localData;
-    }
-    cache.put(localSite + ":" + indexSite + "-" + node + "-" + site + "-" + storeCache.getName()
-        + ".local", oldValue);
+    try {
+      EnsembleCache cache = emanager.getCache("metrics");
+      Long oldValue =
+          (Long) cache.get(localSite + ":" + indexSite + "-" + node + "-" + site + "-" + cacheName + ".local");
+      if (oldValue == null) {
+        oldValue = new Long(localData);
+      } else {
+        oldValue += localData;
+      }
+      cache.put(localSite + ":" + indexSite + "-" + node + "-" + site + "-" + cacheName + ".local", oldValue);
 
-    oldValue = (Long) cache.get(localSite+":"+indexSite+"-"+node+"-"+site+"-"+storeCache.getName()+".remote");
-    if(oldValue == null){
-      oldValue = new Long(remoteData);
+      oldValue = (Long) cache.get(localSite + ":" + indexSite + "-" + node + "-" + site + "-" + cacheName + ".remote");
+      if (oldValue == null) {
+        oldValue = new Long(remoteData);
+      } else {
+        oldValue += remoteData;
+      }
+      cache.put(localSite + ":" + indexSite + "-" + node + "-" + site + "-" + cacheName + ".remote", oldValue);
+    }catch (Exception e){
+      e.printStackTrace();
     }
-    else{
-      oldValue += remoteData;
-    }
-    cache.put(localSite + ":" + indexSite + "-" + node + "-" + site + "-" + storeCache.getName()
-        + ".remote", oldValue);
   }
 
   public void initializeCache(EmbeddedCacheManager manager) {

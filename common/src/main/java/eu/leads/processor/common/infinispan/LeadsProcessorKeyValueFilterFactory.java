@@ -31,8 +31,8 @@ public class LeadsProcessorKeyValueFilterFactory implements CacheEventFilterFact
     }
     JsonObject conf = new JsonObject((String)params[0]);
     log.error("Json conf parametrized");
-    PluginRunnerFilter result = new PluginRunnerFilter(manager,conf.toString());
+//    PluginRunnerFilter result = new PluginRunnerFilter(manager,conf.toString());
     log.error("Filter init");
-    return result;
+    return null;
   }
 }

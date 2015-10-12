@@ -4,9 +4,7 @@ import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.core.Action;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
-import eu.leads.processor.core.plan.LeadsNodeType;
 import eu.leads.processor.infinispan.operators.Operator;
-import eu.leads.processor.infinispan.operators.WGSOperator;
 
 import org.vertx.java.core.json.JsonObject;
 
@@ -22,15 +20,15 @@ public class OperatorFactory {
       JsonObject actionData = action.getData();
       // read monitor q.getString("monitor");
       String operatorType = actionData.getString("operatorType");
-      if (operatorType.equals(LeadsNodeType.WGS_URL.toString())) {//SQL Query
-        result = new WGSOperator(com, persistence, log, action);
+//      if (operatorType.equals(LeadsNodeType.WGS_URL.toString())) {//SQL Query
+//        result = new WGSOperator(com, persistence, log, action);
 
-      } else if (operatorType.equals(LeadsNodeType.EPQ.toString())) {
+//      } else if (operatorType.equals(LeadsNodeType.EPQ.toString())) {
 //            result = new SSEPointQueryOperator(com,persistence,log,action);
-      } else {
+//      } else {
         //SQL Operators
 //        result = SQLOperatorFactory.getOperator(com, persistence, log, action);
-      }
+//      }
 
     } catch (Exception e) {
       log.error(e.getMessage());

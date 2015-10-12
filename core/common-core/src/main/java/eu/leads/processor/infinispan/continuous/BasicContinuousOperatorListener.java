@@ -3,6 +3,7 @@ package eu.leads.processor.infinispan.continuous;
 import eu.leads.processor.common.continuous.BasicContinuousListener;
 import eu.leads.processor.common.continuous.EventTriplet;
 import eu.leads.processor.common.infinispan.EnsembleCacheUtilsSingle;
+import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.plugins.EventType;
 import org.infinispan.ensemble.EnsembleCacheManager;
@@ -82,6 +83,12 @@ import java.util.concurrent.Future;
 
     if (operatorClassName.equals(WordCountContinuousOperator.class.getCanonicalName().toString())) {
       operator = new WordCountContinuousOperator();
+    }else if(operatorClassName.equals(CountMinOperatorContinuous.class.getCanonicalName().toString())){
+      operator = new CountMinOperatorContinuous();
+    }else if(operatorClassName.equals(KMeansOperatorContinuous.class.getCanonicalName().toString())){
+      operator = new KMeansOperatorContinuous();
+    }else{
+      PrintUtilities.printAndLog(log,"SERIOIS ERROR Continuous class is not KNOWND " + operatorClassName);
     }
     operator.setInputCache(inputCache);
     operator.initializeContinuousOperator(operatorConf);

@@ -8,10 +8,9 @@
     <packaging>jar</packaging>
     <name>Project - log-sink-module</name>
     <url>http://maven.apache.org</url>
-
     <parent>
         <groupId>gr.tuc.softnet</groupId>
-        <artifactId>leads-query-processor-core</artifactId>
+        <artifactId>multicloud-mr-core</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>

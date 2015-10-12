@@ -35,6 +35,8 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
     this.reducer = reducer;
     collector = new LeadsCollector(1000, cacheName);
     collector.setOnMap(false);
+    collector.setCombiner(null);
+    collector.setUseCombiner(false);
     this.prefix = prefix;
   }
 
@@ -117,6 +119,8 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
 
     collector.setOnMap(false);
     collector.setEmanager(emanager);
+    collector.setCombiner(null);
+    collector.setUseCombiner(false);
     collector.initializeCache(inputCache.getName(), imanager);
 
     this.reducer.initialize();

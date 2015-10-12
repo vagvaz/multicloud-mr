@@ -79,10 +79,12 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
     collector.setSite(site);
     collector.initializeCache(inputCache.getName(), imanager);
     if (combiner != null) {
+      System.out.println("USE COMBINER");
       combiner.initialize();
       collector.setCombiner((LeadsCombiner<kOut, vOut>) combiner);
       collector.setUseCombiner(true);
     } else {
+      System.out.println("NO COMBINER");
       collector.setCombiner(null);
       collector.setUseCombiner(false);
     }

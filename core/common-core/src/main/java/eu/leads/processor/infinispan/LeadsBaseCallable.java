@@ -369,7 +369,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 
   @Override public void finalizeCallable() {
     try {
-      profCallable.start("finalizeBaseCallable");
+//      profCallable.start("finalizeBaseCallable");
       //      EngineUtils.waitForAllExecute();
       //      if(collector != null) {
       //        collector.finalizeCollector();
@@ -384,7 +384,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
       profilerLog.error(("LEADS Base callable " + e.getClass().toString() + " " + e.getMessage() + " cause "));
       PrintUtilities.logStackTrace(profilerLog, e.getStackTrace());
     }
-    profCallable.end("finalizeBaseCallable");
+//    profCallable.end("finalizeBaseCallable");
     end = System.currentTimeMillis();
     profilerLog.error("LBDISTEXEC: " + this.getClass().toString() + " run for " + (end - start) + " ms");
   }

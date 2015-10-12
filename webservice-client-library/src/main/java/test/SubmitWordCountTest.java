@@ -210,7 +210,7 @@ public class SubmitWordCountTest {
     boolean combine    = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine",false);
     System.out.println("use combine " + combine);
     //set the default microclouds
-    List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a","dresden2","hamm6"));
+    List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a","dresden2","hamm6","localcluster"));
     //read the microcloud to run the job
     activeMicroClouds = new ArrayList<>();
     activeMicroClouds.add("localcluster");//LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
@@ -244,7 +244,7 @@ public class SubmitWordCountTest {
 
     JsonObject jsonObject = new JsonObject();
     jsonObject.putObject("operator", new JsonObject());
-    jsonObject.getObject("operator").putString("direct","runFromWC");
+//    jsonObject.getObject("operator").putString("direct","runFromWC");
     jsonObject.getObject("operator").putObject("configuration", new JsonObject());
     jsonObject.getObject("operator").putString("name", "wordCount");
     jsonObject.getObject("operator").putArray("inputs", new JsonArray().add(CACHE_NAME));
@@ -270,8 +270,8 @@ public class SubmitWordCountTest {
     if (reduceLocal) {
       jsonObject.getObject("operator").putString("reduceLocal", "true");
     }
-    //    jsonObject.getObject("operator").putString("recComposableReduce","recComposableReduce");
-//    jsonObject.getObject("operator").putString("recComposableLocalReduce","recComposableLocalReduce");
+//        jsonObject.getObject("operator").putString("recComposableReduce","recComposableReduce");
+    jsonObject.getObject("operator").putString("recComposableLocalReduce","recComposableLocalReduce");
     JsonObject targetEndpoints = scheduling;
     jsonObject.getObject("operator").putObject("targetEndpoints",targetEndpoints);
     //                   new JsonObject()

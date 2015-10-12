@@ -178,30 +178,7 @@
             <version>${vertx.testtools.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.tajo</groupId>
-            <artifactId>tajo-core</artifactId>
-            <version>${tajo.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.tajo</groupId>
-                    <artifactId>tajo-jdbc</artifactId>
-                </exclusion>
-            </exclusions>
 
-        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
@@ -254,30 +231,7 @@
             <artifactId>infinispan-atomic-factory</artifactId>
             <version>${infinispan.version}</version>
         </dependency>
-        <!--dependency>
-            <groupId>org.infinispan</groupId>
-            <artifactId>infinispan-lucene-v4</artifactId>
-            <version>${infinispan.version}</version>
-           <exclusions>
-              <exclusion>
-                 <groupId>log4j</groupId>
-                 <artifactId>log4j</artifactId>
-              </exclusion>
-              <exclusion>
-                 <groupId>org.apache.logging.log4j</groupId>
-                 <artifactId>log4j-core</artifactId>
-              </exclusion>
-              <exclusion>
-                 <groupId>org.slf4j</groupId>
-                 <artifactId>slf4j-log4j12</artifactId>
-              </exclusion>
-              <exclusion>
-                 <groupId>org.apache.tajo</groupId>
-                 <artifactId>tajo-jdbc</artifactId>
-              </exclusion>
-           </exclusions>
 
-        </dependency-->
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-remote-query-server</artifactId>
@@ -326,30 +280,7 @@
             </exclusions>
 
         </dependency>
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-search-engine</artifactId>
-            <version>5.0.0.Alpha4</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.tajo</groupId>
-                    <artifactId>tajo-jdbc</artifactId>
-                </exclusion>
-            </exclusions>
 
-        </dependency>
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>bson</artifactId>

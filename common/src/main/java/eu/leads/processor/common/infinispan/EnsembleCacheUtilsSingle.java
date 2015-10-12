@@ -51,10 +51,10 @@ public class EnsembleCacheUtilsSingle {
 
 
   public  EnsembleCacheUtilsSingle() {
-    synchronized (mutex) {
-      if (initialized) {
-        return;
-      }
+//    synchronized (mutex) {
+//      if (initialized) {
+//        return;
+//      }
 
       //Initialize auxiliary put
       useAsync = LQPConfiguration.getInstance().getConfiguration()
@@ -69,7 +69,7 @@ public class EnsembleCacheUtilsSingle {
 
       auxExecutor = new ThreadPoolExecutor((int)threadBatch,(int)(threadBatch),1000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>());
       runnables = new ConcurrentLinkedDeque<>();
-      for (int i = 0; i <= 10 * (threadBatch); i++) {
+      for (int i = 0; i < 10 * (threadBatch); i++) {
         runnables.add(new SyncPutRunnable(this));
       }
       initialized = true;
@@ -90,7 +90,7 @@ public class EnsembleCacheUtilsSingle {
       localManager = null;
       localMC =null;
       localFutures = new ConcurrentLinkedQueue<NotifyingFuture>();
-    }
+//    }
   }
 
   public  void clean() throws ExecutionException, InterruptedException {
@@ -165,7 +165,7 @@ public class EnsembleCacheUtilsSingle {
   }
   public   SyncPutRunnable getRunnable(){
     SyncPutRunnable result = null;
-
+    System.err.println("GET aux run " + runnables.size());
     result = runnables.poll();
     while(result == null){
       try {
@@ -185,6 +185,7 @@ public class EnsembleCacheUtilsSingle {
   public  BatchPutRunnable getBatchPutRunnable(){
     BatchPutRunnable result = null;
     //        synchronized (runnableMutex){
+    System.err.println("GET batch run " + microcloudRunnables.size());
     result = microcloudRunnables.poll();
     while(result == null){
 
@@ -205,9 +206,12 @@ public class EnsembleCacheUtilsSingle {
 
   public  void addRunnable(SyncPutRunnable runnable){
     runnables.add(runnable);
+    System.err.println("add aux run " + runnables.size());
    }
 
-  public  void addBatchPutRunnable(BatchPutRunnable runnable){
+  public  void addBatchPutRunnable(BatchPutRunnable runnable)
+  {
+    System.err.println("add microcloud run " + microcloudRunnables.size());
     microcloudRunnables.add(runnable);
   }
 
@@ -224,7 +228,7 @@ public class EnsembleCacheUtilsSingle {
     }
   }
   public  void waitForAuxPuts() throws InterruptedException {
-    while(auxExecutor.getActiveCount() > 0) {
+    while(runnables.size() != 10*(threadBatch)) {
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
         Thread.sleep(100);
@@ -268,7 +272,7 @@ public class EnsembleCacheUtilsSingle {
       }
     }
 
-    while(batchPutExecutor.getActiveCount() > 0){
+    while( microcloudRunnables.size() !=  totalBatchPutThreads){
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
         Thread.sleep(100);
@@ -278,15 +282,7 @@ public class EnsembleCacheUtilsSingle {
       }
     }
 
-    while(auxExecutor.getActiveCount() > 0) {
-      try {
-        //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
-        Thread.sleep(100);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-        PrintUtilities.logStackTrace(log,e.getStackTrace()); throw e;
-      }
-    }
+    waitForAuxPuts();
 
     System.err.println("local wait " + localFutures.size());
     for(NotifyingFuture future : localFutures)
@@ -369,7 +365,7 @@ public class EnsembleCacheUtilsSingle {
       tupleBuffer.setCacheName(cache.getName());
     }
     if(tupleBuffer.add(key, value)){
-      BatchPutRunnable runnable = EnsembleCacheUtils.getBatchPutRunnable();
+      BatchPutRunnable runnable = getBatchPutRunnable();
       runnable.setBuffer(tupleBuffer);
       batchPutExecutor.submit(runnable);
     }
@@ -479,7 +475,7 @@ public class EnsembleCacheUtilsSingle {
             isok = true;
             continue;
           }
-          SyncPutRunnable putRunnable = EnsembleCacheUtils.getRunnable();
+          SyncPutRunnable putRunnable = getRunnable();
           putRunnable.setParameters(cache,key,value);
           auxExecutor.submit(putRunnable);
           isok = true;

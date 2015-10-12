@@ -5,7 +5,6 @@ import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
-import eu.leads.processor.plugins.NutchLocalListener;
 import org.infinispan.Cache;
 import org.infinispan.commands.RemoveCacheCommand;
 import org.infinispan.configuration.cache.CacheMode;
@@ -44,7 +43,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
@@ -193,29 +191,29 @@ public class ClusterInfinispanManager implements InfinispanManager {
 
     //Join Infinispan Cluster
     //      manager.start();
-    ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC, false);
-    //    builder.read(holder.getGlobalConfigurationBuilder().serialization().marshaller(marshaller).build());
-    builder.indexing()
-        .enable()
-        .index(Index.LOCAL)
-        .addProperty("default.directory_provider", "filesystem")
-        .addProperty("hibernate.search.default.indexBase","/tmp/leadsprocessor-data/"+uniquePath+"/infinispan/webpage/")
-        .addProperty("hibernate.search.default.exclusive_index_use", "true")
-        .addProperty("hibernate.search.default.indexmanager", "near-real-time")
-        .addProperty("hibernate.search.default.indexwriter.ram_buffer_size", "128")
-        .addProperty("lucene_version", "LUCENE_CURRENT");
-    builder.clustering().l1().disable().clustering().hash().numOwners(1);
-    builder.jmxStatistics().enable();
-    builder.transaction().transactionMode(TransactionMode.TRANSACTIONAL)
-        //            .persistence().passivation(false)
-        .persistence().passivation(false).addSingleFileStore().location
-        ("/tmp/leadsprocessor-data/"+uniquePath+"/webpage/")
-        .fetchPersistentState(false)
-        .shared(false).purgeOnStartup(false).preload(false).expiration().lifespan(-1).maxIdle(-1).wakeUpInterval(-1).reaperEnabled(
-        false);
-    //    builder.transaction().transactionManagerLookup(new GenericTransactionManagerLookup()).dataContainer().valueEquivalence(AnyEquivalence.getInstance());
-    Configuration configuration = builder.build();
-    manager.defineConfiguration("WebPage", configuration);
+//    ConfigurationBuilder builder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC, false);
+//    //    builder.read(holder.getGlobalConfigurationBuilder().serialization().marshaller(marshaller).build());
+//    builder.indexing()
+//        .enable()
+//        .index(Index.LOCAL)
+//        .addProperty("default.directory_provider", "filesystem")
+//        .addProperty("hibernate.search.default.indexBase","/tmp/leadsprocessor-data/"+uniquePath+"/infinispan/webpage/")
+//        .addProperty("hibernate.search.default.exclusive_index_use", "true")
+//        .addProperty("hibernate.search.default.indexmanager", "near-real-time")
+//        .addProperty("hibernate.search.default.indexwriter.ram_buffer_size", "128")
+//        .addProperty("lucene_version", "LUCENE_CURRENT");
+//    builder.clustering().l1().disable().clustering().hash().numOwners(1);
+//    builder.jmxStatistics().enable();
+//    builder.transaction().transactionMode(TransactionMode.TRANSACTIONAL)
+//        //            .persistence().passivation(false)
+//        .persistence().passivation(false).addSingleFileStore().location
+//        ("/tmp/leadsprocessor-data/"+uniquePath+"/webpage/")
+//        .fetchPersistentState(false)
+//        .shared(false).purgeOnStartup(false).preload(false).expiration().lifespan(-1).maxIdle(-1).wakeUpInterval(-1).reaperEnabled(
+//        false);
+//    //    builder.transaction().transactionManagerLookup(new GenericTransactionManagerLookup()).dataContainer().valueEquivalence(AnyEquivalence.getInstance());
+//    Configuration configuration = builder.build();
+//    manager.defineConfiguration("WebPage", configuration);
     //    Cache nutchCache = manager.getCache("WebPage", true);
     if(LQPConfiguration.getConf().getBoolean("processor.start.hotrod"))
     {
@@ -226,8 +224,8 @@ public class ClusterInfinispanManager implements InfinispanManager {
 
     }
     getPersisentCache("clustered");
-    getPersisentCache("pagerankCache");
-    getPersisentCache("approx_sum_cache");
+//    getPersisentCache("pagerankCache");
+//    getPersisentCache("approx_sum_cache");
     getPersisentCache(StringConstants.STATISTICS_CACHE);
     getPersisentCache(StringConstants.OWNERSCACHE);
     getPersisentCache(StringConstants.PLUGIN_ACTIVE_CACHE);
@@ -239,34 +237,34 @@ public class ClusterInfinispanManager implements InfinispanManager {
 
     getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".entities");
 
-    getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME+".content");
-    getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".page");
-    Cache uridirCache = (Cache) getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME+".urldirectory");
-    Cache uridirCacheEcom = (Cache) getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME+".urldirectory_ecom");
+//    getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME+".content");
+//    getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".page");
+//    Cache uridirCache = (Cache) getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME+".urldirectory");
+//    Cache uridirCacheEcom = (Cache) getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME+".urldirectory_ecom");
     getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".page_core");
-    getInMemoryCache(StringConstants.DEFAULT_DATABASE_NAME + ".page_core.compressed", 4000);
-    BatchPutListener listener = new BatchPutListener(StringConstants.DEFAULT_DATABASE_NAME+".page_core.compressed",StringConstants.DEFAULT_DATABASE_NAME+".page_core");
-    addListener(listener, StringConstants.DEFAULT_DATABASE_NAME + ".page_core.compressed");
+//    getInMemoryCache(StringConstants.DEFAULT_DATABASE_NAME + ".page_core.compressed", 4000);
+//    BatchPutListener listener = new BatchPutListener(StringConstants.DEFAULT_DATABASE_NAME+".page_core.compressed",StringConstants.DEFAULT_DATABASE_NAME+".page_core");
+//    addListener(listener, StringConstants.DEFAULT_DATABASE_NAME + ".page_core.compressed");
     getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".keywords");
-    getInMemoryCache(StringConstants.DEFAULT_DATABASE_NAME + ".keywords.compressed", 4000);
-    listener = new BatchPutListener(StringConstants.DEFAULT_DATABASE_NAME+".keywords.compressed",StringConstants.DEFAULT_DATABASE_NAME+".keywords");
-    addListener(listener, StringConstants.DEFAULT_DATABASE_NAME + ".keywords.compressed");
-    getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME+".resourcepart");
-    getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".site");
-    Cache adidasKeywords = (Cache) getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".adidas_keywords");
+//    getInMemoryCache(StringConstants.DEFAULT_DATABASE_NAME + ".keywords.compressed", 4000);
+//    listener = new BatchPutListener(StringConstants.DEFAULT_DATABASE_NAME+".keywords.compressed",StringConstants.DEFAULT_DATABASE_NAME+".keywords");
+//    addListener(listener, StringConstants.DEFAULT_DATABASE_NAME + ".keywords.compressed");
+//    getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME+".resourcepart");
+//    getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".site");
+//    Cache adidasKeywords = (Cache) getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".adidas_keywords");
 
     getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".rankings");
-    getInMemoryCache(StringConstants.DEFAULT_DATABASE_NAME + ".rankings.compressed", 4000);
-    listener = new BatchPutListener(StringConstants.DEFAULT_DATABASE_NAME+".rankings.compressed",StringConstants.DEFAULT_DATABASE_NAME+".rankings");
-    addListener(listener, StringConstants.DEFAULT_DATABASE_NAME + ".rankings.compressed");
+//    getInMemoryCache(StringConstants.DEFAULT_DATABASE_NAME + ".rankings.compressed", 4000);
+//    listener = new BatchPutListener(StringConstants.DEFAULT_DATABASE_NAME+".rankings.compressed",StringConstants.DEFAULT_DATABASE_NAME+".rankings");
+//    addListener(listener, StringConstants.DEFAULT_DATABASE_NAME + ".rankings.compressed");
     getPersisentCache(StringConstants.DEFAULT_DATABASE_NAME + ".uservisits");
-    getInMemoryCache(StringConstants.DEFAULT_DATABASE_NAME + ".uservisits.compressed", 4000);
-    listener = new BatchPutListener(StringConstants.DEFAULT_DATABASE_NAME+".uservisits.compressed",StringConstants.DEFAULT_DATABASE_NAME+".uservisits");
-    addListener(listener, StringConstants.DEFAULT_DATABASE_NAME + ".uservisits.compressed");
-    getPersisentCache("leads.processor.catalog.tablespaces");
-    getPersisentCache("leads.processor.catalog.databases");
-    getPersisentCache("leads.processor.catalog.functions");
-    getPersisentCache("leads.processor.catalog.indexes");
+//    getInMemoryCache(StringConstants.DEFAULT_DATABASE_NAME + ".uservisits.compressed", 4000);
+//    listener = new BatchPutListener(StringConstants.DEFAULT_DATABASE_NAME+".uservisits.compressed",StringConstants.DEFAULT_DATABASE_NAME+".uservisits");
+//    addListener(listener, StringConstants.DEFAULT_DATABASE_NAME + ".uservisits.compressed");
+//    getPersisentCache("leads.processor.catalog.tablespaces");
+//    getPersisentCache("leads.processor.catalog.databases");
+//    getPersisentCache("leads.processor.catalog.functions");
+//    getPersisentCache("leads.processor.catalog.indexes");
     getPersisentCache("metrics");
     getPersisentCache("leads.processor.catalog.indexesByColumn");
     getPersisentCache("leads.processor.databases.sub." + StringConstants.DEFAULT_DATABASE_NAME);
@@ -276,9 +274,9 @@ public class ClusterInfinispanManager implements InfinispanManager {
     BatchPutListener batchPutListener = new BatchPutListener("batchputTest.compressed","batchputTest");
     addListener(batchPutListener, "batchputTest.compressed");
 
-    putAdidasKeyWords(adidasKeywords);
-    putUriDirData(uridirCache);
-    putUriDirEcomData(uridirCacheEcom);
+//    putAdidasKeyWords(adidasKeywords);
+//    putUriDirData(uridirCache);
+//    putUriDirEcomData(uridirCacheEcom);
     getPersisentCache("TablesSize");
     Cache<String, String> allIndexes = (Cache) getPersisentCache("allIndexes");
     for (String column : allIndexes.keySet()) {
@@ -286,9 +284,9 @@ public class ClusterInfinispanManager implements InfinispanManager {
       getIndexedPersistentCache(allIndexes.get(column));
       getPersisentCache(allIndexes.get(column) + ".sketch");
     }
-    NutchLocalListener nlistener = new NutchLocalListener(this,"default.webpages",LQPConfiguration.getInstance().getConfiguration().getString("nutch.listener.prefix"),currentComponent);
-
-    manager.getCache("WebPage").addListener(nlistener);
+//    NutchLocalListener nlistener = new NutchLocalListener(this,"default.webpages",LQPConfiguration.getInstance().getConfiguration().getString("nutch.listener.prefix"),currentComponent);
+//
+//    manager.getCache("WebPage").addListener(nlistener);
 
     //I might want to sleep here for a little while
     PrintUtilities.printList(manager.getMembers());
@@ -383,12 +381,12 @@ public class ClusterInfinispanManager implements InfinispanManager {
               }
             }
           });
-          if(files.length > 0){
-            uniquePath = files[0].getName().toString();
-          }
-          else{
+//          if(files.length > 0){
+//            uniquePath = files[0].getName().toString();
+//          }
+//          else{
             uniquePath = currentComponent +"-"+UUID.randomUUID().toString();
-          }
+//          }
           //          for(int i = 1; i < files.length;i++){
           //            files[i].delete();
           //          }
