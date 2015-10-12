@@ -160,7 +160,7 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
       continueRunning = false;
       return null;
     }
-    System.out.println(" POLL NEXT");
+//    System.out.println(" POLL NEXT");
     Map.Entry result = null;
     if (iterator.hasNext()) {
       Map.Entry<String, Integer> entry = iterator.next();

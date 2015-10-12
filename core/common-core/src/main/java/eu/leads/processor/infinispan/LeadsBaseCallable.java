@@ -100,9 +100,10 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
         LeadsMapperCallable mapperCallable = (LeadsMapperCallable) result;
         LeadsMapperCallable thisCallable = (LeadsMapperCallable) this;
         mapperCallable.setSite(thisCallable.getSite());
-        if (collector.getCombiner() != null) {
-          thisCallable.getCollector().setCombiner(thisCallable.getCombiner());
-          thisCallable.getCollector().setUseCombiner(true);
+        LeadsCombiner thisCombiner = thisCallable.getCombiner();
+        if ( thisCombiner != null) {
+          mapperCallable.setCombiner(thisCombiner);
+//          thisCallable.getCollector().setUseCombiner(true);
         }
         mapperCallable.setMapper(thisCallable.getMapper());
       } else if (result instanceof LeadsLocalReducerCallable) {
