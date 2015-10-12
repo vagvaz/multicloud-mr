@@ -165,7 +165,7 @@ public class EnsembleCacheUtilsSingle {
   }
   public   SyncPutRunnable getRunnable(){
     SyncPutRunnable result = null;
-    System.err.println("GET aux run " + runnables.size());
+//    System.err.println("GET aux run " + runnables.size());
     result = runnables.poll();
     while(result == null){
       try {
@@ -185,7 +185,7 @@ public class EnsembleCacheUtilsSingle {
   public  BatchPutRunnable getBatchPutRunnable(){
     BatchPutRunnable result = null;
     //        synchronized (runnableMutex){
-    System.err.println("GET batch run " + microcloudRunnables.size());
+//    System.err.println("GET batch run " + microcloudRunnables.size());
     result = microcloudRunnables.poll();
     while(result == null){
 
@@ -206,12 +206,12 @@ public class EnsembleCacheUtilsSingle {
 
   public  void addRunnable(SyncPutRunnable runnable){
     runnables.add(runnable);
-    System.err.println("add aux run " + runnables.size());
+//    System.err.println("add aux run " + runnables.size());
    }
 
   public  void addBatchPutRunnable(BatchPutRunnable runnable)
   {
-    System.err.println("add microcloud run " + microcloudRunnables.size());
+//    System.err.println("add microcloud run " + microcloudRunnables.size());
     microcloudRunnables.add(runnable);
   }
 
