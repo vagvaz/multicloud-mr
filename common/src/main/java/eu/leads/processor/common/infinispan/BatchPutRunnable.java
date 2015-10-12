@@ -1,8 +1,11 @@
 package eu.leads.processor.common.infinispan;
 
 import eu.leads.processor.common.utils.PrintUtilities;
+import org.infinispan.ensemble.cache.EnsembleCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 /**
  * Created by vagvaz on 9/1/15.
@@ -32,10 +35,17 @@ public class BatchPutRunnable implements Runnable{
     }
     @Override public void run() {
         boolean isok = false;
+      Map data = buffer.flushToMC();
+      long counter = (long) data.get("counter");
+      EnsembleCache cache = (EnsembleCache) data.get("cache");
+      String uuid = (String) data.get("uuid");
+      byte[] bytes = (byte[]) data.get("bytes");
         try{
 
+//            EnsembleCacheUtilsSingle ensembleCacheUtilsSingle = (EnsembleCacheUtilsSingle) data.get("ensemble");
+
             while(retries > 0 && !isok){
-                buffer.flushToMC();
+                cache.put(uuid + ":" + Long.toString(counter),bytes);
                 isok = true;
             }
         }

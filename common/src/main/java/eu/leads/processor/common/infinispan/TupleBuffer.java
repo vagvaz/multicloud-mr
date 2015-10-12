@@ -21,10 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.xerial.snappy.Snappy;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
@@ -161,44 +158,69 @@ public class TupleBuffer {
     }
   }
 
-  public void flushToMC() {
+  public Map flushToMC() {
     byte[] bytes = null;
-    synchronized (mutex) {
+    Map result = new HashMap();
+    synchronized (mutex){
       if (ensembleCache == null) {
-        this.ensembleCache = emanager.getCache(cacheName + ".compressed", new ArrayList<>(emanager.sites()),
-            EnsembleCacheManager.Consistency.DIST);
+                this.ensembleCache = emanager.getCache(cacheName + ".compressed", new ArrayList<>(emanager.sites()),
+                    EnsembleCacheManager.Consistency.DIST);
 
       }
-      //            System.out.println("FLusht to mc " + ensembleCache.getName() + " " + buffer.size());
-
-      if (buffer.size() == 0)
-        return;
-      localCounter = (localCounter + 1) % Long.MAX_VALUE;
-
-      bytes = this.serialize();
-      buffer.clear();
-      size = 0;
-    }
-    boolean isok = false;
-    try {
-      while (!isok) {
-        ensembleCache.put(uuid + ":" + Long.toString(localCounter), bytes);
-        isok = true;
-
-      }
-    } catch (Exception e) {
-      if (e instanceof TimeoutException) {
-        try {
-          Thread.sleep(10);
-        } catch (InterruptedException e1) {
-          e1.printStackTrace();
+      result.put("cache",ensembleCache);
+      synchronized (mutex){
+        if (buffer.size() == 0) {
+          return null;
         }
-        System.err.println("Timeout Exxcception in slushToMC " + e.getMessage());
-        PrintUtilities.logStackTrace(log,e.getStackTrace());
+              localCounter = (localCounter + 1) % Long.MAX_VALUE;
+        result.put("counter",localCounter);
+        bytes = this.serialize();
+              buffer.clear();
+        size = 0;
+        result.put("bytes",bytes);
+//        result.put("ensemble",ensembleCacheUtilsSingle);
+        result.put("uuid",uuid);
+        return result;
       }
-      e.printStackTrace();
-
     }
+
+//    byte[] bytes = null;
+//    synchronized (mutex) {
+//      if (ensembleCache == null) {
+//        this.ensembleCache = emanager.getCache(cacheName + ".compressed", new ArrayList<>(emanager.sites()),
+//            EnsembleCacheManager.Consistency.DIST);
+//
+//      }
+//      //            System.out.println("FLusht to mc " + ensembleCache.getName() + " " + buffer.size());
+//
+//      if (buffer.size() == 0)
+//        return;
+//      localCounter = (localCounter + 1) % Long.MAX_VALUE;
+//
+//      bytes = this.serialize();
+//      buffer.clear();
+//      size = 0;
+//    }
+//    boolean isok = false;
+//    try {
+//      while (!isok) {
+//        ensembleCache.put(uuid + ":" + Long.toString(localCounter), bytes);
+//        isok = true;
+//
+//      }
+//    } catch (Exception e) {
+//      if (e instanceof TimeoutException) {
+//        try {
+//          Thread.sleep(10);
+//        } catch (InterruptedException e1) {
+//          e1.printStackTrace();
+//        }
+//        System.err.println("Timeout Exxcception in slushToMC " + e.getMessage());
+//        PrintUtilities.logStackTrace(log,e.getStackTrace());
+//      }
+//      e.printStackTrace();
+//
+//    }
 
   }
   public void flushEndToMC() {
@@ -230,7 +252,7 @@ public class TupleBuffer {
     }
   }
 
-  private byte[] serialize()  {
+  public byte[] serialize()  {
     //        synchronized (mutex) {
     try {
       ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
