@@ -26,26 +26,26 @@ import java.util.concurrent.*;
 public class EnsembleCacheUtilsSingle {
 
   private static Logger log = LoggerFactory.getLogger(EnsembleCacheUtilsSingle.class);
-  private static boolean useAsync;
+  private  boolean useAsync;
 
-  private static volatile Object mutex = new Object();
-  private static Boolean initialized = false;
-  private static int batchSize = 20;
-  private static long threadCounter = 0;
-  private static long threadBatch = 3;
-  private static ThreadPoolExecutor auxExecutor;
+  private  volatile Object mutex = new Object();
+  private  Boolean initialized = false;
+  private  int batchSize = 20;
+  private  long threadCounter = 0;
+  private  long threadBatch = 3;
+  private    ThreadPoolExecutor auxExecutor;
   //    private static volatile Object runnableMutex = new Object();
-  private static ConcurrentHashMap<String, Map<String,TupleBuffer>> microclouds;
+  private  ConcurrentHashMap<String, Map<String,TupleBuffer>> microclouds;
   //    private static ConcurrentHashMap<String, List<BatchPutAllAsyncThread>> microcloudThreads;
-  private static HashBasedPartitioner partitioner;
-  private static ConcurrentMap<String,EnsembleCacheManager> ensembleManagers;
-  private static InfinispanManager localManager;
-  private static String localMC;
-  private static ThreadPoolExecutor batchPutExecutor;
-  private static int totalBatchPutThreads =16;
-  private static String ensembleString ="";
-  private static ConcurrentLinkedQueue<NotifyingFuture> localFutures;
-  private static int localBatchSize =10;
+  private  HashBasedPartitioner partitioner;
+  private  ConcurrentMap<String,EnsembleCacheManager> ensembleManagers;
+  private  InfinispanManager localManager;
+  private  String localMC;
+  private  ThreadPoolExecutor batchPutExecutor;
+  private  int totalBatchPutThreads =16;
+  private  String ensembleString ="";
+  private  ConcurrentLinkedQueue<NotifyingFuture> localFutures;
+  private  int localBatchSize =10;
   private ConcurrentLinkedDeque<BatchPutRunnable > microcloudRunnables;
   private ConcurrentLinkedDeque<SyncPutRunnable > runnables;
 
@@ -82,7 +82,7 @@ public class EnsembleCacheUtilsSingle {
       microclouds = new ConcurrentHashMap<>();
       //            microcloudThreads  = new ConcurrentHashMap<>();
       microcloudRunnables = new ConcurrentLinkedDeque<>();
-      for (int index = 0; index < totalBatchPutThreads; index++){
+      for (int index = 0; index < 10*totalBatchPutThreads; index++){
         microcloudRunnables.add(new BatchPutRunnable(3,this));
       }
       ensembleManagers = new ConcurrentHashMap<>();
@@ -244,7 +244,9 @@ public class EnsembleCacheUtilsSingle {
     for(Map.Entry<String,Map<String,TupleBuffer>> mc : microclouds.entrySet()) {
       for (Map.Entry<String, TupleBuffer> cache : mc.getValue().entrySet()) {
         if(!mc.getKey().equals(localMC) ) {
-          cache.getValue().flushToMC();
+          BatchPutRunnable runnable = getBatchPutRunnable();
+          runnable.setBuffer(cache.getValue());
+          batchPutExecutor.submit(runnable);
         }
         //                else{
         //                    cache.getValue().flushToMC();
@@ -374,7 +376,7 @@ public class EnsembleCacheUtilsSingle {
   private  void putToLocalMC(BasicCache cache, Object key, Object value) {
     if(localMC == null){
       log.error("Cache is of type " + cache.getClass().toString() + " but localMC is " + localMC + " using direct put");
-      putToCacheDirect(cache,key,value);
+      putToCacheDirect(cache, key, value);
       return;
     }
 //    Map<String,TupleBuffer> mcBufferMap = microclouds.get(localMC);

@@ -180,8 +180,8 @@ public class TupleBuffer {
         result.put("bytes",bytes);
 //        result.put("ensemble",ensembleCacheUtilsSingle);
         result.put("uuid",uuid);
-        return result;
       }
+      return result;
     }
 
 //    byte[] bytes = null;
