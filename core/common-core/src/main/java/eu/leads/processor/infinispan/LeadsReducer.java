@@ -61,6 +61,10 @@ public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
     this.configString = confString;
   }
 
+  public String getConfigString() {
+    return configString;
+  }
+
   public void setCacheManager(EmbeddedCacheManager manager) {
     this.manager = manager;
   }

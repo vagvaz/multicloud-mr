@@ -27,6 +27,7 @@ public class SubmitKMeansTest {
   private static final String DRESDEN2_IP = "80.156.73.116";
   private static final String DD1A_IP = "80.156.222.4";
   private static final String DD2A_IP = "87.190.238.119";
+  private static final String SOFTNET_IP = "147.27.14.38";
   private static final String HAMM5_IP = "5.147.254.161";
   private static final String HAMM6_IP = "5.147.254.199";
   private static final String CACHE_NAME = "clustered";
@@ -89,6 +90,7 @@ public class SubmitKMeansTest {
   public static void main(String[] args) {
 
     host = "http://" + DD1A_IP;  // dd1a
+    host = "http://" + SOFTNET_IP;
     port = 8080;
 
     String propertiesFile = "client.properties";
@@ -132,6 +134,8 @@ public class SubmitKMeansTest {
     microcloudAddresses.put("dresden2", DRESDEN2_IP);
     microcloudAddresses.put("hamm6", HAMM6_IP);
     microcloudAddresses.put("hamm5", HAMM5_IP);
+    microcloudAddresses.put("softnet", SOFTNET_IP);
+
 
     activeIps = new HashMap<>();
     //read the ips from configuration or use the default
@@ -160,6 +164,10 @@ public class SubmitKMeansTest {
 
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
     jsonObject.getObject("operator").putObject("scheduling", scheduling);
+
+    jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
+    jsonObject.getObject("operator").putString("recComposableLocalReduce",
+                                               "recComposableLocalReduce");
 
     if (combine) {
       jsonObject.getObject("operator").putString("combine", "1");

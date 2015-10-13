@@ -28,6 +28,7 @@ public class SubmitWordCountTest {
   private static final String DD1A_IP = "80.156.222.4";
   private static final String HAMM5_IP = "5.147.254.161";
   private static final String HAMM6_IP = "5.147.254.199";
+  private static final String SOFTNET_IP = "147.27.14.38";
   private static final String LOCAL = "127.0.0.1";
   private static final String CACHE_NAME = "clustered";
   private static final int PUT_THREADS_COUNT = 100;
@@ -136,7 +137,8 @@ public class SubmitWordCountTest {
 
     //    host = "http://localhost";
     //    host = "http://" + DRESDEN2_IP;  // dresden2
-    host = "http://" + DD1A_IP;  // dd1a
+//    host = "http://" + DD1A_IP;  // dd1a
+    host = "http://" + SOFTNET_IP;  // softnet
 
 
     //    if (args.length > 1) {
@@ -186,7 +188,7 @@ public class SubmitWordCountTest {
     boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine", true);
     System.out.println("use combine " + combine);
     //set the default microclouds
-    List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dresden2", "hamm6"));
+    List<String> defaultMCs = new ArrayList<>(Arrays.asList("softnet", "dd1a", "dresden2", "hamm6"));
     //read the microcloud to run the job
     activeMicroClouds = LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
     System.out.println("active mc ");
@@ -197,6 +199,7 @@ public class SubmitWordCountTest {
     microcloudAddresses.put("dresden2", DRESDEN2_IP);
     microcloudAddresses.put("hamm6", HAMM6_IP);
     microcloudAddresses.put("hamm5", HAMM5_IP);
+    microcloudAddresses.put("softnet", SOFTNET_IP);
 
     activeIps = new HashMap<>();
     //read the ips from configuration or use the default
@@ -224,10 +227,15 @@ public class SubmitWordCountTest {
     jsonObject.getObject("operator").putString("output", "testOutputCache");
     //    jsonObject.getObject("operator").putArray("inputMicroClouds",
     //                                              new JsonArray().add("localcluster"));
-    //    jsonObject.getObject("operator").putArray("outputMicroClouds",
+    //    jsonObject.getObject("operator").pqutArray("outputMicroClouds",
     //                                              new JsonArray().add("localcluster"));
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
     jsonObject.getObject("operator").putObject("scheduling", scheduling);
+
+    jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
+    jsonObject.getObject("operator").putString("recComposableLocalReduce",
+                                               "recComposableLocalReduce");
+
     //                   new JsonObject()
     //                       .putArray("dresden2", new JsonArray().add(DRESDEN2_IP))
     //                       .putArray("dd1a", new JsonArray().add(DD1A_IP))
@@ -241,6 +249,8 @@ public class SubmitWordCountTest {
     if (reduceLocal) {
       jsonObject.getObject("operator").putString("reduceLocal", "true");
     }
+
+
     JsonObject targetEndpoints = scheduling;
     jsonObject.getObject("operator").putObject("targetEndpoints", targetEndpoints);
     //                   new JsonObject()

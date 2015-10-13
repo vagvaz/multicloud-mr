@@ -52,7 +52,7 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
     } catch (InvocationTargetException e) {
       e.printStackTrace();
     }
-    result.setConfigString(configString);
+    result.setConfigString(mapper.getConfigString());
 
     return result;
   }

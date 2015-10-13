@@ -127,7 +127,7 @@ public class EnsembleCacheUtilsSingle {
       if(localManager == null && isEmbedded){
         localManager = InfinispanClusterSingleton.getInstance().getManager();
         if(localMC == null)
-          localMC = resolveMCName() + "L";
+          localMC = resolveMCName();
       }
 
       partitioner = new HashBasedPartitioner(cachesList);
