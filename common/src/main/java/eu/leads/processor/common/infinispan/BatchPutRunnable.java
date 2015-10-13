@@ -25,6 +25,7 @@ public class BatchPutRunnable implements Runnable{
 
   public BatchPutRunnable(int i, EnsembleCacheUtilsSingle ensembleCacheUtilsSingle) {
     this.owner = ensembleCacheUtilsSingle;
+    this.retries = i;
   }
 
   public TupleBuffer getBuffer(){
@@ -57,8 +58,10 @@ public class BatchPutRunnable implements Runnable{
             PrintUtilities.logStackTrace(log,e.getStackTrace());
         }
         if(owner != null){
+          System.err.println("ADDING batchput to single");
           owner.addBatchPutRunnable(this);
         }else {
+          System.err.println("ADDING batchput to static");
           EnsembleCacheUtils.addBatchPutRunnable(this);
         }
     }

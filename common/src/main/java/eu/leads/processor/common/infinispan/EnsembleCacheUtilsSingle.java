@@ -1,5 +1,6 @@
 package eu.leads.processor.common.infinispan;
 
+import com.sun.rmi.rmid.ExecPermission;
 import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
@@ -51,46 +52,46 @@ public class EnsembleCacheUtilsSingle {
 
 
   public  EnsembleCacheUtilsSingle() {
-//    synchronized (mutex) {
-//      if (initialized) {
-//        return;
-//      }
+    //    synchronized (mutex) {
+    //      if (initialized) {
+    //        return;
+    //      }
 
-      //Initialize auxiliary put
-      useAsync = LQPConfiguration.getInstance().getConfiguration()
-          .getBoolean("node.infinispan.putasync", true);
-      log.info("Using asynchronous put " + useAsync);
-      //            concurrentQuue = new ConcurrentLinkedQueue<>();
-      batchSize = LQPConfiguration.getInstance().getConfiguration()
-          .getInt("node.ensemble.batchsize", 100);
-      threadBatch = LQPConfiguration.getInstance().getConfiguration().getInt(
-          "node.ensemble.threads", 3);
+    //Initialize auxiliary put
+    useAsync = LQPConfiguration.getInstance().getConfiguration()
+        .getBoolean("node.infinispan.putasync", true);
+    log.info("Using asynchronous put " + useAsync);
+    //            concurrentQuue = new ConcurrentLinkedQueue<>();
+    batchSize = LQPConfiguration.getInstance().getConfiguration()
+        .getInt("node.ensemble.batchsize", 100);
+    threadBatch = LQPConfiguration.getInstance().getConfiguration().getInt(
+        "node.ensemble.threads", 3);
 
 
-      auxExecutor = new ThreadPoolExecutor((int)threadBatch,(int)(threadBatch),1000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>());
-      runnables = new ConcurrentLinkedDeque<>();
-      for (int i = 0; i < 10 * (threadBatch); i++) {
-        runnables.add(new SyncPutRunnable(this));
-      }
-      initialized = true;
+    auxExecutor = new ThreadPoolExecutor((int)threadBatch,(int)(threadBatch),1000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>());
+    runnables = new ConcurrentLinkedDeque<>();
+    for (int i = 0; i < 10 * (threadBatch); i++) {
+      runnables.add(new SyncPutRunnable(this));
+    }
+    initialized = true;
 
-      //Initialize BatchPut Structures
-      totalBatchPutThreads = LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.batchput.threads",4);
-      localBatchSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.batchput.batchsize",localBatchSize);
-      System.err.println("threads " + threadBatch + " batchSize " + batchSize + " async = " + useAsync +" batchPutThreads " + totalBatchPutThreads + " localBatch " + localBatchSize);
-      batchPutExecutor = new ThreadPoolExecutor(totalBatchPutThreads,totalBatchPutThreads,2000,TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>());
-      microclouds = new ConcurrentHashMap<>();
-      //            microcloudThreads  = new ConcurrentHashMap<>();
-      microcloudRunnables = new ConcurrentLinkedDeque<>();
-      for (int index = 0; index < 10*totalBatchPutThreads; index++){
-        microcloudRunnables.add(new BatchPutRunnable(3,this));
-      }
-      ensembleManagers = new ConcurrentHashMap<>();
-      partitioner = null;
-      localManager = null;
-      localMC =null;
-      localFutures = new ConcurrentLinkedQueue<NotifyingFuture>();
-//    }
+    //Initialize BatchPut Structures
+    totalBatchPutThreads = LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.batchput.threads",4);
+    localBatchSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.batchput.batchsize",localBatchSize);
+    System.err.println("threads " + threadBatch + " batchSize " + batchSize + " async = " + useAsync +" batchPutThreads " + totalBatchPutThreads + " localBatch " + localBatchSize);
+    batchPutExecutor = new ThreadPoolExecutor(totalBatchPutThreads,totalBatchPutThreads,2000,TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>());
+    microclouds = new ConcurrentHashMap<>();
+    //            microcloudThreads  = new ConcurrentHashMap<>();
+    microcloudRunnables = new ConcurrentLinkedDeque<>();
+    for (int index = 0; index < 10*totalBatchPutThreads; index++){
+      microcloudRunnables.add(new BatchPutRunnable(3,this));
+    }
+    ensembleManagers = new ConcurrentHashMap<>();
+    partitioner = null;
+    localManager = null;
+    localMC =null;
+    localFutures = new ConcurrentLinkedQueue<NotifyingFuture>();
+    //    }
   }
 
   public  void clean() throws ExecutionException, InterruptedException {
@@ -126,7 +127,7 @@ public class EnsembleCacheUtilsSingle {
       if(localManager == null && isEmbedded){
         localManager = InfinispanClusterSingleton.getInstance().getManager();
         if(localMC == null)
-          localMC = resolveMCName();
+          localMC = resolveMCName() + "L";
       }
 
       partitioner = new HashBasedPartitioner(cachesList);
@@ -141,16 +142,27 @@ public class EnsembleCacheUtilsSingle {
     if(externalIp == null){
       externalIp = LQPConfiguration.getInstance().getConfiguration().getString("node.ip");
     }
-
-    int index = ensembleString.indexOf(externalIp);
-
-    if(index == -1){
-      result = null;
+    boolean hasport = false;
+    if(externalIp.contains(":")){
+      String candidatePort = externalIp.substring(externalIp.lastIndexOf(":")+1,externalIp.length());
+      try {
+        Integer port = Integer.valueOf(candidatePort);
+        hasport = true;
+      }catch(Exception e){
+        hasport =false;
+      }
     }
-    else {
-      int lastIndex = ensembleString.lastIndexOf(externalIp) + 6 + externalIp.length();
-      result = ensembleString.substring(index, lastIndex);
+    if(!hasport){
+      externalIp+=":";
     }
+
+    for(String ensemble : ensembleManagers.keySet()) {
+      if(ensemble.contains(externalIp)){
+        result = ensemble;
+        break;
+      }
+    }
+
     return result;
   }
 
@@ -165,7 +177,7 @@ public class EnsembleCacheUtilsSingle {
   }
   public   SyncPutRunnable getRunnable(){
     SyncPutRunnable result = null;
-//    System.err.println("GET aux run " + runnables.size());
+    //    System.err.println("GET aux run " + runnables.size());
     result = runnables.poll();
     while(result == null){
       try {
@@ -185,7 +197,7 @@ public class EnsembleCacheUtilsSingle {
   public  BatchPutRunnable getBatchPutRunnable(){
     BatchPutRunnable result = null;
     //        synchronized (runnableMutex){
-//    System.err.println("GET batch run " + microcloudRunnables.size());
+     System.err.println("GET batch run " + microcloudRunnables.size());
     result = microcloudRunnables.poll();
     while(result == null){
 
@@ -206,12 +218,12 @@ public class EnsembleCacheUtilsSingle {
 
   public  void addRunnable(SyncPutRunnable runnable){
     runnables.add(runnable);
-//    System.err.println("add aux run " + runnables.size());
-   }
+    //    System.err.println("add aux run " + runnables.size());
+  }
 
   public  void addBatchPutRunnable(BatchPutRunnable runnable)
   {
-//    System.err.println("add microcloud run " + microcloudRunnables.size());
+    System.err.println("add microcloud run " + microcloudRunnables.size());
     microcloudRunnables.add(runnable);
   }
 
@@ -242,7 +254,7 @@ public class EnsembleCacheUtilsSingle {
     System.err.println("WaitForAuxPuts---end");
   }
   public void waitForAllPuts() throws InterruptedException, ExecutionException {
-  System.err.println("wait for puts");
+    System.err.println("wait for puts");
     for(Map.Entry<String,Map<String,TupleBuffer>> mc : microclouds.entrySet()) {
       for (Map.Entry<String, TupleBuffer> cache : mc.getValue().entrySet()) {
         if(!mc.getKey().equals(localMC) ) {
@@ -280,7 +292,8 @@ public class EnsembleCacheUtilsSingle {
     while( microcloudRunnables.size() !=  10*totalBatchPutThreads){
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
-        Thread.sleep(100);
+        System.err.println("microRunna " + microcloudRunnables.size() + " instead of " + (10*totalBatchPutThreads));
+        Thread.sleep(10000);
       } catch (InterruptedException e) {
         e.printStackTrace();
         PrintUtilities.logStackTrace(log,e.getStackTrace()); throw e;
@@ -382,24 +395,24 @@ public class EnsembleCacheUtilsSingle {
       putToCacheDirect(cache, key, value);
       return;
     }
-//    Map<String,TupleBuffer> mcBufferMap = microclouds.get(localMC);
-//
-//    if(mcBufferMap == null) { // create buffer map for localMC
-//      microclouds.put(localMC, new ConcurrentHashMap<String, TupleBuffer>());
-//    }
-//    Cache localCache = (Cache) InfinispanClusterSingleton.getInstance().getManager().getPersisentCache(cache.getName());
-//    TupleBuffer tupleBuffer = mcBufferMap.get(cache.getName());
-//    if(tupleBuffer == null){
-//      tupleBuffer= new TupleBuffer(batchSize,localCache,ensembleManagers.get(localMC));
-//      microclouds.get(localMC).put(cache.getName(),tupleBuffer);
-//    }
-//    if(tupleBuffer.getCacheName()==null)
-//    {
-//      tupleBuffer.setCacheName(cache.getName());
-//    }
-//    if(tupleBuffer.add(key, value)){
-//      tupleBuffer.flushToLocalCache();
-//    }
+    //    Map<String,TupleBuffer> mcBufferMap = microclouds.get(localMC);
+    //
+    //    if(mcBufferMap == null) { // create buffer map for localMC
+    //      microclouds.put(localMC, new ConcurrentHashMap<String, TupleBuffer>());
+    //    }
+    //    Cache localCache = (Cache) InfinispanClusterSingleton.getInstance().getManager().getPersisentCache(cache.getName());
+    //    TupleBuffer tupleBuffer = mcBufferMap.get(cache.getName());
+    //    if(tupleBuffer == null){
+    //      tupleBuffer= new TupleBuffer(batchSize,localCache,ensembleManagers.get(localMC));
+    //      microclouds.get(localMC).put(cache.getName(),tupleBuffer);
+    //    }
+    //    if(tupleBuffer.getCacheName()==null)
+    //    {
+    //      tupleBuffer.setCacheName(cache.getName());
+    //    }
+    //    if(tupleBuffer.add(key, value)){
+    //      tupleBuffer.flushToLocalCache();
+    //    }
     Cache localCache =
         (Cache) localManager.getPersisentCache(  cache.getName());
     putToCacheDirect(localCache, key, value);
@@ -534,8 +547,8 @@ public class EnsembleCacheUtilsSingle {
 
   @Override
   public void finalize(){
-//    auxExecutor.shutdownNow();
-//    batchPutExecutor.shutdownNow();
+    //    auxExecutor.shutdownNow();
+    //    batchPutExecutor.shutdownNow();
     System.err.println("Finalize ensmeblCacheUtilsSingle");
   }
 }
