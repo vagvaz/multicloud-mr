@@ -274,7 +274,7 @@ public class EnsembleCacheUtilsSingle {
       }
     }
 
-    while( microcloudRunnables.size() !=  totalBatchPutThreads){
+    while( microcloudRunnables.size() !=  10*totalBatchPutThreads){
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
         Thread.sleep(100);
