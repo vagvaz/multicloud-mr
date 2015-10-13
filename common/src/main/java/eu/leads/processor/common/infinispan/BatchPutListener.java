@@ -92,7 +92,7 @@ public class BatchPutListener implements LeadsListener {
     }
 
     private void batchPut(Object key, Object value) {
-        //        System.out.println("RUN BatchPut");
+                System.out.println("RUN BatchPut " + key.toString());
         try {
             byte[] b = (byte[]) value;
             if (b.length == 1 && b[0] == -1) {
@@ -102,7 +102,8 @@ public class BatchPutListener implements LeadsListener {
             TupleBuffer tupleBuffer = new TupleBuffer((byte[]) value);
 //            Map tmpb = new HashMap();
             for (Map.Entry<Object, Object> entry : tupleBuffer.getBuffer().entrySet()) {
-                ensembleCacheUtilsSingle.putToCacheDirect(targetCache,entry.getKey(),entry.getValue());
+//                ensembleCacheUtilsSingle.putToCacheDirect(targetCache,entry.getKey(),entry.getValue());
+                targetCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(entry.getKey(),entry.getValue());
             }
 //            tupleBuffer.flushToCache(targetCache);
 //            NotifyingFuture f = tupleBuffer.flushToCache(targetCache);
@@ -113,6 +114,7 @@ public class BatchPutListener implements LeadsListener {
         }catch (Exception e){
             e.printStackTrace();
         }
+        System.err.println("END PATH PUT " + key.toString());
     }
 
     @CacheEntryModified
