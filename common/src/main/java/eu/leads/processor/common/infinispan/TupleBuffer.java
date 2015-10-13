@@ -248,7 +248,7 @@ public class TupleBuffer {
       //            ensembleCache = null;
       //            cacheName = null;
       buffer.clear();
-
+      System.out.println("FLush ENDED to mc " + buffer.size() + " " + (ensembleCache == null ? "null" : ensembleCache.getName()));
     }
   }
 

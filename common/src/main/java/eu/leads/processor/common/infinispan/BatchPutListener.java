@@ -137,12 +137,7 @@ public class BatchPutListener implements LeadsListener {
                 PrintUtilities.logStackTrace(log,e.getStackTrace());
             }
             try{
-                for(Map.Entry<NotifyingFuture<Void>,NotifyingFuture<Void>> entry : futures.entrySet()){
-                    entry.getKey().get();
-                }
-                if(retry){
 
-                }
                 isok = true;
             }
             catch (Exception e){

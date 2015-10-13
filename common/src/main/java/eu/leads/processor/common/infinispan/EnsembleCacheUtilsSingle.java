@@ -228,6 +228,7 @@ public class EnsembleCacheUtilsSingle {
     }
   }
   public  void waitForAuxPuts() throws InterruptedException {
+    System.err.println("WaitForAuxPuts");
     while(runnables.size() != 10*(threadBatch)) {
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
@@ -238,6 +239,7 @@ public class EnsembleCacheUtilsSingle {
         throw e;
       }
     }
+    System.err.println("WaitForAuxPuts---end");
   }
   public void waitForAllPuts() throws InterruptedException, ExecutionException {
   System.err.println("wait for puts");
@@ -262,6 +264,7 @@ public class EnsembleCacheUtilsSingle {
     }
     //flush remotely batchputlisteners
     for(Map.Entry<String,Map<String,TupleBuffer>> mc : microclouds.entrySet()){
+      System.err.println("localMC: " + localMC + " mc " + mc.getKey());
       for(Map.Entry<String,TupleBuffer> cache : mc.getValue().entrySet()){
         if(!mc.getKey().equals(localMC)) {
           cache.getValue().flushEndToMC();
@@ -273,7 +276,7 @@ public class EnsembleCacheUtilsSingle {
         //                }
       }
     }
-
+    System.err.println("Wait batchput");
     while( microcloudRunnables.size() !=  10*totalBatchPutThreads){
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
@@ -283,7 +286,7 @@ public class EnsembleCacheUtilsSingle {
         PrintUtilities.logStackTrace(log,e.getStackTrace()); throw e;
       }
     }
-
+    System.err.println("Wait batchput---end");
     waitForAuxPuts();
 
     System.err.println("local wait " + localFutures.size());
