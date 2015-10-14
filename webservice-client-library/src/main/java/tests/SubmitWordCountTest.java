@@ -233,9 +233,9 @@ public class SubmitWordCountTest {
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
     jsonObject.getObject("operator").putObject("scheduling", scheduling);
 
-//    jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
-//    jsonObject.getObject("operator").putString("recComposableLocalReduce",
-//                                               "recComposableLocalReduce");
+    jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
+    jsonObject.getObject("operator").putString("recComposableLocalReduce",
+                                               "recComposableLocalReduce");
 
     //                   new JsonObject()
     //                       .putArray("dresden2", new JsonArray().add(DRESDEN2_IP))
