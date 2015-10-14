@@ -39,6 +39,7 @@ public class WordCountReducer extends LeadsCombiner<String, Tuple> {
   @Override public void initialize() {
     super.initialize();
     log = LoggerFactory.getLogger(WordCountReducer.class);
+    System.err.println("THIS REDUCER IS LOCAL?  " + isLocal + " AND IS COMPSABLE? " + isComposable);
     collectorInitialized = false;
     isComposableButNotLocal = isComposable && !isLocal;
     if (isComposableButNotLocal) {
