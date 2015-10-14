@@ -266,12 +266,12 @@ public class SubmitWordCountTest {
     if(combine) {
       jsonObject.getObject("operator").putString("combine", "1");
     }
-    reduceLocal = true;
+    reduceLocal = false;
     if (reduceLocal) {
       jsonObject.getObject("operator").putString("reduceLocal", "true");
     }
 //        jsonObject.getObject("operator").putString("recComposableReduce","recComposableReduce");
-    jsonObject.getObject("operator").putString("recComposableLocalReduce","recComposableLocalReduce");
+//    jsonObject.getObject("operator").putString("recComposableLocalReduce","recComposableLocalReduce");
     JsonObject targetEndpoints = scheduling;
     jsonObject.getObject("operator").putObject("targetEndpoints",targetEndpoints);
     //                   new JsonObject()

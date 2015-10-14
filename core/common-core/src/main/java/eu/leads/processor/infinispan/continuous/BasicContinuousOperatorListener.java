@@ -97,7 +97,7 @@ import java.util.concurrent.Future;
 
   @Override protected void processBuffer() {
     try {
-      System.out.println("Processing buffer BasicContinuousOperatorListner");
+//      System.out.println("Processing buffer BasicContinuousOperatorListner");
       Iterator iterator = buffer.iterator();
       while (iterator.hasNext()) {
         Map.Entry entry = (Map.Entry) iterator.next();

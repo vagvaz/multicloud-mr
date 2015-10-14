@@ -78,7 +78,7 @@ public class TupleBuffer {
 
       inputStream = null;
       byteStream =null;
-//      ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
+      //      ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
       this.ensembleCacheUtilsSingle = ensembleCacheUtilsSingle;
       nodeMaps = new HashMap<>();
       localAddress = InfinispanClusterSingleton.getInstance().getManager().getMemberName();
@@ -99,12 +99,12 @@ public class TupleBuffer {
 
   public TupleBuffer(int threshold, BasicCache cache, EnsembleCacheManager ensembleCacheManager,EnsembleCacheUtilsSingle ensembleCacheUtilsSingle) {
     this.ensembleCacheUtilsSingle = ensembleCacheUtilsSingle;
-//    this.ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
+    //    this.ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
     this.threshold = threshold;
     buffer = new HashMap<>();
     this.emanager = ensembleCacheManager;
-    //        this.ensembleCache = emanager.getCache(cache.getName()+".compressed", new ArrayList<>(ensembleCacheManager.sites()),
-    //            EnsembleCacheManager.Consistency.DIST);
+    this.ensembleCache = emanager.getCache(cache.getName()+".compressed", new ArrayList<>(ensembleCacheManager.sites()),
+        EnsembleCacheManager.Consistency.DIST);
     nodeMaps = new HashMap<>();
     localAddress = InfinispanClusterSingleton.getInstance().getManager().getMemberName();
     if(cache instanceof Cache){
@@ -124,12 +124,12 @@ public class TupleBuffer {
 
   public TupleBuffer(int threshold, String cacheName, EnsembleCacheManager ensembleCacheManager,String mc,EnsembleCacheUtilsSingle ensembleCacheUtilsSingle) {
     this.ensembleCacheUtilsSingle = ensembleCacheUtilsSingle;
-//    ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
+    //    ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
     this.threshold = threshold;
     buffer = new HashMap<>();
     this.emanager = ensembleCacheManager;
-    //        this.ensembleCache = emanager.getCache(cacheName+".compressed", new ArrayList<>(ensembleCacheManager.sites()),
-    //            EnsembleCacheManager.Consistency.DIST);
+    this.ensembleCache = emanager.getCache(cacheName+".compressed", new ArrayList<>(ensembleCacheManager.sites()),
+        EnsembleCacheManager.Consistency.DIST);
     this.mc = mc;
     localCounter = 0;
     this.cacheName = cacheName;
@@ -151,7 +151,7 @@ public class TupleBuffer {
         size++;
         return (size >= threshold);
       }else{
-//        ensembleCacheUtilsSingle.addLocalFuture(localCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAsync(key,value));
+        //        ensembleCacheUtilsSingle.addLocalFuture(localCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAsync(key,value));
         ensembleCacheUtilsSingle.putToCacheDirect(localCache,key,value);
         return (size >= threshold);
       }
@@ -160,67 +160,70 @@ public class TupleBuffer {
 
   public Map flushToMC() {
     byte[] bytes = null;
+    if(buffer.size() == 0){
+      return null;
+    }
     Map result = new HashMap();
     synchronized (mutex){
-      if (ensembleCache == null) {
-                this.ensembleCache = emanager.getCache(cacheName + ".compressed", new ArrayList<>(emanager.sites()),
-                    EnsembleCacheManager.Consistency.DIST);
-
-      }
+      //      if (ensembleCache == null) {
+      //                this.ensembleCache = emanager.getCache(cacheName + ".compressed", new ArrayList<>(emanager.sites()),
+      //                    EnsembleCacheManager.Consistency.DIST);
+      //
+      //      }
       result.put("cache",ensembleCache);
       synchronized (mutex){
         if (buffer.size() == 0) {
           return null;
         }
-              localCounter = (localCounter + 1) % Long.MAX_VALUE;
+        localCounter = (localCounter + 1) % Long.MAX_VALUE;
         result.put("counter",localCounter);
         bytes = this.serialize();
-              buffer.clear();
+        buffer.clear();
         size = 0;
         result.put("bytes",bytes);
-//        result.put("ensemble",ensembleCacheUtilsSingle);
+        //        result.put("ensemble",ensembleCacheUtilsSingle);
         result.put("uuid",uuid);
       }
       return result;
     }
 
-//    byte[] bytes = null;
-//    synchronized (mutex) {
-//      if (ensembleCache == null) {
-//        this.ensembleCache = emanager.getCache(cacheName + ".compressed", new ArrayList<>(emanager.sites()),
-//            EnsembleCacheManager.Consistency.DIST);
-//
-//      }
-//      //            System.out.println("FLusht to mc " + ensembleCache.getName() + " " + buffer.size());
-//
-//      if (buffer.size() == 0)
-//        return;
-//      localCounter = (localCounter + 1) % Long.MAX_VALUE;
-//
-//      bytes = this.serialize();
-//      buffer.clear();
-//      size = 0;
-//    }
-//    boolean isok = false;
-//    try {
-//      while (!isok) {
-//        ensembleCache.put(uuid + ":" + Long.toString(localCounter), bytes);
-//        isok = true;
-//
-//      }
-//    } catch (Exception e) {
-//      if (e instanceof TimeoutException) {
-//        try {
-//          Thread.sleep(10);
-//        } catch (InterruptedException e1) {
-//          e1.printStackTrace();
-//        }
-//        System.err.println("Timeout Exxcception in slushToMC " + e.getMessage());
-//        PrintUtilities.logStackTrace(log,e.getStackTrace());
-//      }
-//      e.printStackTrace();
-//
-//    }
+    //    byte[] bytes = null;
+    //    synchronized (mutex) {
+    //      if (ensembleCache == null) {
+    //        this.ensembleCache = emanager.getCache(cacheName + ".compressed", new ArrayList<>(emanager.sites()),
+    //            EnsembleCacheManager.Consistency.DIST);
+    //
+    //      }
+    //      //            System.out.println("FLusht to mc " + ensembleCache.getName() + " " + buffer.size());
+    //
+    //      if (buffer.size() == 0)
+    //        return;
+    //      localCounter = (localCounter + 1) % Long.MAX_VALUE;
+    //
+    //      bytes = this.serialize();
+    //      buffer.clear();
+    //      size = 0;
+    //    }
+    //    boolean isok = false;
+    //    try {
+    //      while (!isok) {
+    //        ensembleCache.put(uuid + ":" + Long.toString(localCounter), bytes);
+    //        isok = true;
+    //
+    //      }
+    //    } catch (Exception e) {
+    //      if (e instanceof TimeoutException) {
+    //        try {
+    //          Thread.sleep(10);
+    //        } catch (InterruptedException e1) {
+    //          e1.printStackTrace();
+    //        }
+    //        System.err.println("Timeout Exxcception in slushToMC " + e.getMessage());
+    //        PrintUtilities.logStackTrace(log,e.getStackTrace());
+    //      }
+    //      e.printStackTrace();
+    //
+    //    }
 
   }
   public void flushEndToMC() {
@@ -238,13 +241,15 @@ public class TupleBuffer {
       }
 
       if (buffer.size() > 0) {
-        System.err.println("FLUSH END called but more tuples were added for " + cacheName);
-        flushToMC();
+        System.err.println("FLUSH END called but more tuples were added for " + cacheName + " missing in the end " + buffer.size());
+        //        BatchPutRunnable bpr = ensembleCacheUtilsSingle.getBatchPutRunnable();
+        //        bpr.setBuffer(this);
+        //        ensembleCacheUtilsSingle.submit(bpr);
       }
       localCounter = (localCounter + 1) % Long.MAX_VALUE;
       byte[] bytes = new byte[1];
       bytes[0] = -1;
-      ensembleCache.put(Long.toString(localCounter), bytes);
+      ensembleCache.put(uuid+":"+Long.toString(localCounter), bytes);
       //            ensembleCache = null;
       //            cacheName = null;
       buffer.clear();
@@ -253,37 +258,37 @@ public class TupleBuffer {
   }
 
   public byte[] serialize()  {
-    //        synchronized (mutex) {
-    try {
-      ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-      ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
-      BSONEncoder encoder = new BasicBSONEncoder();
-      outputStream.writeInt(buffer.size());
-      for (Map.Entry<Object, Object> entry : buffer.entrySet()) {
-        if(entry.getKey() instanceof String || entry.getKey() instanceof ComplexIntermediateKey) {
-          outputStream.writeObject(entry.getKey());
+    synchronized (mutex) {
+      try {
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
+        BSONEncoder encoder = new BasicBSONEncoder();
+        outputStream.writeInt(buffer.size());
+        for (Map.Entry<Object, Object> entry : buffer.entrySet()) {
+          if(entry.getKey() instanceof String || entry.getKey() instanceof ComplexIntermediateKey) {
+            outputStream.writeObject(entry.getKey());
+          }
+          else{
+            outputStream.writeObject(entry.getKey().toString());
+          }
+          //                byte[] tupleBytes = encoder.encode(entry.getValue().asBsonObject());
+          //                outputStream.writeInt(tupleBytes.length);
+          //                outputStream.write(tupleBytes);
+          outputStream.writeObject(entry.getValue());
         }
-        else{
-          outputStream.writeObject(entry.getKey().toString());
-        }
-        //                byte[] tupleBytes = encoder.encode(entry.getValue().asBsonObject());
-        //                outputStream.writeInt(tupleBytes.length);
-        //                outputStream.write(tupleBytes);
-        outputStream.writeObject(entry.getValue());
+        buffer.clear();
+        outputStream.flush();
+        outputStream.close();
+        byteStream.close();
+        byte[] uncompressed = byteStream.toByteArray();
+        byte[] compressed = Snappy.compress(uncompressed);
+        //        out.writeInt(compressed.length);
+        //        out.write(compressed);
+        return compressed;
+      } catch (IOException ioe) {
+        ioe.printStackTrace();
       }
-      buffer.clear();
-      outputStream.flush();
-      outputStream.close();
-      byteStream.close();
-      byte[] uncompressed = byteStream.toByteArray();
-      byte[] compressed = Snappy.compress(uncompressed);
-      //        out.writeInt(compressed.length);
-      //        out.write(compressed);
-      return compressed;
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
     }
-    //        }
     return null;
   }
 
@@ -302,40 +307,40 @@ public class TupleBuffer {
     synchronized (mutex){
       if(buffer == null || buffer.size() == 0)
         return;
-//        return null;
+      //        return null;
       Map<Object,Object> tmp = buffer;
       buffer = new HashMap<>();
-//      Map<Object,Object> tmpb = new HashMap<>();
+      //      Map<Object,Object> tmpb = new HashMap<>();
 
-//      Address a;
-//      ensembleCacheUtilsSingle.removeCompleted();
+      //      Address a;
+      //      ensembleCacheUtilsSingle.removeCompleted();
       for(Map.Entry<Object,Object> entry : tmp.entrySet()) {
-//
-//        ensembleCacheUtilsSingle.putToCacheDirect(localCache,entry.getKey(),entry.getValue());
-//        a = distMan.getPrimaryLocation(entry.getKey());
-//        nodeMaps.get(a.toString()).put(entry.getKey(),entry.getValue());
+        //
+        //        ensembleCacheUtilsSingle.putToCacheDirect(localCache,entry.getKey(),entry.getValue());
+        //        a = distMan.getPrimaryLocation(entry.getKey());
+        //        nodeMaps.get(a.toString()).put(entry.getKey(),entry.getValue());
         if(ensembleCacheUtilsSingle !=null) {
           ensembleCacheUtilsSingle.putToCacheDirect(localCache, entry.getKey(), entry.getValue());
         }else{
           EnsembleCacheUtils.putToCacheDirect(localCache, entry.getKey(), entry.getValue());
         }
-//        ensembleCacheUtilsSingle.addLocalFuture(localCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAsync(entry.getKey(),entry.getValue()));
+        //        ensembleCacheUtilsSingle.addLocalFuture(localCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAsync(entry.getKey(),entry.getValue()));
       }
 
-//      for (Map.Entry<String, Map<Object, Object>> entry : nodeMaps.entrySet()) {
-//          if (entry.getValue().size() > 0){
-//            ensembleCacheUtilsSingle.addLocalFuture(localCache.putAllAsync(entry.getValue()));
-//          }
-//        }
+      //      for (Map.Entry<String, Map<Object, Object>> entry : nodeMaps.entrySet()) {
+      //          if (entry.getValue().size() > 0){
+      //            ensembleCacheUtilsSingle.addLocalFuture(localCache.putAllAsync(entry.getValue()));
+      //          }
+      //        }
 
     }
-//    return result;
+    //    return result;
   }
 
   public void release() {
     buffer.clear();
-    ensembleCache =  null;
-    cacheName = null;
+    //    ensembleCache =  null;
+    //    cacheName = null;
   }
 
   public void setCacheName(String cacheName) {
@@ -348,9 +353,9 @@ public class TupleBuffer {
     ensembleCacheUtilsSingle.removeCompleted();
     synchronized (mutex) {
       for (Map.Entry<Object, Object> entry : buffer.entrySet()) {
-//        if (entry.getValue().size() > 0){
-//          ensembleCacheUtilsSingle.addLocalFuture(localCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAsync(
-//              entry.getKey(), entry.getValue()));
+        //        if (entry.getValue().size() > 0){
+        //          ensembleCacheUtilsSingle.addLocalFuture(localCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAsync(
+        //              entry.getKey(), entry.getValue()));
         ensembleCacheUtilsSingle.putToCacheDirect(localCache,entry.getKey(),entry.getValue());
       }
 

@@ -418,7 +418,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
         GlobalConfiguration gc = holder.getGlobalConfigurationBuilder().build();
         Configuration  c = holder.getDefaultConfigurationBuilder().build(gc);
         result.read(c).clustering()
-            .cacheMode(CacheMode.DIST_SYNC)
+            .cacheMode(CacheMode.DIST_SYNC).storeAsBinary().clustering()
             .hash().numOwners(1).numSegments(segments).locking().useLockStriping(false).concurrencyLevel(1000)
             .indexing().index(Index.NONE).transaction().transactionMode(
             TransactionMode.NON_TRANSACTIONAL)
@@ -437,7 +437,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
         result = new ConfigurationBuilder();
         result.read(holder.getDefaultConfigurationBuilder().build())
             .clustering()
-            .cacheMode(CacheMode.DIST_SYNC)
+            .cacheMode(CacheMode.DIST_SYNC).storeAsBinary().clustering()
             .hash().numOwners(1).numSegments(segments).locking().useLockStriping(false).concurrencyLevel(1000)
             .indexing().index(Index.NONE).transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL)
             .persistence().passivation(false)
@@ -461,7 +461,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
       result = new ConfigurationBuilder();
       result.read(holder.getDefaultConfigurationBuilder().build())
           .clustering()
-          .cacheMode(CacheMode.DIST_SYNC)
+          .cacheMode(CacheMode.DIST_SYNC).storeAsBinary().clustering()
           .hash().numOwners(1).numSegments(segments).locking().useLockStriping(false).concurrencyLevel(1000)
           .indexing().index(Index.NONE).transaction().transactionMode(
           TransactionMode.NON_TRANSACTIONAL).compatibility().enable()
@@ -640,7 +640,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
     //do not use persistence
 
     Configuration config = new ConfigurationBuilder()//.read(manager.getDefaultCacheConfiguration())
-        .clustering().l1().disable().clustering().cacheMode(CacheMode.DIST_SYNC).hash().numOwners(1).numSegments(segments).locking().useLockStriping(false).concurrencyLevel(1000).indexing()
+        .clustering().l1().disable().clustering().cacheMode(CacheMode.DIST_SYNC).storeAsBinary().clustering().hash().numOwners(1).numSegments(segments).locking().useLockStriping(false).concurrencyLevel(1000).indexing()
         .index(Index.NONE).transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL)
         .compatibility().enable()//.marshaller(new TupleMarshaller())
         .expiration().lifespan(-1).maxIdle(-1).wakeUpInterval(-1).reaperEnabled(
@@ -968,7 +968,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
       if (!LQPConfiguration.getConf().getBoolean("leads.processor.infinispan.useLevelDB", false)) {
         defaultConfig = new ConfigurationBuilder()//.read(manager.getDefaultCacheConfiguration())
             .clustering()
-            .cacheMode(CacheMode.DIST_SYNC)
+            .cacheMode(CacheMode.DIST_SYNC).storeAsBinary().clustering()
             .hash().numOwners(1).numSegments(segments).locking().useLockStriping(false).concurrencyLevel(1000)
             .indexing().index(Index.NONE).transaction().transactionMode(
                 TransactionMode.NON_TRANSACTIONAL)
@@ -986,7 +986,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
       } else { //Use leveldb
         defaultConfig = new ConfigurationBuilder() //.read(manager.getDefaultCacheConfiguration())
             .clustering()
-            .cacheMode(CacheMode.DIST_SYNC)
+            .cacheMode(CacheMode.DIST_SYNC).storeAsBinary().clustering()
             .hash().numOwners(1).numSegments(segments).locking().useLockStriping(false).concurrencyLevel(1000)
             .indexing().index(Index.NONE).transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL)
             .persistence().passivation(false)
@@ -1010,7 +1010,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
     } else { //do not use persistence
       defaultConfig = new ConfigurationBuilder()//.read(manager.getDefaultCacheConfiguration())
           .clustering()
-          .cacheMode(CacheMode.DIST_SYNC)
+          .cacheMode(CacheMode.DIST_SYNC).storeAsBinary().clustering()
           .hash().numOwners(1).numSegments(segments).locking().useLockStriping(false).concurrencyLevel(1000)
           .indexing().index(Index.NONE).transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL).compatibility().enable()//.marshaller(new TupleMarshaller())
           .expiration().lifespan(-1).maxIdle(-1).wakeUpInterval(-1).reaperEnabled(false)//.eviction().maxEntries(maxEntries).strategy(EvictionStrategy.NONE)
@@ -1052,7 +1052,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
 
 
       cacheConfig = new ConfigurationBuilder()//.read(manager.getDefaultCacheConfiguration())
-          .clustering().cacheMode(CacheMode.DIST_SYNC).hash().numOwners(1).numSegments(segments).locking().useLockStriping(false).concurrencyLevel(1000)
+          .clustering().cacheMode(CacheMode.DIST_SYNC).storeAsBinary().clustering().hash().numOwners(1).numSegments(segments).locking().useLockStriping(false).concurrencyLevel(1000)
           .indexing().index(Index.LOCAL).transaction().transactionMode(TransactionMode
               .NON_TRANSACTIONAL)
           .persistence()

@@ -30,6 +30,8 @@ public class ConcurrentDiskQueue implements java.util.Queue {
         .deleteFilesAfterClose()
         .closeOnJvmShutdown()
         .transactionDisable()
+        .asyncWriteEnable()
+        .asyncWriteQueueSize(blockSize)
         .make();
     queue = db.getQueue("fifo");
   }

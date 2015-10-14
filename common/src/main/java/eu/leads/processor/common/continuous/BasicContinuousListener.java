@@ -113,6 +113,11 @@ public abstract class BasicContinuousListener implements LeadsListener {
   @Override public void close() {
     buffer.clear();
     try {
+      if(processingThread.isAlive()){
+        synchronized (queueMutex){
+          queueMutex.notify();
+        }
+      }
       processingThread.join();
     } catch (InterruptedException e) {
       e.printStackTrace();

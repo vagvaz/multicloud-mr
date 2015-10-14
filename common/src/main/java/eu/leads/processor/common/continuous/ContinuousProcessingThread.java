@@ -102,7 +102,7 @@ public class ContinuousProcessingThread extends Thread{
         break;
     }
     if(processBuffer){
-      System.out.println("Processing buffer");
+//      System.out.println("Processing buffer");
       owner.processBuffer();
       buffer.clear();
     }

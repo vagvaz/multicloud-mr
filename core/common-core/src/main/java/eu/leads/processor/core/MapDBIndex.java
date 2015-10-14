@@ -220,7 +220,7 @@ public class MapDBIndex {
     return t;
   }
 
-  public synchronized void put(Object key, Object value) {
+  public  void put(Object key, Object value) {
     add(key, value);
   }
 

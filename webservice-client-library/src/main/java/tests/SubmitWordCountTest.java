@@ -52,7 +52,7 @@ public class SubmitWordCountTest {
     }
 
     @Override public void run() {
-      int linesPerTupe = 100;
+      int linesPerTupe = 1000;
       File f;
 
       EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
@@ -200,6 +200,7 @@ public class SubmitWordCountTest {
     microcloudAddresses.put("hamm6", HAMM6_IP);
     microcloudAddresses.put("hamm5", HAMM5_IP);
     microcloudAddresses.put("softnet", SOFTNET_IP);
+    microcloudAddresses.put("localcluster",LOCAL);
 
     activeIps = new HashMap<>();
     //read the ips from configuration or use the default
@@ -232,9 +233,9 @@ public class SubmitWordCountTest {
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
     jsonObject.getObject("operator").putObject("scheduling", scheduling);
 
-    jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
-    jsonObject.getObject("operator").putString("recComposableLocalReduce",
-                                               "recComposableLocalReduce");
+//    jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
+//    jsonObject.getObject("operator").putString("recComposableLocalReduce",
+//                                               "recComposableLocalReduce");
 
     //                   new JsonObject()
     //                       .putArray("dresden2", new JsonArray().add(DRESDEN2_IP))

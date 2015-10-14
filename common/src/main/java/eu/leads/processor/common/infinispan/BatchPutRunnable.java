@@ -37,6 +37,15 @@ public class BatchPutRunnable implements Runnable{
     @Override public void run() {
         boolean isok = false;
       Map data = buffer.flushToMC();
+      if(data==null || data.size() == 0){
+        if(owner != null){
+//          System.err.println("ADDING batchput to single");
+          owner.addBatchPutRunnable(this);
+        }else {
+//          System.err.println("ADDING batchput to static");
+          EnsembleCacheUtils.addBatchPutRunnable(this);
+        }
+      }
       long counter = (long) data.get("counter");
       EnsembleCache cache = (EnsembleCache) data.get("cache");
       String uuid = (String) data.get("uuid");
@@ -58,10 +67,10 @@ public class BatchPutRunnable implements Runnable{
             PrintUtilities.logStackTrace(log,e.getStackTrace());
         }
         if(owner != null){
-          System.err.println("ADDING batchput to single");
+//          System.err.println("ADDING batchput to single");
           owner.addBatchPutRunnable(this);
         }else {
-          System.err.println("ADDING batchput to static");
+//          System.err.println("ADDING batchput to static");
           EnsembleCacheUtils.addBatchPutRunnable(this);
         }
     }

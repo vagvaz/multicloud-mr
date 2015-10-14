@@ -68,7 +68,7 @@ public class EnsembleCacheUtilsSingle {
 
 
     auxExecutor = new ThreadPoolExecutor((int)threadBatch,(int)(threadBatch),1000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>());
-    runnables = new LinkedList<>();
+    runnables = new ConcurrentLinkedQueue<>();
     for (int i = 0; i < 10 * (threadBatch); i++) {
       runnables.add(new SyncPutRunnable(this));
     }
@@ -81,7 +81,7 @@ public class EnsembleCacheUtilsSingle {
     batchPutExecutor = new ThreadPoolExecutor(totalBatchPutThreads,totalBatchPutThreads,2000,TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>());
     microclouds = new ConcurrentHashMap<>();
     //            microcloudThreads  = new ConcurrentHashMap<>();
-    microcloudRunnables = new LinkedList<>();
+    microcloudRunnables = new ConcurrentLinkedQueue<>();
     for (int index = 0; index < 10*totalBatchPutThreads; index++){
       microcloudRunnables.add(new BatchPutRunnable(3,this));
     }
@@ -177,38 +177,48 @@ public class EnsembleCacheUtilsSingle {
   }
   public  SyncPutRunnable getRunnable(){
     SyncPutRunnable result = null;
-        System.err.println("GET aux run " + runnables.size());
-    synchronized (runMutex) {
+//        System.err.println("GET aux run " + runnables.size());
+
       result = runnables.poll();
       while (result == null) {
         try {
-          System.err.println("SLEEEP RUN IS " + runnables.size());
 
-          runMutex.wait();
-          System.err.println("WOKE UP " + runnables.size());
+
+            synchronized (runMutex) {
+              if(runnables.isEmpty()) {
+//                System.err.println("SLEEEP RUN IS " + runnables.size() + result);
+                runMutex.wait(10);
+              }
+            }
+//            System.err.println("WOKE UP " + runnables.size());
+
           //                    Thread.yield();
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
         result = runnables.poll();
       }
-    }
-    System.err.println("GETEND aux run " + runnables.size());
+
+//    System.err.println("GETEND aux run " + runnables.size());
     return result;
   }
 
   public synchronized BatchPutRunnable getBatchPutRunnable(){
     BatchPutRunnable result = null;
     //        synchronized (runnableMutex){
-    System.err.println("GET batch run " + microcloudRunnables.size());
-    synchronized (batchMutex) {
+//    System.err.println("GET batch run " + microcloudRunnables.size());
+
       result = microcloudRunnables.poll();
       while (result == null) {
 
         try {
-          System.err.println("SLEEP batch run " + microcloudRunnables.size());
-         batchMutex.wait();
-          System.err.println("WAKE batch run " + microcloudRunnables.size());
+//          System.err.println("SLEEP batch run " + microcloudRunnables.size());
+          synchronized (batchMutex) {
+            if(microcloudRunnables.isEmpty()) {
+              batchMutex.wait(10);
+            }
+          }
+//          System.err.println("WAKE batch run " + microcloudRunnables.size());
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
@@ -216,8 +226,8 @@ public class EnsembleCacheUtilsSingle {
         result = microcloudRunnables.poll();
         //            }
       }
-    }
-    System.err.println("GETEND " + microcloudRunnables.size());
+
+//    System.err.println("GETEND " + microcloudRunnables.size());
     return result;
   }
 
@@ -227,7 +237,7 @@ public class EnsembleCacheUtilsSingle {
     synchronized (runMutex){
       runMutex.notifyAll();
     }
-    System.err.println("add aux run " + runnables.size());
+//    System.err.println("add aux run " + runnables.size());
   }
 
   public void addBatchPutRunnable(BatchPutRunnable runnable)
@@ -237,7 +247,7 @@ public class EnsembleCacheUtilsSingle {
     synchronized (batchMutex){
       batchMutex.notifyAll();
     }
-    System.err.println("add microcloud run " + microcloudRunnables.size() + " before " + before);
+//    System.err.println("add microcloud run " + microcloudRunnables.size() + " before " + before);
   }
 
 
@@ -257,6 +267,7 @@ public class EnsembleCacheUtilsSingle {
     while(runnables.size() != 10*(threadBatch)) {
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
+
         Thread.sleep(100);
       } catch (InterruptedException e) {
         e.printStackTrace();
@@ -271,9 +282,11 @@ public class EnsembleCacheUtilsSingle {
     for(Map.Entry<String,Map<String,TupleBuffer>> mc : microclouds.entrySet()) {
       for (Map.Entry<String, TupleBuffer> cache : mc.getValue().entrySet()) {
         if(!mc.getKey().equals(localMC) ) {
-          BatchPutRunnable runnable = getBatchPutRunnable();
-          runnable.setBuffer(cache.getValue());
-          batchPutExecutor.submit(runnable);
+          if(cache.getValue().getBuffer().size() > 0) {
+            BatchPutRunnable runnable = getBatchPutRunnable();
+            runnable.setBuffer(cache.getValue());
+            batchPutExecutor.submit(runnable);
+          }
         }
         //                else{
         //                    cache.getValue().flushToMC();
@@ -288,6 +301,20 @@ public class EnsembleCacheUtilsSingle {
       }
     }
     //flush remotely batchputlisteners
+
+    System.err.println("Wait batchput");
+    while( microcloudRunnables.size() !=  10*totalBatchPutThreads){
+      try {
+        //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
+        System.err.println("microRunna " + microcloudRunnables.size() + " instead of " + (10*totalBatchPutThreads));
+        Thread.sleep(10000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+        PrintUtilities.logStackTrace(log,e.getStackTrace()); throw e;
+      }
+    }
+
+    System.out.println("FLUSH LISTENERS");
     for(Map.Entry<String,Map<String,TupleBuffer>> mc : microclouds.entrySet()){
       System.err.println("localMC: " + localMC + " mc " + mc.getKey());
       for(Map.Entry<String,TupleBuffer> cache : mc.getValue().entrySet()){
@@ -301,35 +328,24 @@ public class EnsembleCacheUtilsSingle {
         //                }
       }
     }
-    System.err.println("Wait batchput");
-    while( microcloudRunnables.size() !=  10*totalBatchPutThreads){
-      try {
-        //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
-        System.err.println("microRunna " + microcloudRunnables.size() + " instead of " + (10*totalBatchPutThreads));
-        Thread.sleep(10000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-        PrintUtilities.logStackTrace(log,e.getStackTrace()); throw e;
-      }
-    }
     System.err.println("Wait batchput---end");
     waitForAuxPuts();
 
     System.err.println("local wait " + localFutures.size());
-    for(NotifyingFuture future : localFutures)
-    {
-      try {
-        if(future != null)
-          future.get();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-        PrintUtilities.logStackTrace(log,e.getStackTrace()); throw e;
-      } catch (ExecutionException e) {
-        e.printStackTrace();
-        PrintUtilities.logStackTrace(log,e.getStackTrace()); throw e;
-      }
-    }
-    localFutures.clear();
+//    for(NotifyingFuture future : localFutures)
+//    {
+//      try {
+//        if(future != null)
+//          future.get();
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//        PrintUtilities.logStackTrace(log,e.getStackTrace()); throw e;
+//      } catch (ExecutionException e) {
+//        e.printStackTrace();
+//        PrintUtilities.logStackTrace(log,e.getStackTrace()); throw e;
+//      }
+//    }
+//    localFutures.clear();
     System.err.println("ensembesingle wait end");
   }
 
@@ -564,4 +580,8 @@ public class EnsembleCacheUtilsSingle {
     //    batchPutExecutor.shutdownNow();
     System.err.println("Finalize ensmeblCacheUtilsSingle");
   }
+
+    public void submit(BatchPutRunnable bpr) {
+        batchPutExecutor.submit(bpr);
+      }
 }
