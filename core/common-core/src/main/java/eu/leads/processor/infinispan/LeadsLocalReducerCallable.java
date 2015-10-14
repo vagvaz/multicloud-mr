@@ -67,7 +67,7 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
     } catch (InvocationTargetException e) {
       e.printStackTrace();
     }
-    result.setConfigString(configString);
+    result.setConfigString(reducer.configString);
 
     return result;
   }

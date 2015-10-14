@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
   String cacheName;
   //    transient LevelDBIndex index;
   //    transient List<LevelDBIndex> indexes;
-  transient ConcurrentLinkedDeque queue;;
+  transient ConcurrentLinkedDeque queue;
   transient Thread thread;
   transient List<LevelDBIndex> indexes;
   transient Cache targetCache;
