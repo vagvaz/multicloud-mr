@@ -16,7 +16,8 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class WordCountOperator extends MapReduceOperator {
 
-  LeadsReducer<?, ?> wordCountReducer;  // same for local and federation reducer
+  LeadsReducer<?, ?> wordCountLocalReducer;
+  LeadsReducer<?, ?> wordCountFederationReducer;
 
   public WordCountOperator(Node com, InfinispanManager persistence, LogProxy log, Action action) {
     super(com, persistence, log, action);
@@ -25,9 +26,12 @@ public class WordCountOperator extends MapReduceOperator {
   @Override public void init(JsonObject config) {
     super.init(conf);
     setMapper(new WordCountMapper(conf.toString()));
-    wordCountReducer = new WordCountReducer(conf.toString());
-    setFederationReducer(wordCountReducer);
-    setLocalReducer(wordCountReducer);
+
+    //create local and federation reducer
+    wordCountFederationReducer = new WordCountReducer(conf.toString());
+    JsonObject localReducerConf = conf.copy().putString("local", "1");
+    wordCountLocalReducer = new WordCountReducer(localReducerConf.toString());
+
     init_statistics(this.getClass().getCanonicalName());
   }
 
@@ -44,12 +48,12 @@ public class WordCountOperator extends MapReduceOperator {
   }
 
   @Override public void setupReduceLocalCallable() {
-    setLocalReducer(wordCountReducer);
+    setLocalReducer(wordCountLocalReducer);
     super.setupReduceLocalCallable();
   }
 
   @Override public void setupReduceCallable() {
-    setFederationReducer(wordCountReducer);
+    setFederationReducer(wordCountFederationReducer);
     super.setupReduceCallable();
   }
 

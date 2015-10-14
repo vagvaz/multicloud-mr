@@ -8,7 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 /**
@@ -17,6 +19,10 @@ import java.util.NoSuchElementException;
 public class WordCountReducer extends LeadsCombiner<String, Tuple> {
 
   Logger log;
+  private Map<String, Integer> sums;
+  transient private LeadsCollector collector;
+  transient private boolean collectorInitialized;
+  transient private boolean isComposableButNotLocal;
 
   public WordCountReducer(JsonObject configuration) {
     super(configuration);
@@ -26,12 +32,18 @@ public class WordCountReducer extends LeadsCombiner<String, Tuple> {
     super(configString);
   }
 
-  public WordCountReducer() {super();
+  public WordCountReducer() {
+    super();
   }
 
   @Override public void initialize() {
     super.initialize();
     log = LoggerFactory.getLogger(WordCountReducer.class);
+    collectorInitialized = false;
+    isComposableButNotLocal = isComposable && !isLocal;
+    if (isComposableButNotLocal) {
+      sums = new HashMap<>();
+    }
   }
 
   @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
@@ -50,15 +62,40 @@ public class WordCountReducer extends LeadsCombiner<String, Tuple> {
         e.printStackTrace();
       }
     }
+
+    if (isComposableButNotLocal) {
+      if (sums.containsKey(reducedKey)) {
+        sum += sums.get(reducedKey);
+      }
+      sums.put(reducedKey, sum);
+
+      if (!collectorInitialized) {  // TODO(ap0n): Not sure this is the best place
+        this.collector = collector;
+        collectorInitialized = true;
+      }
+    }
+
     event.end();
-    event.start("WRCOutputResult");
-    Tuple output = new Tuple();
-    output.setAttribute("count", sum);
-    collector.emit(reducedKey, output);
-    event.end();
+    if (!isComposableButNotLocal) {
+      event.start("WRCOutputResult");
+      Tuple output = new Tuple();
+      output.setAttribute("count", sum);
+      collector.emit(reducedKey, output);
+      event.end();
+    }
   }
 
   @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
+    if (isComposableButNotLocal) {
+      ProfileEvent event = new ProfileEvent("WCRComputeSum", log);  // TODO(ap0n): Is this ok?
+      event.start("WRCOutputResult");
+      for (Map.Entry<String, Integer> entry : sums.entrySet()) {
+        Tuple output = new Tuple();
+        output.setAttribute("count", entry.getValue());
+        collector.emit(entry.getKey(), output);
+      }
+      event.end();
+    }
   }
 }

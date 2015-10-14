@@ -43,6 +43,8 @@ public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
   transient protected Map<String, List<JsonObject>> targetsMap;
   transient protected EmbeddedCacheManager manager;
   transient protected XMLConfiguration xmlConfiguration;
+  transient protected boolean isLocal;
+  transient protected boolean isComposable;
 
   public LeadsReducer() {
   }
@@ -80,8 +82,21 @@ public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
     this.xmlConfiguration = xmlConfiguration;
   }
 
-  public void initialize() {
+  public void initialize() {  // add local or federation
     conf = new JsonObject(configString);
+
+    if (conf.containsField("local")) {
+      isLocal = true;
+    } else {
+      isLocal = false;
+    }
+
+    if (conf.containsField("composable")) {
+      isComposable = true;
+    } else {
+      isComposable = false;
+    }
+
     outputCacheName = conf.getString("output");
     if (conf.containsField("body") && conf.getObject("body").containsField("outputSchema")) {
       outputSchema = conf.getObject("body").getObject("outputSchema");
