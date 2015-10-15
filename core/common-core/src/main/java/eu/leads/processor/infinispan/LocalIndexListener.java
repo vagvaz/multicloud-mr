@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
   String cacheName;
   //    transient LevelDBIndex index;
   //    transient List<LevelDBIndex> indexes;
-  transient ConcurrentLinkedDeque queue;
+  transient ConcurrentDiskQueue queue;
   transient Thread thread;
   transient List<LevelDBIndex> indexes;
   transient Cache targetCache;
@@ -159,7 +159,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
     //        this.keysCache = manager.getLocalCache(cacheName+".index.keys");
     //        this.dataCache = manager.getLocalCache(cacheName+".index.data");
     //        this.index = new IntermediateKeyIndex(keysCache,dataCache);
-    queue = new ConcurrentLinkedDeque();
+    queue = new ConcurrentDiskQueue(500);
 
     Thread thread = new Thread(this);
     parallelism = LQPConfiguration.getInstance().getConfiguration().getInt("node.engine.parallelism", 4);
