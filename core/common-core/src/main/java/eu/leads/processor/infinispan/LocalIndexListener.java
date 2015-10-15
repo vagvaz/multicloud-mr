@@ -277,7 +277,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
         System.err.println("DDDDDDDDDDDIIIIIIIIIIIIIIIIIIIIRRRRRRRRRRRTY");
         System.exit(-1);
       }
-      System.err.println("*");
+//      System.err.println("*");
       ComplexIntermediateKey key = (ComplexIntermediateKey) e.getKey();
       int indx = Math.abs(key.hashCode()) % parallelism;
       indexes.get(indx).put(key.getKey(), e.getValue());
