@@ -889,7 +889,7 @@ public class Boot2 {
 
     ConfigRepository configRepository = null;
     try {
-      configRepository = OpenSSHConfig.parseFile("/home/vagvaz/.ssh/config");
+      configRepository = OpenSSHConfig.parseFile(System.getenv("HOME")+".ssh/config");
     } catch (IOException e) {
       e.printStackTrace();
     }
