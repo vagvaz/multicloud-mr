@@ -1,9 +1,12 @@
 package eu.leads.processor.common.infinispan;
 
 import eu.leads.processor.common.LeadsListener;
+import eu.leads.processor.common.continuous.ConcurrentDiskQueue;
+import eu.leads.processor.common.continuous.EventTriplet;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
+import eu.leads.processor.plugins.EventType;
 import org.infinispan.Cache;
 import org.infinispan.commons.util.concurrent.FutureListener;
 import org.infinispan.commons.util.concurrent.NotifyingFuture;
@@ -27,7 +30,7 @@ import java.util.concurrent.Future;
  * Created by vagvaz on 8/30/15.
  */
 @Listener(sync = true,primaryOnly = true,clustered = false)
-public class BatchPutListener implements LeadsListener {
+public class BatchPutListener implements LeadsListener,Runnable {
     private transient InfinispanManager manager;
     private String compressedCache;
     private String targetCacheName;
@@ -36,6 +39,9 @@ public class BatchPutListener implements LeadsListener {
     private transient Object mutex = null;
     private transient  EnsembleCacheUtilsSingle ensembleCacheUtilsSingle;
     private transient Logger log = LoggerFactory.getLogger(BatchPutListener.class);
+    private transient Thread thread;
+    private transient ConcurrentDiskQueue queue;
+    private boolean flush = false;
 
     public BatchPutListener(String compressedCache,String targetCacheName){
         this.compressedCache = compressedCache;
@@ -62,6 +68,9 @@ public class BatchPutListener implements LeadsListener {
         futures = new ConcurrentHashMap<>();
         System.err.println("init ensembleCacheUtilsSingle");
         ensembleCacheUtilsSingle  = new EnsembleCacheUtilsSingle();
+        Thread thread = new Thread(this);
+        queue = new ConcurrentDiskQueue(500);
+        thread.start();
         System.err.println("end");
     }
 
@@ -99,17 +108,7 @@ public class BatchPutListener implements LeadsListener {
                 waitForPendingPuts();
                 return;
             }
-            TupleBuffer tupleBuffer = new TupleBuffer((byte[]) value);
-//            Map tmpb = new HashMap();
-            for (Map.Entry<Object, Object> entry : tupleBuffer.getBuffer().entrySet()) {
-                ensembleCacheUtilsSingle.putToCacheDirect(targetCache,entry.getKey(),entry.getValue());
-//                targetCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAll(tupleBuffer.getBuffer());//(entry.getKey(),entry.getValue());
-            }
-//            tupleBuffer.flushToCache(targetCache);
-//            NotifyingFuture f = tupleBuffer.flushToCache(targetCache);
-//            futures.put(f,f);
-            tupleBuffer.getBuffer().clear();
-            tupleBuffer = null;
+            queue.add(new EventTriplet(EventType.CREATED,key,value));
 
         }catch (Exception e){
             e.printStackTrace();
@@ -129,26 +128,81 @@ public class BatchPutListener implements LeadsListener {
         if(futures == null)
             return;
 
-        boolean isok = false;
-        boolean retry = false;
-        while(!isok){
-
+//        boolean isok = false;
+//        boolean retry = false;
+//        while(!isok){
+//
+//            try {
+//                ensembleCacheUtilsSingle.waitForAuxPuts();
+//            } catch (Exception e) {
+//                PrintUtilities.logStackTrace(log,e.getStackTrace());
+//            }
+//            try{
+//
+//                isok = true;
+//            }
+//            catch (Exception e){
+//                System.err.println("Exception " +  e.getClass().toString() + " in BatchPUtListener waitForPendingPuts" + e.getMessage());
+//                e.printStackTrace();
+//                PrintUtilities.logStackTrace(log, e.getStackTrace());
+//                retry = true;
+//                isok = true;
+//            }
+//        }
+        flush = true;
+        synchronized (mutex){
+            mutex.notify();
             try {
-                ensembleCacheUtilsSingle.waitForAuxPuts();
-            } catch (Exception e) {
-                PrintUtilities.logStackTrace(log,e.getStackTrace());
-            }
-            try{
-
-                isok = true;
-            }
-            catch (Exception e){
-                System.err.println("Exception " +  e.getClass().toString() + " in BatchPUtListener waitForPendingPuts" + e.getMessage());
+                mutex.wait();
+            } catch (InterruptedException e) {
                 e.printStackTrace();
-                PrintUtilities.logStackTrace(log, e.getStackTrace());
-                retry = true;
-                isok = true;
             }
+        }
+    }
+
+    @Override public void run() {
+        while(true){
+            EventTriplet triplet = (EventTriplet) queue.poll();
+            if(triplet == null){
+                if(queue.isEmpty()){
+                    if(flush){
+                        try {
+                            ensembleCacheUtilsSingle.waitForAuxPuts();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        synchronized (mutex){
+                            flush = false;
+                            mutex.notify();
+                        }
+                        break;
+                    }
+                    Thread.yield();
+                    if(queue.isEmpty())
+                    {
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                continue;
+            }
+
+            TupleBuffer tupleBuffer = new TupleBuffer((byte[]) triplet.getValue());
+            //            Map tmpb = new HashMap();
+            for (Map.Entry<Object, Object> entry : tupleBuffer.getBuffer().entrySet()) {
+                ensembleCacheUtilsSingle.putToCacheDirect(targetCache,entry.getKey(),entry.getValue());
+                //                targetCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAll(tupleBuffer.getBuffer());//(entry.getKey(),entry.getValue());
+            }
+            //            tupleBuffer.flushToCache(targetCache);
+            //            NotifyingFuture f = tupleBuffer.flushToCache(targetCache);
+            //            futures.put(f,f);
+            triplet = null;
+            tupleBuffer.getBuffer().clear();
+            tupleBuffer = null;
+
         }
     }
 }
