@@ -27,11 +27,14 @@ public class ConcurrentDiskQueue implements java.util.Queue {
   public ConcurrentDiskQueue(int blockSize) {
     this.threshold = blockSize;
     db = DBMaker.tempFileDB()
+        .fileMmapEnable()
+        .fileMmapEnableIfSupported()
+//        .cacheSize(blockSize)
         .deleteFilesAfterClose()
         .closeOnJvmShutdown()
         .transactionDisable()
         .asyncWriteEnable()
-        .asyncWriteQueueSize(blockSize)
+//        .asyncWriteQueueSize(blockSize)
         .make();
     queue = db.getQueue("fifo");
   }
