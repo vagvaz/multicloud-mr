@@ -32,7 +32,7 @@ public class ExecuteRunnable implements Runnable {
     try {
       Map.Entry entry = null;
       while (callable.isContinueRunning() || !callable.isEmpty()) {
-        System.err.println(callable.getCallableIndex()+": "+ callable.isContinueRunning() + " " + callable.isEmpty() + " sz " + callable.getSize());
+//        System.err.println(callable.getCallableIndex()+": "+ callable.isContinueRunning() + " " + callable.isEmpty() + " sz " + callable.getSize());
         entry = callable.poll();
         while (entry != null) {
           key = entry.getKey();

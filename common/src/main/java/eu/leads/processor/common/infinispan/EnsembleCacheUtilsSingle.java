@@ -29,6 +29,9 @@ public class EnsembleCacheUtilsSingle {
   private  volatile Object mutex = new Object();
   private  volatile Object runMutex = new Object();
   private  volatile Object batchMutex = new Object();
+  private long localBytes = 0;
+  private long remoteBytes = 0;
+
   private  Boolean initialized = false;
   private  int batchSize = 20;
   private  long threadCounter = 0;
@@ -48,6 +51,7 @@ public class EnsembleCacheUtilsSingle {
   private  int localBatchSize =10;
   private Queue<BatchPutRunnable > microcloudRunnables;
   private Queue<SyncPutRunnable > runnables;
+  private boolean computeBytes = false;
 
 
   public  EnsembleCacheUtilsSingle() {
@@ -66,7 +70,7 @@ public class EnsembleCacheUtilsSingle {
     threadBatch = LQPConfiguration.getInstance().getConfiguration().getInt(
         "node.ensemble.threads", 3);
 
-
+    computeBytes = LQPConfiguration.getInstance().getConfiguration().getBoolean("keep.network.metrics",false);
     auxExecutor = new ThreadPoolExecutor((int)threadBatch,(int)(threadBatch),1000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>());
     runnables = new ConcurrentLinkedQueue<>();
     for (int i = 0; i < 10 * (threadBatch); i++) {
@@ -263,7 +267,7 @@ public class EnsembleCacheUtilsSingle {
     }
   }
   public  void waitForAuxPuts() throws InterruptedException {
-    System.err.println("WaitForAuxPuts");
+//    System.err.println("WaitForAuxPuts");
     while(runnables.size() != 10*(threadBatch)) {
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
@@ -275,7 +279,7 @@ public class EnsembleCacheUtilsSingle {
         throw e;
       }
     }
-    System.err.println("WaitForAuxPuts---end");
+//    System.err.println("WaitForAuxPuts---end");
   }
   public void waitForAllPuts() throws InterruptedException, ExecutionException {
     System.err.println("wait for puts");
@@ -302,7 +306,7 @@ public class EnsembleCacheUtilsSingle {
     }
     //flush remotely batchputlisteners
 
-    System.err.println("Wait batchput");
+//    System.err.println("Wait batchput");
     while( microcloudRunnables.size() !=  10*totalBatchPutThreads){
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
@@ -314,9 +318,9 @@ public class EnsembleCacheUtilsSingle {
       }
     }
 
-    System.out.println("FLUSH LISTENERS");
+//    System.out.println("FLUSH LISTENERS");
     for(Map.Entry<String,Map<String,TupleBuffer>> mc : microclouds.entrySet()){
-      System.err.println("localMC: " + localMC + " mc " + mc.getKey());
+//      System.err.println("localMC: " + localMC + " mc " + mc.getKey());
       for(Map.Entry<String,TupleBuffer> cache : mc.getValue().entrySet()){
         if(!mc.getKey().equals(localMC)) {
           cache.getValue().flushEndToMC();
@@ -328,10 +332,10 @@ public class EnsembleCacheUtilsSingle {
         //                }
       }
     }
-    System.err.println("Wait batchput---end");
+//    System.err.println("Wait batchput---end");
     waitForAuxPuts();
 
-    System.err.println("local wait " + localFutures.size());
+//    System.err.println("local wait " + localFutures.size());
     //    for(NotifyingFuture future : localFutures)
     //    {
     //      try {
@@ -346,7 +350,14 @@ public class EnsembleCacheUtilsSingle {
     //      }
     //    }
     //    localFutures.clear();
-    System.err.println("ensembesingle wait end");
+    if(computeBytes){
+      System.err.println("Splill ensembesingle wait end");
+      spillMetricData();
+    }
+    else {
+      System.err.println("ensembesingle wait end");
+    }
+
   }
 
   public void addLocalFuture(NotifyingFuture future){
@@ -442,6 +453,9 @@ public class EnsembleCacheUtilsSingle {
     //    if(tupleBuffer.add(key, value)){
     //      tupleBuffer.flushToLocalCache();
     //    }
+    if(value instanceof Tuple && computeBytes){
+      localBytes += ((Tuple)value).getSerializedSize();
+    }
     Cache localCache =
         (Cache) localManager.getPersisentCache(  cache.getName());
     putToCacheDirect(localCache, key, value);
@@ -574,10 +588,48 @@ public class EnsembleCacheUtilsSingle {
     }
   }
 
+  public void spillMetricData(){
+    try {
+      BasicCache cache = null;
+      if(localMC != null && !localMC.equals("")){
+        cache = (BasicCache) InfinispanClusterSingleton.getInstance().getManager().getPersisentCache("metrics");
+      }else{
+        PrintUtilities.printAndLog(log,"EVEN THOUGH compute remote data no localMC was defined");
+        return;
+      }
+      Long oldValue =null;
+      String key = localMC+"."+InfinispanClusterSingleton.getInstance().getManager().getMemberName().toString() + "."+this.toString();
+      if(localBytes > 0) {
+
+        oldValue = (Long) cache.get(key + ".local");
+        if (oldValue == null) {
+          oldValue = new Long(localBytes);
+        } else {
+          oldValue += localBytes;
+        }
+        cache.put(key + ".local", oldValue);
+        localBytes = 0;
+      }
+      if(remoteBytes > 0) {
+        oldValue = (Long) cache.get(key + ".remote");
+        if (oldValue == null) {
+          oldValue = new Long(remoteBytes);
+        } else {
+          oldValue += remoteBytes;
+        }
+        cache.put(key + ".remote", oldValue);
+        remoteBytes = 0;
+      }
+    }catch (Exception e){
+      e.printStackTrace();
+    }
+  }
+
   @Override
   public void finalize(){
     //    auxExecutor.shutdownNow();
     //    batchPutExecutor.shutdownNow();
+
     runnables.clear();
     microcloudRunnables.clear();
     auxExecutor.shutdownNow();
@@ -600,5 +652,9 @@ public class EnsembleCacheUtilsSingle {
 
   public void submit(BatchPutRunnable bpr) {
     batchPutExecutor.submit(bpr);
+  }
+
+  public  void updateRemoteBytes(int length) {
+    remoteBytes+= length;
   }
 }

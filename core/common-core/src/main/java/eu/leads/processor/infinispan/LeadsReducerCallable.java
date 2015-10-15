@@ -197,9 +197,9 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
       leadsListener.close();
     }
 
-    System.err.println("reducer finalizee collector");
+//    System.err.println("reducer finalizee collector");
     //        collector.finalizeCollector();
-    System.err.println("finalzie super");
+//    System.err.println("finalzie super");
     collector.finalizeCollector();
     super.finalizeCallable();
 

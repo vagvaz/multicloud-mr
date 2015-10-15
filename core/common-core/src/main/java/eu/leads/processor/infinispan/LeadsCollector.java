@@ -48,8 +48,8 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   private ComplexIntermediateKey baseIntermKey;
   private transient volatile Object mutex;
   private String ensembleHost;
-  private long localData;
-  private long remoteData;
+//  private long localData;
+//  private long remoteData;
   protected Map<KOut, List<VOut>> combinedValues;
   private EnsembleCacheUtilsSingle ensembleCacheUtilsSingle;
 
@@ -267,12 +267,12 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       }
 
     } else {
-      if(key.hashCode() % emanager.sites().size() == indexSite){
-        localData += key.toString().length() + value.toString().length();
-      }
-      else{
-        remoteData += key.toString().length() + value.toString().length();
-      }
+//      if(key.hashCode() % emanager.sites().size() == indexSite){
+//        localData += key.toString().length() + value.toString().length();
+//      }
+//      else{
+//        remoteData += key.toString().length() + value.toString().length();
+//      }
       ensembleCacheUtilsSingle.putToCache(storeCache, key, value);
     }
   }
@@ -300,18 +300,18 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   }
 
   private void output(KOut key, VOut value) {
-    if(key.hashCode() % emanager.sites().size() == indexSite){
-      localData += key.toString().length() +
-          site.length() +
-          node.length() + 4;  //cost for complex Intermediate key
-      localData += value.toString().length();
-    }
-    else{
-      remoteData += key.toString().length() +
-          site.length() +
-          node.length() + 4;  //cost for complex Intermediate key
-      remoteData += value.toString().length();
-    }
+//    if(key.hashCode() % emanager.sites().size() == indexSite){
+//      localData += key.toString().length() +
+//          site.length() +
+//          node.length() + 4;  //cost for complex Intermediate key
+//      localData += value.toString().length();
+//    }
+//    else{
+//      remoteData += key.toString().length() +
+//          site.length() +
+//          node.length() + 4;  //cost for complex Intermediate key
+//      remoteData += value.toString().length();
+//    }
 
     synchronized (mutex){
       counter++;
@@ -333,7 +333,6 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
      if (combiner != null) {
       combiner.finalizeTask();
     }
-    spillMetricData();
   }catch(Exception e) {
       e.printStackTrace();
   }
@@ -344,29 +343,6 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     } catch (ExecutionException e) {
       e.printStackTrace();
     } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-  public void spillMetricData(){
-    try {
-      EnsembleCache cache = emanager.getCache("metrics");
-      Long oldValue =
-          (Long) cache.get(localSite + ":" + indexSite + "-" + node + "-" + site + "-" + cacheName + ".local");
-      if (oldValue == null) {
-        oldValue = new Long(localData);
-      } else {
-        oldValue += localData;
-      }
-      cache.put(localSite + ":" + indexSite + "-" + node + "-" + site + "-" + cacheName + ".local", oldValue);
-
-      oldValue = (Long) cache.get(localSite + ":" + indexSite + "-" + node + "-" + site + "-" + cacheName + ".remote");
-      if (oldValue == null) {
-        oldValue = new Long(remoteData);
-      } else {
-        oldValue += remoteData;
-      }
-      cache.put(localSite + ":" + indexSite + "-" + node + "-" + site + "-" + cacheName + ".remote", oldValue);
-    }catch (Exception e){
       e.printStackTrace();
     }
   }

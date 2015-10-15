@@ -13,7 +13,7 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
 
   //    static BasicBSONEncoder encoder = new BasicBSONEncoder();
   //    static BasicBSONDecoder decoder = new BasicBSONDecoder();
-
+  private transient byte[] bytes = null;
   public Tuple() {
     super();
   }
@@ -52,29 +52,44 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
 
   private void writeObject(java.io.ObjectOutputStream out) throws IOException {
     // Serialize it
+    if(bytes != null){
+      out.writeObject(bytes);
+      bytes = null;
+      return;
+    }
+
     BSONEncoder encoder = TupleUtils.getEncoder();
     if (encoder == null) {
       encoder = new BasicBSONEncoder();
-      byte[] array = encoder.encode(data);
-      byte[] compressed = Snappy.compress(array);
-      out.writeObject(compressed);
-      array = null;
-      compressed = null;
+      bytes = serializeWithEncoder(encoder);
+      out.writeObject(bytes);
+
+      bytes = null;
       encoder = null;
       return;
     }
-    byte[] array = encoder.encode(data);
-    byte[] compressed = Snappy.compress(array);
-    out.writeObject(compressed);
-    array = null;
-    compressed = null;
+    bytes = serializeWithEncoder(encoder);
+    out.writeObject(bytes);
+    bytes = null;
     TupleUtils.addEncoder(encoder);
     //      out.writeInt(data.toString().length());
     //      out.writeBytes(data.toString());
   }
 
+  private byte[] serializeWithEncoder(BSONEncoder encoder) {
+      byte[] array = encoder.encode(data);
+    try {
+      bytes = Snappy.compress(array);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    array = null;
+    return bytes;
+  }
+
   private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
     // Deserialize it
+    bytes = null;
     byte[] array = (byte[]) in.readObject();
     byte[] uncompressed = Snappy.uncompress(array);
     BSONDecoder decoder = TupleUtils.getDecoder();//new BasicBSONDecoder();
@@ -98,23 +113,50 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
   }
 
   private void readObjectNoData() throws ObjectStreamException {
+    bytes = null;
     data = new BasicBSONObject();
   }
 
   public void writeExternal(ObjectOutput out) throws IOException {
-    BasicBSONEncoder encoder = new BasicBSONEncoder();
-    byte[] array = encoder.encode(data);
-    out.writeObject(array);
-    array = null;
-    encoder = null;
+    if(bytes != null){
+      out.writeObject(bytes);
+      bytes = null;
+      return;
+    }
+
+    BSONEncoder encoder = TupleUtils.getEncoder();
+    if (encoder == null) {
+      encoder = new BasicBSONEncoder();
+      bytes = serializeWithEncoder(encoder);
+      out.writeObject(bytes);
+
+      bytes = null;
+      encoder = null;
+      return;
+    }
+    bytes = serializeWithEncoder(encoder);
+    out.writeObject(bytes);
+    bytes = null;
+    TupleUtils.addEncoder(encoder);
   }
 
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-    BasicBSONDecoder decoder = new BasicBSONDecoder();
+    bytes = null;
     byte[] array = (byte[]) in.readObject();
-    data = decoder.readObject(array);
+    byte[] uncompressed = Snappy.uncompress(array);
+    BSONDecoder decoder = TupleUtils.getDecoder();//new BasicBSONDecoder();
+    if (decoder == null) {
+      decoder = new BasicBSONDecoder();
+      data = decoder.readObject(uncompressed);
+      array = null;
+      uncompressed = null;
+      decoder = null;
+      return;
+    }
+    data = decoder.readObject(uncompressed);
     array = null;
-    decoder = null;
+    uncompressed = null;
+    TupleUtils.addDecoder(decoder);
   }
 
   public String asString() {
@@ -228,6 +270,23 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
         }
       }
     }
+  }
+
+  public long getSerializedSize() {
+    if(bytes != null){
+      return bytes.length;
+    }
+
+    BSONEncoder encoder = TupleUtils.getEncoder();
+    if (encoder == null) {
+      encoder = new BasicBSONEncoder();
+      bytes = serializeWithEncoder(encoder);
+      encoder = null;
+      return bytes.length;
+    }
+    bytes = serializeWithEncoder(encoder);
+    TupleUtils.addEncoder(encoder);
+    return bytes.length;
   }
 
   public static class TupleExternalizer implements AdvancedExternalizer<Tuple> {

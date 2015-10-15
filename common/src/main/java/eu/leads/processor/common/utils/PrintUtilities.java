@@ -21,7 +21,7 @@ public class PrintUtilities {
     public static void printMap(Map<?, ?> map) {
         System.out.println("Map{ Size " + map.keySet().size() + "\n");
         for (Object  e : map.keySet()) {
-            System.out.println("\t " + e.toString() + "--->" + map.get(e).toString() + "\n");
+            System.out.println("\t " + e.toString() + "--->" + map.get(e).toString());
         }
         System.out.println("end of map }");
     }
@@ -30,7 +30,7 @@ public class PrintUtilities {
     System.out.println("Map{\n");
     int counter = 0;
     for (Object e : map.keySet()) {
-      System.out.println("\t " + e.toString() + "--->" + map.get(e).toString() + "\n");
+      System.out.println("\t " + e.toString() + "--->" + map.get(e).toString());
       counter++;
       if(counter > numOfItems)
         break;

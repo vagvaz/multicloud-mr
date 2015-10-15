@@ -68,11 +68,14 @@ public class BatchPutRunnable implements Runnable{
         }
         if(owner != null){
 //          System.err.println("ADDING batchput to single");
+          owner.updateRemoteBytes(bytes.length);
           owner.addBatchPutRunnable(this);
         }else {
 //          System.err.println("ADDING batchput to static");
           EnsembleCacheUtils.addBatchPutRunnable(this);
         }
+      bytes = null;
+      cache = null;
     }
 
 
