@@ -242,7 +242,6 @@ public abstract class MapReduceOperator extends BasicOperator {
         new LeadsLocalReducerCallable(intermediateCacheName, localReducer, intermediateLocalCacheName,
             LQPConfiguration.getInstance().getMicroClusterName());
 
-    System.err.println("reduInput " + reduceLocalInputCache.size());
     combiner = null;
     String localSite =
         globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName()).get(0)

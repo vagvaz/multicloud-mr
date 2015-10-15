@@ -134,7 +134,7 @@ public class LeadsDistMapReduceTest {
   //
   //                long start = System.currentTimeMillis();
   //                JsonObject configuration = new JsonObject();
-  //                LeadsMapper<String, String, String, Integer> testMapper = new eu.leads.processor.common.test.WordCountMapper(
+  //                LeadsMapper<String, String, String, Integer> testMapper = new eu.leads.processor.common.test.WCM(
   //
   //                        configuration);
   //                LeadsCollector<String, Integer> testCollector = new LeadsCollector<String, Integer>(
@@ -142,7 +142,7 @@ public class LeadsDistMapReduceTest {
   //                LeadsMapperCallable<String, String, String, Integer> testMapperCAll = new LeadsMapperCallable<String, String, String, Integer>(
   //                        InCache, testCollector, testMapper);
   //
-  //                LeadsReducer<String, Integer> testReducer = new eu.leads.processor.common.test.WordCountReducer(
+  //                LeadsReducer<String, Integer> testReducer = new eu.leads.processor.common.test.WCR(
   //                        configuration);
   //                LeadsReduceCallable<String, Integer> testReducerCAll = new LeadsReduceCallable<String, Integer>(
   //                        OutCache, testReducer);

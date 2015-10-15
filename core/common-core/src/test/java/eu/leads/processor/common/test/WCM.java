@@ -6,13 +6,13 @@ import org.infinispan.distexec.mapreduce.Collector;
 import org.vertx.java.core.json.JsonObject;
 
 
-public class WordCountMapper extends LeadsMapper<String, String, String, Integer> {
+public class WCM extends LeadsMapper<String, String, String, Integer> {
 
   private static final long serialVersionUID = -5943370243108735560L;
   private static int chunks = 0, words = 0;
 
 
-  public WordCountMapper(JsonObject configuration) {
+  public WCM(JsonObject configuration) {
     super(configuration);
   }
 

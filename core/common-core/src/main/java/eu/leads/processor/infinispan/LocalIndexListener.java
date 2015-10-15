@@ -44,7 +44,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
   private int parallelism = 1;
   private boolean isDirty = false;
   private boolean flush = false;
-
+  private boolean isClosed = false;
+  private boolean isFlushed = false;
   public LocalIndexListener(InfinispanManager manager, String cacheName) {
     this.cacheName = cacheName;
   }
@@ -96,7 +97,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
       System.err.println("DIRTY === ");
       System.exit(-1);
     }
-    if (event.isPre()) {
+    if (event.isPre() || event.isCommandRetried() ) {
       return;
     }
 
@@ -125,23 +126,11 @@ import java.util.concurrent.ConcurrentLinkedDeque;
       System.err.println("DIRTY ++++++=== ");
       System.exit(-1);
     }
-    if (event.isPre()) {
-      //            ComplexIntermediateKey key = (ComplexIntermediateKey) event.getKey();
-      //            System.err.println("PREKey modified " + event.getKey() + " key "  + key.getKey() + " " + key.getNode() + " " + key.getSite() + " " + key.getCounter());
+    if (event.isPre() || event.isCommandRetried() ) {
       return;
     }
-    //        System.err.println("localmodify " + event.isOriginLocal() + " " + event.isCommandRetried() + " " + event.isCreated() + " " + event.isPre());
-    //        log.error("orig " + event.isOriginLocal() + " ret " + event.isCommandRetried() + " crea " + event.isCreated() + " pre  " + event.isPre());
 
-    //        pevent.start("IndexPut");
-    //        if(event.getKey() instanceof ComplexIntermediateKey) {
     processEvent(event.getKey(),event.getValue());
-
-    //        pevent.end();
-    //            synchronized (mutex){
-    //                mutex.notifyAll();
-    //            }
-    //        }
   }
 
   @Override public InfinispanManager getManager() {
@@ -170,8 +159,6 @@ import java.util.concurrent.ConcurrentLinkedDeque;
               + InfinispanClusterSingleton.getInstance().getManager().getUniquePath() + "/" + cacheName + i,
           cacheName + ".index-" + i));
     }
-
-    //        this.index = new LevelDBIndex( System.getProperties().getProperty("java.io.tmpdir")+"/"+StringConstants.TMPPREFIX+"/interm-index/"+ InfinispanClusterSingleton.getInstance().getManager().getUniquePath()+"/"+cacheName,cacheName+".index");
     log = LoggerFactory.getLogger(LocalIndexListener.class);
     pevent = new ProfileEvent("indexPut", log);
     thread.start();
@@ -185,7 +172,21 @@ import java.util.concurrent.ConcurrentLinkedDeque;
     return this.getClass().toString();
   }
 
-  @Override public void close() {
+  @Override public  void  close() {
+    if(isClosed)
+      return;
+    isClosed = true;
+    synchronized (mutex){
+      mutex.notify();
+    }
+    System.err.println("JOIN Thread in local");
+    try {
+      if(thread != null) {
+        thread.join();
+      }
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     for (LevelDBIndex index : indexes) {
       index.flush();
       index.close();
@@ -211,25 +212,58 @@ import java.util.concurrent.ConcurrentLinkedDeque;
     confString = s;
   }
 
-  void waitForAllData() {
-    System.err.println("get the size of target");
-    if(flush){
+  public  void waitForAllData() {
+    if(isFlushed){
       return;
-    }
-    synchronized (mutex) {
-      flush = true;
-      mutex.notify();
     }
     for (LevelDBIndex index : indexes) {
       index.flush();
     }
+    synchronized (mutex) {
+      flush = true;
+      try {
+        mutex.notify();
+        mutex.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+
+    isFlushed = true;
 
   }
 
   @Override public void run() {
-    while(!flush){
+    while(!flush || !isClosed){
       EventTriplet e = (EventTriplet) queue.poll();
       if(e == null){
+        if(isClosed) {
+          if(!queue.isEmpty()){
+            System.err.println("CLOSING LOCALINDEX LISTENER WHILE NOT EMPTY");
+            System.exit(-1);
+          }
+          else{
+            break;
+          }
+        }
+        if(flush){
+          if(queue.isEmpty()){
+            synchronized (mutex){
+              mutex.notifyAll();
+              try {
+                mutex.wait();
+                continue;
+              } catch (InterruptedException e1) {
+                e1.printStackTrace();
+              }
+            }
+          }else{
+            if(isDirty){
+              System.err.println("DDDDDDDDDDDIIIIIIIIIIIIIIIIIIIIRRRRRRRRRRRTY");
+              System.exit(-1);
+            }
+          }
+        }
         synchronized (mutex){
           try {
             mutex.wait();
@@ -239,6 +273,11 @@ import java.util.concurrent.ConcurrentLinkedDeque;
           }
         }
       }
+      if(isDirty){
+        System.err.println("DDDDDDDDDDDIIIIIIIIIIIIIIIIIIIIRRRRRRRRRRRTY");
+        System.exit(-1);
+      }
+      System.err.println("*");
       ComplexIntermediateKey key = (ComplexIntermediateKey) e.getKey();
       int indx = Math.abs(key.hashCode()) % parallelism;
       indexes.get(indx).put(key.getKey(), e.getValue());
@@ -248,13 +287,15 @@ import java.util.concurrent.ConcurrentLinkedDeque;
            key = (ComplexIntermediateKey) triplet.getKey();
            indx = Math.abs(key.hashCode()) % parallelism;
           indexes.get(indx).put(key.getKey(), triplet.getValue());
+          triplet = (EventTriplet) queue.poll();
         }
-        flush = false;
         for (LevelDBIndex index : indexes) {
           index.flush();
         }
+//        flush = false;
+
         synchronized (mutex) {
-          mutex.notify();
+          mutex.notifyAll();
         }
       }
     }

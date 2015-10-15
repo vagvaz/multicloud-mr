@@ -17,7 +17,7 @@ public interface InputBuffer {
   public boolean isFull();
   public void setRemovalListener(RemovalListener removalListener);
   public RemovalListener getRemovalListener();
-  public Iterator iterator();
+  public Map getMapAndReset();
   public void clear();
   public Map reset();
 }

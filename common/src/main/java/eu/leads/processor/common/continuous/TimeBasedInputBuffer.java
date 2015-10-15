@@ -30,7 +30,7 @@ public class TimeBasedInputBuffer implements InputBuffer {
     data = CacheBuilder.newBuilder().expireAfterWrite(timeWindow, TimeUnit.MILLISECONDS).build();
   }
 
-  @Override public boolean add(Object key, Object value) {
+  @Override public  boolean add(Object key, Object value) {
     boolean result = actionResult;
     data.put(key,value);
     if(result){
@@ -39,7 +39,7 @@ public class TimeBasedInputBuffer implements InputBuffer {
     return result;
   }
 
-  @Override public boolean remove(Object key) {
+  @Override public  boolean remove(Object key) {
     boolean result = actionResult;
     data.invalidate(key);
     if(result){
@@ -48,7 +48,7 @@ public class TimeBasedInputBuffer implements InputBuffer {
     return result;
   }
 
-  @Override public boolean modify(Object key, Object value) {
+  @Override public  boolean modify(Object key, Object value) {
     boolean result = actionResult;
     data.put(key,value);
     if(result){
@@ -57,19 +57,19 @@ public class TimeBasedInputBuffer implements InputBuffer {
     return result;
   }
 
-  @Override public boolean isEmpty() {
+  @Override public  boolean isEmpty() {
     return (data.size() == 0);
   }
 
-  @Override public int size() {
+  @Override public  int size() {
     return (int) data.size();
   }
 
-  @Override public boolean isFull() {
+  @Override public  boolean isFull() {
     return false;
   }
 
-  @Override public void setRemovalListener(RemovalListener removalListener) {
+  @Override public  void setRemovalListener(RemovalListener removalListener) {
     this.removalListener = removalListener;
     resetDataCache();
   }
@@ -78,15 +78,17 @@ public class TimeBasedInputBuffer implements InputBuffer {
     return removalListener;
   }
 
-  @Override public Iterator iterator() {
-    return data.asMap().entrySet().iterator();
+  @Override public  Map getMapAndReset() {
+    Map result = data.asMap();
+    resetDataCache();
+    return result;
   }
 
-  @Override public void clear() {
+  @Override public  void clear() {
     data.invalidateAll();
   }
 
-  @Override public Map reset() {
+  @Override public  Map reset() {
     Map result = data.asMap();
     resetDataCache();
     return result;

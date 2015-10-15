@@ -42,8 +42,6 @@ import java.util.concurrent.Future;
   protected int parallelism = 1;
   protected transient Class<?> operatorClass = null;
 
-
-
   @Override protected void initializeContinuousListener(JsonObject conf) {
     log = LoggerFactory.getLogger(this.getClass());
     ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
@@ -95,15 +93,21 @@ import java.util.concurrent.Future;
     return operator;
   }
 
-  @Override protected void processBuffer() {
+  @Override protected  void processBuffer() {
     try {
 //      System.out.println("Processing buffer BasicContinuousOperatorListner");
-      Iterator iterator = buffer.iterator();
+      Map map = buffer.getMapAndReset();
+      if(map.size() == 0){
+        return;
+      }
+      Iterator iterator = map.entrySet().iterator();
       while (iterator.hasNext()) {
         Map.Entry entry = (Map.Entry) iterator.next();
+        iterator.remove();
         int index = (Math.abs(entry.getKey().hashCode()) % parallelism);
         inputEntry.get(index).add(entry);
       }
+//      map.clear();
       ArrayList<Future> futures = new ArrayList<>();
       for (int i = 0; i < parallelism; i++) {
         operators.get(i).setInput(inputEntry.get(i).iterator());
@@ -141,68 +145,64 @@ import java.util.concurrent.Future;
   }
 
 
-  @CacheEntryCreated @Override public void entryCreated(CacheEntryCreatedEvent event) {
-    try {
-      if (event.isPre()) {
-        return;
-      }
-      if (event.isCommandRetried())
-        return;
-      if (!event.isOriginLocal())
-        return;
-      //      log.error("process key " + event.getKey().toString());
-      //      System.out.println("process key " + event.getKey().toString());
-
-      EventTriplet triplet = new EventTriplet(EventType.CREATED, event.getKey(), event.getValue());
-      synchronized (queueMutex) {
-        eventQueue.add(triplet);
-        queueMutex.notify();
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  @CacheEntryModified @Override public void entryModified(CacheEntryModifiedEvent event) {
-    try {
-      //      log.error("process key " + event.getKey().toString());
-      if (event.isPre()) {
-        return;
-      }
-      if (event.isCreated())
-        return;
-      if (event.isCommandRetried())
-        return;
-      if (!event.isOriginLocal())
-        return;
-      EventTriplet triplet = new EventTriplet(EventType.MODIFIED, event.getKey(), event.getValue());
-      synchronized (queueMutex) {
-        eventQueue.add(triplet);
-        queueMutex.notify();
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-
-  @CacheEntryRemoved @Override public void entryModified(CacheEntryRemovedEvent event) {
-    try {
-      if (event.isCommandRetried())
-        return;
-      if (!event.isOriginLocal())
-        return;
-      //      System.out.println("process key " + event.getKey().toString());
-      //      log.error("process key " + event.getKey().toString());
-      if (event.isPre()) {
-        return;
-      }
-      EventTriplet triplet = new EventTriplet(EventType.REMOVED, event.getKey(), event.getOldValue());
-      synchronized (queueMutex) {
-        eventQueue.add(triplet);
-        queueMutex.notify();
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
+//  @CacheEntryCreated @Override public void entryCreated(CacheEntryCreatedEvent event) {
+//    try {
+//      if (event.isPre()) {
+//        return;
+//      }
+//      if (event.isCommandRetried())
+//        return;
+//      if (!event.isOriginLocal())
+//        return;
+//      //      log.error("process key " + event.getKey().toString());
+//      //      System.out.println("process key " + event.getKey().toString());
+//
+//      EventTriplet triplet = new EventTriplet(EventType.CREATED, event.getKey(), event.getValue());
+//      synchronized (queueMutex) {
+//        eventQueue.add(triplet);
+//        queueMutex.notify();
+//      }
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//    }
+//  }
+//
+//  @CacheEntryModified @Override public void entryModified(CacheEntryModifiedEvent event) {
+//    try {
+//      //      log.error("process key " + event.getKey().toString());
+//      if (event.isPre()) {
+//        return;
+//      }
+//      if (event.isCreated())
+//        return;
+//      if (event.isCommandRetried())
+//        return;
+//      EventTriplet triplet = new EventTriplet(EventType.MODIFIED, event.getKey(), event.getValue());
+//      synchronized (queueMutex) {
+//        eventQueue.add(triplet);
+//        queueMutex.notify();
+//      }
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//    }
+//  }
+//
+//  @CacheEntryRemoved @Override public void entryModified(CacheEntryRemovedEvent event) {
+//    try {
+//      if (event.isCommandRetried())
+//        return;
+//      //      System.out.println("process key " + event.getKey().toString());
+//      //      log.error("process key " + event.getKey().toString());
+//      if (event.isPre()) {
+//        return;
+//      }
+//      EventTriplet triplet = new EventTriplet(EventType.REMOVED, event.getKey(), event.getOldValue());
+//      synchronized (queueMutex) {
+//        eventQueue.add(triplet);
+//        queueMutex.notify();
+//      }
+//    } catch (Exception e) {
+//      e.printStackTrace();
+//    }
+//  }
 }

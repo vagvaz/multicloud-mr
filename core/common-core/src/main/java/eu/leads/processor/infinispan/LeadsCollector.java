@@ -325,11 +325,18 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     ensembleCacheUtilsSingle.putToCache(intermediateDataCache, newKey, value);
   }
 
-  public void finalizeCollector(){
-    if(useCombiner) {
-      combine(true);
+  public void finalizeCollector() {
+    try {
+      if (useCombiner) {
+        combine(true);
+      }
+     if (combiner != null) {
+      combiner.finalizeTask();
     }
     spillMetricData();
+  }catch(Exception e) {
+      e.printStackTrace();
+  }
     try {
       ensembleCacheUtilsSingle.waitForAllPuts();
     } catch (InterruptedException e) {

@@ -42,6 +42,7 @@ public class OperatorRunCallable implements Callable {
       e.printStackTrace();
       PrintUtilities.logStackTrace(log, e.getStackTrace());
     }
+    owner.getInputData().clear();
     return null;
   }
 }

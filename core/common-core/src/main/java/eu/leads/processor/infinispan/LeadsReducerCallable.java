@@ -186,6 +186,9 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
     if(index != null)
       index.close();
     //        inputCache.removeListener(leadsListener);
+    if(leadsListener != null){
+      leadsListener.close();
+    }
 
     System.err.println("reducer finalizee collector");
     //        collector.finalizeCollector();

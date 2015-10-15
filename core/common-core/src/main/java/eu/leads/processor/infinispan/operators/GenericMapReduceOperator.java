@@ -114,7 +114,6 @@ public class GenericMapReduceOperator extends MapReduceOperator {
     //             intermediateLocalCacheName, LQPConfiguration
     //             .getInstance().getMicroClusterName());
     reducerLocalCallable = new GenericLocalReducerCallable(outputCache.getName(), conf.toString());
-    System.err.println("reduInput " + reduceLocalInputCache.size());
     combiner = null;
   }
 }

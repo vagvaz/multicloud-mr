@@ -36,6 +36,7 @@ public class LevelDBIndex {
   private WriteBatch keyBatch;
   private DBFactory dbfactory;
   private Logger log = LoggerFactory.getLogger(LevelDBIndex.class);
+  private boolean isclosed = false;
   //    private BasicBSONEncoder encoder = new BasicBSONEncoder();
 
   public LevelDBIndex(String baseDir, String name) {
@@ -287,13 +288,18 @@ public class LevelDBIndex {
 
   //
 
-  public void close() {
+  public synchronized void close() {
+
+    if(isclosed)
+      return;
+    isclosed = true;
     if (keyIterator != null) {
       keyIterator.close();
     }
     keyIterator = null;
     if (valuesIterator != null) {
       valuesIterator.close();
+
     }
     valuesIterator = null;
     if (keysDB != null) {

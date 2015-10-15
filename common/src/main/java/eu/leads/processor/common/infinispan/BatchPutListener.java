@@ -94,7 +94,7 @@ public class BatchPutListener implements LeadsListener,Runnable {
 
     @CacheEntryCreated
     public void created(CacheEntryCreatedEvent event){
-        if(event.isPre()){
+        if(event.isPre() || event.isCommandRetried() ){
             return;
         }
         batchPut(event.getKey(), event.getValue());
@@ -118,7 +118,7 @@ public class BatchPutListener implements LeadsListener,Runnable {
 
     @CacheEntryModified
     public void modified(CacheEntryModifiedEvent event) {
-        if(event.isPre()){
+        if(event.isPre() || event.isCommandRetried() ){
             return;
         }
         batchPut(event.getKey(),event.getValue());

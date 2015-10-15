@@ -9,12 +9,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-public class WordCountReducer extends LeadsReducer<String, Integer> {
+public class WCR extends LeadsReducer<String, Integer> {
 
   private static final long serialVersionUID = 1901016598354633256L;
   Map<String, Integer> sums;
 
-  public WordCountReducer(JsonObject configuration) {
+  public WCR(JsonObject configuration) {
     super(configuration);
 
   }

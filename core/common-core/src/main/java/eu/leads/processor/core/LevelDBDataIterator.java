@@ -108,7 +108,7 @@ public class LevelDBDataIterator implements Iterator<Object> {
     }
   }
 
-  public void close() {
+  public synchronized void close() {
     try {
       iterator.close();
     } catch (IOException e) {
