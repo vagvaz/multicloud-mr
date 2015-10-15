@@ -161,7 +161,7 @@ public class BatchPutListener implements LeadsListener,Runnable {
     }
 
     @Override public void run() {
-        while(true){
+        while(!flush && !queue.isEmpty()){
             EventTriplet triplet = (EventTriplet) queue.poll();
             if(triplet == null){
                 if(queue.isEmpty()){
