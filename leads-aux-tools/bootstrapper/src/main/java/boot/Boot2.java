@@ -910,7 +910,7 @@ public class Boot2 {
 //    if(configRepository.getConfig(ip) == null){
     String username = sshconf.getString("username");//getStringValue(conf, "ssh.username", null, true);
 
-      jsch.getSession(username, ip, 22);
+      session = jsch.getSession(username, ip, 22);
 
     if (sshconf.containsField("rsa")/*xmlConfiguration.containsKey("ssh.rsa")*/) {
       String privateKey = sshconf.getString("rsa"); //conf.getString("ssh.rsa");
