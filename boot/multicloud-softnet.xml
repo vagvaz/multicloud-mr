@@ -11,12 +11,17 @@
 	<deploymentType>multicloud</deploymentType>
 	<adresses>
 		<MC name='softnet' credentials="softnet">
-			<node name='clu25' privateIp='10.130.0.16'>clu25.softnet.tuc.gr</node>
-			<node name='clu24' privateIp='10.130.0.104'>clu24.softnet.tuc.gr</node>
-			<node name='clu20' privateIp='10.130.0.104'>clu20cd.softnet.tuc.gr</node>
-			<node name='clu19' privateIp='10.130.0.104'>clu19.softnet.tuc.gr</node>
-			<node name='clu18' privateIp='10.130.0.104'>clu18.softnet.tuc.gr</node>
-			<node name='clu17' privateIp='10.130.0.104'>clu17.softnet.tuc.gr</node>
+			147.27.14.37
+			147.27.14.36
+			147.27.14.35
+			147.27.14.93
+			147.27.14.92
+			<node name='clu25' privateIp='10.130.0.16'>147.27.14.38</node>
+			<node name='clu24' privateIp='10.130.0.104'>147.27.14.37</node>
+			<node name='clu20' privateIp='10.130.0.104'>147.27.14.36</node>
+			<node name='clu19' privateIp='10.130.0.104'>147.27.14.35</node>
+			<node name='clu18' privateIp='10.130.0.104'>147.27.14.93</node>
+			<node name='clu17' privateIp='10.130.0.104'>147.27.14.92</node>
 		</MC>
 		<!--<MC name='dd1a' credentials="cloudandheat">-->
 			<!--<node name='leads-qe8' privateIp='10.130.0.16'>80.156.222.4</node>-->
