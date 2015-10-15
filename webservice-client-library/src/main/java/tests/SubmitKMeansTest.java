@@ -102,24 +102,30 @@ public class SubmitKMeansTest {
 
     LQPConfiguration.getInstance().initialize();
     LQPConfiguration.getInstance().loadFile(propertiesFile);
-    host = LQPConfiguration.getInstance().getConfiguration().getString("webservice-address", "http://" + DD1A_IP);
+    host = LQPConfiguration.getInstance().getConfiguration().getString("webservice-address",
+                                                                       "http://" + DD1A_IP);
     System.out.println("webservice host: " + host);
     port = 8080;
     String dataPath = LQPConfiguration.getInstance().getConfiguration().getString("data-path", ".");
     System.out.println("data path " + dataPath);
-    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data", false);
+    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data",
+                                                                                    false);
     System.out.println("load data " + loadData);
 
-    boolean reduceLocal = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-reduce-local", false);
+    boolean reduceLocal = LQPConfiguration.getInstance().getConfiguration()
+        .getBoolean("use-reduce-local", false);
     System.out.println("use reduce local " + reduceLocal);
 
-    boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine", true);
+    boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine",
+                                                                                   true);
     System.out.println("use combine " + combine);
 
-    boolean recComposableReduce = LQPConfiguration.getInstance().getConfiguration().getBoolean("recComposableReduce",false);
+    boolean recComposableReduce = LQPConfiguration.getInstance().getConfiguration()
+        .getBoolean("recComposableReduce", false);
     System.out.println("isRecComposableReduce " + recComposableReduce);
 
-    boolean recComposableLocalReduce = LQPConfiguration.getInstance().getConfiguration().getBoolean("recComposableLocalReduce",false);
+    boolean recComposableLocalReduce = LQPConfiguration.getInstance().getConfiguration()
+        .getBoolean("recComposableLocalReduce", false);
     System.out.println("isRecComposableLocalReduce " + recComposableLocalReduce);
 
     k = LQPConfiguration.getInstance().getConfiguration().getInt("k", 2);
@@ -130,7 +136,8 @@ public class SubmitKMeansTest {
     //set the default microclouds
     List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dd2a", "dresden2"));
     //read the microcloud to run the job
-    activeMicroClouds = LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
+    activeMicroClouds = LQPConfiguration.getInstance().getConfiguration()
+        .getList("active-microclouds", defaultMCs);
     System.out.println("active mc ");
     PrintUtilities.printList(activeMicroClouds);
     //initialize default values
@@ -146,7 +153,8 @@ public class SubmitKMeansTest {
     activeIps = new HashMap<>();
     //read the ips from configuration or use the default
     for (String mc : activeMicroClouds) {
-      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration().getString(mc, microcloudAddresses.get(mc)));
+      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration()
+          .getString(mc, microcloudAddresses.get(mc)));
     }
     System.out.println("active ips");
     PrintUtilities.printMap(activeIps);
@@ -180,7 +188,8 @@ public class SubmitKMeansTest {
     }
 
     if(recComposableLocalReduce) {
-      jsonObject.getObject("operator").putString("recComposableLocalReduce", "recComposableLocalReduce");
+      jsonObject.getObject("operator").putString("recComposableLocalReduce",
+                                                 "recComposableLocalReduce");
     }
 
     if (combine) {
@@ -240,12 +249,13 @@ public class SubmitKMeansTest {
 
         EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
         EnsembleCache cache = ensembleCacheManager
-            .getCache(id, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
+            .getCache(id, new ArrayList<>(ensembleCacheManager.sites()),
+                      EnsembleCacheManager.Consistency.DIST);
 
         Map<String, Double>[] newCenters = new Map[k];
         for (int i = 0; i < k; i++) {
           //          Tuple t = (Tuple) cache.get(String.valueOf(i));
-          Tuple t = (Tuple) getKeyFrom(cache, String.valueOf(i));
+          Tuple t = new Tuple((String)getKeyFrom(cache, String.valueOf(i)));
           norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
           clusters[i] = t.getAttribute("cluster" + i);
           Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("newCentroid"));
@@ -271,7 +281,8 @@ public class SubmitKMeansTest {
 
       //        printResults(id, 5);
       Date end = new Date();
-      System.out.println("\nDONE IN: " + ((double) (end.getTime() - start.getTime()) / 1000.0) + " sec");
+      System.out.println("\nDONE IN: " + ((double) (end.getTime() - start.getTime()) / 1000.0)
+                         + " sec");
 
       //      printResults("metrics");
 
@@ -298,7 +309,8 @@ public class SubmitKMeansTest {
     return false;
   }
 
-  private static JsonObject getScheduling(List<String> activeMicroClouds, Map<String, String> activeIps) {
+  private static JsonObject getScheduling(List<String> activeMicroClouds,
+                                          Map<String, String> activeIps) {
     JsonObject result = new JsonObject();
     for (String mc : activeMicroClouds) {
       result.putArray(mc, new JsonArray().add(activeIps.get(mc)));
@@ -309,7 +321,8 @@ public class SubmitKMeansTest {
   private static void verifyResults(String id, String[] resultWords, String ensembleString) {
     EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
     EnsembleCache cache = ensembleCacheManager
-        .getCache(id, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
+        .getCache(id, new ArrayList<>(ensembleCacheManager.sites()),
+                  EnsembleCacheManager.Consistency.DIST);
     for (String word : resultWords) {
       Object result = cache.get(word);
       if (result != null) {
@@ -405,7 +418,8 @@ public class SubmitKMeansTest {
 
   private static void PrintUsage() {
     System.out
-        .println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>" + " <LOAD_DATA> <REDUCE_LOCAL>");
+        .println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>"
+                 + " <LOAD_DATA> <REDUCE_LOCAL>");
     System.out.println("Defaults:");
     System.out.println("java -cp tests.SubmitWordCountTest http://80.156.222.4 8080 . false false");
   }
@@ -430,7 +444,8 @@ public class SubmitKMeansTest {
       EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
 
       EnsembleCache ensembleCache = ensembleCacheManager
-          .getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
+          .getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()),
+                    EnsembleCacheManager.Consistency.DIST);
       while (true) {
         synchronized (files) {
           if (files.size() > 0) {
@@ -444,7 +459,8 @@ public class SubmitKMeansTest {
         System.out.println(id + ": files.get(0).getAbsolutePath() = " + f.getAbsolutePath());
 
         try {
-          BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+          BufferedReader bufferedReader =
+              new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           String line;
           Map<String, Double> frequencies = new HashMap<>();

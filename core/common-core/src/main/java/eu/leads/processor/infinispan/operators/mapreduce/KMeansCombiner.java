@@ -3,6 +3,7 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsCombiner;
+
 import org.bson.BasicBSONObject;
 import org.vertx.java.core.json.JsonObject;
 
@@ -15,7 +16,10 @@ import java.util.Map;
  */
 public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
 
-  public KMeansCombiner(){super();}
+  public KMeansCombiner() {
+    super();
+  }
+
   public KMeansCombiner(JsonObject configuration) {
     super(configuration);
   }
@@ -24,7 +28,8 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
     super(configString);
   }
 
-  @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
+  @Override
+  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     System.out.println("COMBINER/REDUCER");
     int documentsCount = 0;
     Map<String, Double> dimensions = new HashMap<>();
@@ -35,7 +40,8 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
       Tuple documentTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("dimensions"));
       for (String s : documentTuple.getFieldNames()) {  // For each word
         if (s.equals("~")) {  // Skip document id (when used as combiner)
-          clusterDocuments += String.valueOf(documentTuple.getNumberAttribute(s).doubleValue()) + " ";
+          clusterDocuments +=
+              String.valueOf(documentTuple.getNumberAttribute(s).doubleValue()) + " ";
           continue;
         }
 
@@ -65,7 +71,8 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
     collector.emit(reducedKey, toEmit);
   }
 
-  @Override protected void finalizeTask() {
+  @Override
+  protected void finalizeTask() {
     System.out.println("Combiner/Reducer finished!");
   }
 }

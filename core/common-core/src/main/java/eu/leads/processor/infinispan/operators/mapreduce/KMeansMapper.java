@@ -2,6 +2,7 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsMapper;
+
 import org.infinispan.distexec.mapreduce.Collector;
 import org.vertx.java.core.json.JsonObject;
 
@@ -19,7 +20,10 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
   Double[] norms;
   Random random;
 
-  public KMeansMapper(){super();}
+  public KMeansMapper() {
+    super();
+  }
+
   public KMeansMapper(JsonObject configuration) {
     super(configuration);
   }
@@ -28,7 +32,8 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     super(configString);
   }
 
-  @Override public void map(String key, Tuple document, Collector<String, Tuple> collector) {
+  @Override
+  public void map(String key, Tuple document, Collector<String, Tuple> collector) {
     System.out.println("MAPPER");
     double maxSimilarity = 0;
     int index = random.nextInt(k);
@@ -41,12 +46,14 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
       }
     }
     Tuple res = new Tuple();
-    res.asBsonObject().put("dimensions", document.asBsonObject());  // TODO can we avoid (de)serializations?
+    res.asBsonObject()
+        .put("dimensions", document.asBsonObject());  // TODO can we avoid (de)serializations?
     res.setAttribute("documentsCount", 1);
     collector.emit(String.valueOf(index), res);
   }
 
-  @Override public void initialize() {
+  @Override
+  public void initialize() {
     super.initialize();
     k = conf.getInteger("k");
 
@@ -66,7 +73,8 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     random = new Random();
   }
 
-  @Override protected void finalizeTask() {
+  @Override
+  protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
   }
 

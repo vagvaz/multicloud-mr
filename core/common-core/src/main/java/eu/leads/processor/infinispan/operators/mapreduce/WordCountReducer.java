@@ -4,6 +4,9 @@ import eu.leads.processor.common.utils.ProfileEvent;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsCombiner;
+
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
@@ -19,10 +22,10 @@ import java.util.NoSuchElementException;
 public class WordCountReducer extends LeadsCombiner<String, Tuple> {
 
   Logger log;
-  private Map<String, Integer> sums;
   transient private LeadsCollector collector;
   transient private boolean collectorInitialized;
   transient private boolean isComposableButNotLocal;
+  private Map<String, Integer> sums;
 
   public WordCountReducer(JsonObject configuration) {
     super(configuration);
@@ -42,7 +45,8 @@ public class WordCountReducer extends LeadsCombiner<String, Tuple> {
     collectorInitialized = false;
     isComposableButNotLocal = isComposable && !isLocal;
     if (isComposableButNotLocal) {
-      sums = new HashMap<>();
+//      sums = new HashMap<>();
+      sums = DBMaker.tempTreeMap();
     }
   }
 
