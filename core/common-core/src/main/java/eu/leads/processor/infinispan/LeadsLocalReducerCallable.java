@@ -1,6 +1,7 @@
 package eu.leads.processor.infinispan;
 
 import eu.leads.processor.common.LeadsListener;
+import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.EngineUtils;
 import eu.leads.processor.core.LevelDBIndex;
@@ -80,8 +81,14 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
     //    LeadsIntermediateIterator<vOut> values = new LeadsIntermediateIterator<>((String) key, prefix,
     //                                                                             imanager);
     //    Iterator<vOut> values = ((List)value).iterator();
+    try{
     Iterator<vOut> values = (Iterator<vOut>) value;
     reducer.reduce(key, values, collector);
+    }catch (Exception e){
+      e.printStackTrace();
+      PrintUtilities.logStackTrace(profilerLog, e.getStackTrace());
+      PrintUtilities.printAndLog(profilerLog,"Exception in MApper: " + e.getMessage());
+    }
   }
 
 

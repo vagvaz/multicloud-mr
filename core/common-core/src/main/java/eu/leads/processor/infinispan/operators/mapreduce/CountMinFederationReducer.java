@@ -14,6 +14,7 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
 
   int w;
 
+
   public CountMinFederationReducer(JsonObject configuration) {
     super(configuration);
   }

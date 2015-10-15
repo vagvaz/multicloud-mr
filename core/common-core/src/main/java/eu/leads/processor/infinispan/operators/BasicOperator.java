@@ -762,8 +762,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       }
     }
     long end = System.currentTimeMillis();
-    System.out.println("TIME FOR MAP = " + (end - start) / 1000f);
-    log.error("TIME FOR MAP = " + (end - start) / 1000f);
+    PrintUtilities.printAndLog(log,"TIME FOR MAP = " + (end - start) / 1000f);
     if (reduceLocal) {
       setupReduceLocalCallable();
       executeReduceLocal();
@@ -913,8 +912,8 @@ public abstract class BasicOperator extends Thread implements Operator {
       }
     }
     long end = System.currentTimeMillis();
-    System.out.println("TIME FOR FEDREDUCE = " + (end - start) / 1000f);
-    log.error("TIME FOR FEDREDUCE = " + (end - start) / 1000f);
+
+    PrintUtilities.printAndLog(log, "TIME FOR FEDREDUCE = " + (end - start) / 1000f);
     replyForSuccessfulExecution(action);
   }
 
@@ -1127,8 +1126,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       }
     }
     long end = System.currentTimeMillis();
-    System.out.println("TIME FOR REDUCELOCAL = " + (end - start) / 1000f);
-    profilerLog.error("TIME FOR REDUCELOCAL = " + (end - start) / 1000f);
+    PrintUtilities.printAndLog(log,"TIME FOR REDUCELOCAL = " + (end - start) / 1000f);
     //    replyForSuccessfulExecution(action);
   }
 

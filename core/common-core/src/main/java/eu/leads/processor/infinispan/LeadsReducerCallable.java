@@ -1,6 +1,7 @@
 package eu.leads.processor.infinispan;
 
 import eu.leads.processor.common.LeadsListener;
+import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.core.EngineUtils;
 import eu.leads.processor.core.LevelDBIndex;
 import org.infinispan.Cache;
@@ -77,8 +78,14 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
 
   @Override public void executeOn(kOut key, Object value) {
     //        LeadsIntermediateIterator<vOut> values = new LeadsIntermediateIterator<>((String) key,prefix,imanager);
-    Iterator<vOut> values = (Iterator<vOut>) value;//((List)value).iterator();
-    reducer.reduce(key, values, collector);
+    try {
+      Iterator<vOut> values = (Iterator<vOut>) value;//((List)value).iterator();
+      reducer.reduce(key, values, collector);
+    }catch (Exception e){
+      e.printStackTrace();
+      PrintUtilities.logStackTrace(profilerLog,e.getStackTrace());
+      PrintUtilities.printAndLog(profilerLog, "Exception in Reducer: " + e.getMessage());
+    }
   }
 
   @Override public String call() throws Exception {

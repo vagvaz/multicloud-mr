@@ -232,7 +232,7 @@ public abstract class MapReduceOperator extends BasicOperator {
   @Override public void setupReduceLocalCallable() {
     // TODO(ap0n): conf.putString("output", getOutput());
     intermediateLocalDataCache = (BasicCache) manager.getPersisentCache(intermediateLocalCacheName + ".data");
-    log.error("ReducerIntermediateLocalData " + intermediateLocalDataCache.size());
+//    log.error("ReducerIntermediateLocalData " + intermediateLocalDataCache.size());
     //    outputCache = (BasicCache) manager.getPersisentCache(intermediateCacheName);
     reduceLocalInputCache = (Cache) intermediateLocalDataCache;
 

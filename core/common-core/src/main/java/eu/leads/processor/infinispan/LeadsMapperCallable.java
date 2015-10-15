@@ -1,5 +1,6 @@
 package eu.leads.processor.infinispan;
 
+import eu.leads.processor.common.utils.PrintUtilities;
 import org.infinispan.Cache;
 
 import java.io.Serializable;
@@ -95,7 +96,13 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
 
 
   @Override public void executeOn(K key, V value) {
-    mapper.map(key, value, collector);
+    try {
+      mapper.map(key, value, collector);
+    }catch (Exception e){
+      e.printStackTrace();
+      PrintUtilities.logStackTrace(profilerLog,e.getStackTrace());
+      PrintUtilities.printAndLog(profilerLog,"Exception in MApper: " + e.getMessage());
+    }
   }
 
   @Override public void finalizeCallable() {

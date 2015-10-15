@@ -325,6 +325,11 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
         iterable.close();
         if (e instanceof InterruptedException) {
           profilerLog.error(this.imanager.getCacheManager().getAddress().toString() + " was interrupted ");
+          for(ExecuteRunnable ex : executeRunnables){
+            if(ex.isRunning()) {
+              ex.cancel();
+            }
+          }
         } else {
           profilerLog.error("Exception in LEADSBASEBACALLABE " + e.getClass().toString());
           PrintUtilities.logStackTrace(profilerLog, e.getStackTrace());
@@ -422,6 +427,10 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 
   public LeadsCollector getCollector() {
     return collector;
+  }
+
+  public int getSize() {
+    return input.size() ;
   }
 
 
