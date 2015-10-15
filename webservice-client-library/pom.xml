@@ -290,47 +290,6 @@
     <build>
         <plugins>
 
-            <!-- The vert.x Maven plugin -->
-            <plugin>
-                <groupId>io.vertx</groupId>
-                <artifactId>vertx-maven-plugin</artifactId>
-                <version>${maven.vertx.plugin.version}</version>
-                <!--
-            You can specify extra config to the plugin as required here
-            <configuration>
-               <configFile>/path/to/MyVerticle.conf</configFile>
-               <instances>1</instances>
-               <classpath>src/main/resources/:src/test/resources/:target/classes/:target/test-classes/</classpath>
-            </configuration>
-            -->
-                <!-- Make sure that the plugin uses the vert.x versions from this pom.xml not from its own pom.xml -->
-                <dependencies>
-                    <dependency>
-                        <groupId>io.vertx</groupId>
-                        <artifactId>vertx-platform</artifactId>
-                        <version>${vertx.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>io.vertx</groupId>
-                        <artifactId>vertx-core</artifactId>
-                        <version>${vertx.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>io.vertx</groupId>
-                        <artifactId>vertx-hazelcast</artifactId>
-                        <version>${vertx.version}</version>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <id>PullInDeps</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>pullInDeps</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
 
             <!-- Other plugins required by the build -->
             <plugin>
@@ -343,145 +302,13 @@
                 </configuration>
             </plugin>
             <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>${maven.resources.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>copy-mod-to-target</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <overwrite>true</overwrite>
-                            <outputDirectory>${mods.directory}/${module.name}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>target/classes</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>${maven.dependency.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>copy-mod-dependencies-to-target</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${mods.directory}/${module.name}/lib</outputDirectory>
-                            <includeScope>runtime</includeScope>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-mod-dependencies-to-target-dependencies</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/dependencies</outputDirectory>
-                            <includeScope>runtime</includeScope>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.plugin.version}</version>
-                <configuration>
-                    <includes>
-                        <include>**/unit/*Test*.java</include>
-                    </includes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>${maven.failsafe.plugin.version}</version>
-                <configuration>
-                    <systemProperties>
-                        <property>
-                            <name>vertx.mods</name>
-                            <value>${mods.directory}</value>
-                        </property>
-                    </systemProperties>
-                    <includes>
-                        <include>**/integration/**</include>
-                    </includes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>${maven.surefire.report.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>generate-test-report</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>report-only</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>generate-integration-test-report</id>
-                        <phase>integration-test</phase>
-                        <goals>
-                            <goal>failsafe-report-only</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
-                    <descriptors>
-                        <descriptor>src/main/assembly/mod.xml</descriptor>
-                    </descriptors>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>assemble</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>${maven.surefire.report.plugin.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${maven.javadoc.plugin.version}</version>
-                <configuration>
-                    <aggregate>true</aggregate>
-                </configuration>
-            </plugin>
-        </plugins>
-    </reporting>
 </project>
