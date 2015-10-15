@@ -116,6 +116,12 @@ public class SubmitKMeansTest {
     boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine", true);
     System.out.println("use combine " + combine);
 
+    boolean recComposableReduce = LQPConfiguration.getInstance().getConfiguration().getBoolean("recComposableReduce",false);
+    System.out.println("isRecComposableReduce " + recComposableReduce);
+
+    boolean recComposableLocalReduce = LQPConfiguration.getInstance().getConfiguration().getBoolean("recComposableLocalReduce",false);
+    System.out.println("isRecComposableLocalReduce " + recComposableLocalReduce);
+
     k = LQPConfiguration.getInstance().getConfiguration().getInt("k", 2);
     System.out.println("k " + k);
     centroids = new Map[k];
@@ -168,6 +174,14 @@ public class SubmitKMeansTest {
     jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
     jsonObject.getObject("operator").putString("recComposableLocalReduce",
                                                "recComposableLocalReduce");
+
+    if(recComposableReduce) {
+      jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
+    }
+
+    if(recComposableLocalReduce) {
+      jsonObject.getObject("operator").putString("recComposableLocalReduce", "recComposableLocalReduce");
+    }
 
     if (combine) {
       jsonObject.getObject("operator").putString("combine", "1");

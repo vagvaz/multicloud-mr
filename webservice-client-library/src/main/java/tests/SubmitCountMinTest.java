@@ -28,6 +28,7 @@ public class SubmitCountMinTest {
   private static final String SOFTNET_IP = "147.27.14.38";
   private static final String HAMM5_IP = "5.147.254.161";
   private static final String HAMM6_IP = "5.147.254.199";
+  private static final String UNINE_IP = "192.42.43.31";
   private static final String CACHE_NAME = "clustered";
   private static final int PUT_THREADS_COUNT = 100;
   private static String host;
@@ -102,6 +103,12 @@ public class SubmitCountMinTest {
     boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine", true);
     System.out.println("use combine " + combine);
 
+    boolean recComposableReduce = LQPConfiguration.getInstance().getConfiguration().getBoolean("recComposableReduce",false);
+    System.out.println("isRecComposableReduce " + recComposableReduce);
+
+    boolean recComposableLocalReduce = LQPConfiguration.getInstance().getConfiguration().getBoolean("recComposableLocalReduce",false);
+    System.out.println("isRecComposableLocalReduce " + recComposableLocalReduce);
+
     double delta = LQPConfiguration.getInstance().getConfiguration().getDouble("delta", 0.02);
     System.out.println("delta " + delta);
 
@@ -123,6 +130,7 @@ public class SubmitCountMinTest {
     microcloudAddresses.put("dresden2", DRESDEN2_IP);
     microcloudAddresses.put("hamm6", HAMM6_IP);
     microcloudAddresses.put("hamm5", HAMM5_IP);
+
 
     activeIps = new HashMap<>();
     //read the ips from configuration or use the default
@@ -151,9 +159,13 @@ public class SubmitCountMinTest {
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
     jsonObject.getObject("operator").putObject("scheduling", scheduling);
 
-    jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
-    jsonObject.getObject("operator").putString("recComposableLocalReduce",
-                                               "recComposableLocalReduce");
+    if(recComposableReduce) {
+      jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
+    }
+
+    if(recComposableLocalReduce) {
+      jsonObject.getObject("operator").putString("recComposableLocalReduce", "recComposableLocalReduce");
+    }
 
     if (combine) {
       jsonObject.getObject("operator").putString("combine", "1");
