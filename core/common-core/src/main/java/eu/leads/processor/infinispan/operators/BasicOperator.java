@@ -116,7 +116,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       executeOnlyReduce = true;
 
       reduceLocal = action.getData().getObject("operator").containsField("reduceLocal");
-      isRecCompReduceLocal = action.getData().getObject("operator").containsField("recComposableReduce");
+      isRecCompReduceLocal = action.getData().getObject("operator").containsField("recComposableLocalReduce");
       isRecCompReduce = action.getData().getObject("operator").containsField("recComposableReduce");
       System.err.println(
           "REMOTE FALSE map " + executeOnlyMap + " reduce local " + reduceLocal + " reduce " + executeOnlyReduce
