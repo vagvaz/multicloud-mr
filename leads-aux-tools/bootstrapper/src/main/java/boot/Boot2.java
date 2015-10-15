@@ -887,15 +887,15 @@ public class Boot2 {
 
   private static Session createSession(JSch jsch, String ipa) throws JSchException {
 
-    ConfigRepository configRepository = null;
-    try {
-      configRepository = OpenSSHConfig.parseFile(System.getenv("HOME")+".ssh/config");
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+//    ConfigRepository configRepository = null;
+//    try {
+//      configRepository = OpenSSHConfig.parseFile(System.getenv("HOME")+"/.ssh/config");
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
     //com.jcraft.jsch.OpenSSHConfig.parseFile("~/.ssh/config");
 
-    jsch.setConfigRepository(configRepository);
+//    jsch.setConfigRepository(configRepository);
 
     JsonObject sshconf = IPsshmap.get(ipa);
     String ip  = ipa;
@@ -907,7 +907,7 @@ public class Boot2 {
     }
     Session session = null;
 
-    if(configRepository.getConfig(ip) == null){
+//    if(configRepository.getConfig(ip) == null){
     String username = sshconf.getString("username");//getStringValue(conf, "ssh.username", null, true);
 
       jsch.getSession(username, ip, 22);
@@ -926,10 +926,10 @@ public class Boot2 {
     }
     session.setConfig("StrictHostKeyChecking", "no");
     jsch.setKnownHosts("~/.ssh/known_hosts");
-  }
-    else{
-      session = jsch.getSession(ip);
-    }
+//  }
+//    else{
+//      session = jsch.getSession(ip);
+//    }
     session.connect();
     logger.info("Securely connected to " + ip);
     //System.out.println("Connected");
