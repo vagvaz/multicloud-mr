@@ -32,7 +32,7 @@ public class SubmitWordCountTest {
   private static final String UNINE_IP = "192.42.43.31";
   private static final String LOCAL = "127.0.0.1";
   private static final String CACHE_NAME = "clustered";
-  private static final int PUT_THREADS_COUNT = 100;
+  private static  int PUT_THREADS_COUNT = 100;
   private static Map<String, String> microcloudAddresses;
   private static Map<String, String> activeIps;
   private static List<String> activeMicroClouds;
@@ -105,7 +105,7 @@ public class SubmitWordCountTest {
 
   private static void putData(String dataDirectory) {
 
-
+    PUT_THREADS_COUNT = LQPConfiguration.getInstance().getConfiguration().getInt("putter.threads",PUT_THREADS_COUNT);
     File datasetDirectory = new File(dataDirectory);
     File[] allFiles = datasetDirectory.listFiles();
     files = new Vector<File>();
