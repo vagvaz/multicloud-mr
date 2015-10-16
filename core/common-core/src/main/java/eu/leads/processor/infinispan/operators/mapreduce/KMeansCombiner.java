@@ -30,7 +30,6 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
 
   @Override
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
-    System.out.println("COMBINER/REDUCER");
     Integer documentsCount = 0;
     Map<String, Double> dimensions = new HashMap<>();
     String clusterDocuments = "";

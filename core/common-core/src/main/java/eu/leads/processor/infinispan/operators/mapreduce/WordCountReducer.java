@@ -73,7 +73,7 @@ public class WordCountReducer extends LeadsCombiner<String, Tuple> {
       }
       sums.put(reducedKey, sum);
 
-      if (!collectorInitialized) {  // TODO(ap0n): Not sure this is the best place
+      if (!collectorInitialized) {
         this.collector = collector;
         collectorInitialized = true;
       }
@@ -92,14 +92,11 @@ public class WordCountReducer extends LeadsCombiner<String, Tuple> {
   @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
     if (isComposableButNotLocal) {
-      ProfileEvent event = new ProfileEvent("WCRComputeSum", log);  // TODO(ap0n): Is this ok?
-      event.start("WRCOutputResult");
       for (Map.Entry<String, Integer> entry : sums.entrySet()) {
         Tuple output = new Tuple();
         output.setAttribute("count", entry.getValue());
         collector.emit(entry.getKey(), output);
       }
-      event.end();
     }
   }
 }

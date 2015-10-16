@@ -34,7 +34,6 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
   @Override
   public void map(String key, Tuple document, Collector<String, Tuple> collector) {
-    System.out.println("MAPPER");
     double maxSimilarity = 0;
     int index = random.nextInt(k);
 

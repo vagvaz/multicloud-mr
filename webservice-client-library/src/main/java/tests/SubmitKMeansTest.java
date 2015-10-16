@@ -179,10 +179,6 @@ public class SubmitKMeansTest {
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
     jsonObject.getObject("operator").putObject("scheduling", scheduling);
 
-//    jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
-//    jsonObject.getObject("operator").putString("recComposableLocalReduce",
-//                                               "recComposableLocalReduce");
-
     if(recComposableReduce) {
       jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
     }
