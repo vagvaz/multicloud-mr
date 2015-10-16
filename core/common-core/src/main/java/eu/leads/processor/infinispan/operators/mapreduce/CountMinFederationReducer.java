@@ -4,9 +4,10 @@ import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsReducer;
 
+import org.mapdb.DBMaker;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.HashMap;
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -18,12 +19,11 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
   transient int w;
   transient private LeadsCollector collector;
   transient private boolean collectorInitialized;
-  transient private Map<String, Map<Integer, Integer>> storage;  // TODO(ap0n): Use mapDb
+  transient private Map<String, Row> storage;
 
   public CountMinFederationReducer() {
     super();
   }
-
 
   public CountMinFederationReducer(JsonObject configuration) {
     super(configuration);
@@ -51,19 +51,21 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
         this.collector = collector;
         collectorInitialized = true;
       }
+
+      Row r;
       if (!storage.containsKey(reducedKey)) {
-        Map<Integer, Integer> v = new HashMap<>();
+        r = new Row(w);
         for (int i = 0; i < w; i++) {
-          v.put(i, singleRow[i]);
+          r.setElement(i, singleRow[i]);
         }
-        storage.put(reducedKey, v);
       } else {
-        Map<Integer, Integer> storedRow = storage.get(reducedKey);
+        r = storage.get(reducedKey);
         for (int i = 0; i < w; i++) {
-          storedRow.put(i, storedRow.get(i) + singleRow[i]);
+          r.setElement(i, r.getElement(i) + singleRow[i]);
         }
-        storage.put(reducedKey, storedRow);
       }
+      storage.put(reducedKey, r);
+
     } else {
       String singleRowStr = "";
       for (int i = 0; i < w; i++) {
@@ -82,7 +84,7 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
     w = conf.getInteger("w");
     collectorInitialized = false;
     if (isComposable) {
-      storage = new HashMap<>();
+      storage = DBMaker.tempTreeMap();
     }
   }
 
@@ -91,16 +93,32 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
     System.out.println(getClass().getName() + " finished!");
 
     if (isComposable) {
-      for (Map.Entry<String, Map<Integer, Integer>> entry : storage.entrySet()) {
+      for (Map.Entry<String, Row> entry : storage.entrySet()) {
         String singleRowStr = "";
         for (int i = 0; i < w; i++) {
-          singleRowStr += String.valueOf(entry.getValue().get(i));
+          singleRowStr += String.valueOf(entry.getValue().getElement(i));
           if (i < w - 1) {
             singleRowStr += ",";
           }
         }
         collector.emit(entry.getKey(), singleRowStr);
       }
+    }
+  }
+
+  private class Row implements Serializable {
+    private int[] row;
+
+    public Row(int width) {
+      row = new int[width];
+    }
+
+    public int getElement(int position) {
+      return row[position];
+    }
+
+    public void setElement(int position, int element) {
+      row[position] = element;
     }
   }
 }
