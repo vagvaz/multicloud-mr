@@ -5,6 +5,7 @@ import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsCombiner;
 
 import org.bson.BasicBSONObject;
+import org.mapdb.DBMaker;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.HashMap;
@@ -37,7 +38,7 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
     super.initialize();
     if (isComposable) {
       collectorInitialized = false;
-      storage = new HashMap<>();
+      storage = DBMaker.tempTreeMap();
     }
   }
 
