@@ -5,6 +5,7 @@ import eu.leads.processor.core.Action;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.infinispan.continuous.CountMinOperatorContinuous;
+import eu.leads.processor.infinispan.operators.mapreduce.CountMinCombiner;
 import eu.leads.processor.infinispan.operators.mapreduce.CountMinFederationReducer;
 import eu.leads.processor.infinispan.operators.mapreduce.CountMinLocalReducer;
 import eu.leads.processor.infinispan.operators.mapreduce.CountMinMapper;
@@ -22,7 +23,7 @@ public class CountMinOperator extends MapReduceOperator {
   @Override public void init(JsonObject config) {
     super.init(conf);
     setMapper(new CountMinMapper(conf.toString()));
-//    setCombiner(new CountMinLocalReducer(conf.toString()));
+    setCombiner(new CountMinCombiner(conf.toString()));
     setFederationReducer(new CountMinFederationReducer(conf.toString()));
     init_statistics(this.getClass().getCanonicalName());
   }
