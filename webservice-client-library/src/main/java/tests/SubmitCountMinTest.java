@@ -224,7 +224,7 @@ public class SubmitCountMinTest {
 
       printResults(id, 0);
       //      verifyResults(id, resultWords, ensembleString);
-      //      printResults("metrics");
+      printResults("metrics");
 
       System.out.println("\nDONE IN: " + secs + " sec");
 

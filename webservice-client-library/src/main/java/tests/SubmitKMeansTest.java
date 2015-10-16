@@ -30,7 +30,7 @@ public class SubmitKMeansTest {
   private static final String SOFTNET_IP = "147.27.14.38";
   private static final String HAMM5_IP = "5.147.254.161";
   private static final String HAMM6_IP = "5.147.254.199";
-  private static final String CACHE_NAME = "clustered";
+  private static final String CACHE_NAME = "default.keywords";
   private static final int PUT_THREADS_COUNT = 100;
   private static String host;
   private static int port;
@@ -284,7 +284,7 @@ public class SubmitKMeansTest {
       System.out.println("\nDONE IN: " + ((double) (end.getTime() - start.getTime()) / 1000.0)
                          + " sec");
 
-      //      printResults("metrics");
+      printResults("metrics");
 
     } catch (Exception e) {
       e.printStackTrace();
