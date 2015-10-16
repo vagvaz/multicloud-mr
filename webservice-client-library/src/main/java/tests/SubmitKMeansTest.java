@@ -179,9 +179,9 @@ public class SubmitKMeansTest {
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
     jsonObject.getObject("operator").putObject("scheduling", scheduling);
 
-    jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
-    jsonObject.getObject("operator").putString("recComposableLocalReduce",
-                                               "recComposableLocalReduce");
+//    jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
+//    jsonObject.getObject("operator").putString("recComposableLocalReduce",
+//                                               "recComposableLocalReduce");
 
     if(recComposableReduce) {
       jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
@@ -255,7 +255,7 @@ public class SubmitKMeansTest {
         Map<String, Double>[] newCenters = new Map[k];
         for (int i = 0; i < k; i++) {
           //          Tuple t = (Tuple) cache.get(String.valueOf(i));
-          Tuple t = new Tuple((String)getKeyFrom(cache, String.valueOf(i)));
+          Tuple t = (Tuple) getKeyFrom(cache, String.valueOf(i));
           norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
           clusters[i] = t.getAttribute("cluster" + i);
           Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("newCentroid"));

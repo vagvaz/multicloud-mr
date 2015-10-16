@@ -2,6 +2,7 @@ package eu.leads.processor.infinispan.continuous;
 
 import eu.leads.processor.infinispan.LeadsMapper;
 import eu.leads.processor.infinispan.LeadsReducer;
+import eu.leads.processor.infinispan.operators.mapreduce.KMeansCombiner;
 import eu.leads.processor.infinispan.operators.mapreduce.KMeansMapper;
 import eu.leads.processor.infinispan.operators.mapreduce.KMeansReducer;
 
@@ -14,7 +15,7 @@ public class KMeansOperatorContinuous extends MapReduceContinuousOperator {
   }
 
   @Override protected LeadsReducer getLocalReducer() {
-    return new  KMeansReducer(conf.toString());
+    return new KMeansCombiner(conf.toString());
   }
 
   @Override protected LeadsMapper getMapper() {

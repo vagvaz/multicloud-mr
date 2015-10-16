@@ -38,11 +38,6 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
 
     while (iter.hasNext()) {
       Tuple t = iter.next();
-      if(t != null)
-      System.out.println(new JsonObject(t.asString()).encodePrettily());
-      else{
-        System.err.println("NULL T --------------------------------");
-      }
       Tuple dimensionsTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("dimensions"));
       int count = t.getNumberAttribute("documentsCount").intValue();
       documentsCount += count;

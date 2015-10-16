@@ -31,7 +31,7 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
   @Override
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     System.out.println("COMBINER/REDUCER");
-    int documentsCount = 0;
+    Integer documentsCount = 0;
     Map<String, Double> dimensions = new HashMap<>();
     String clusterDocuments = "";
 
@@ -66,7 +66,7 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
 
     Tuple toEmit = new Tuple();
     toEmit.asBsonObject().put("dimensions", dimensionsTuple.asBsonObject());
-    toEmit.setAttribute("documentsCount", documentsCount);
+    toEmit.setNumberAttribute("documentsCount", documentsCount);
     toEmit.setAttribute("clusterDocuments", clusterDocuments);
     collector.emit(reducedKey, toEmit);
   }
