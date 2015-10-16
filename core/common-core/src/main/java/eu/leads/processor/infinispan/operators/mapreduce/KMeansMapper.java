@@ -45,8 +45,7 @@ public class KMeansMapper extends LeadsMapper<String, Tuple, String, Tuple> {
       }
     }
     Tuple res = new Tuple();
-    res.asBsonObject()
-        .put("dimensions", document.asBsonObject());  // TODO can we avoid (de)serializations?
+    res.setAttribute("dimensions", document.asBsonObject());  // TODO can we avoid (de)serializations?
     res.setAttribute("documentsCount", 1);
     collector.emit(String.valueOf(index), res);
   }

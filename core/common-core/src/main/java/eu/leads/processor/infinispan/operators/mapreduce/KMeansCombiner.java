@@ -31,21 +31,21 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
   @Override
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     Integer documentsCount = 0;
-    Map<String, Double> dimensions = new HashMap<>();
+    BasicBSONObject dimensions = new BasicBSONObject();
     String clusterDocuments = "";
 
     while (iter.hasNext()) {
       Tuple t = iter.next();
-      Tuple documentTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("dimensions"));
-      for (String s : documentTuple.getFieldNames()) {  // For each word
+      BasicBSONObject document = (BasicBSONObject) t.getGenericAttribute("dimensions");
+
+      for (String s : document.keySet()) {  // For each word
         if (s.equals("~")) {  // Skip document id (when used as combiner)
-          clusterDocuments +=
-              String.valueOf(documentTuple.getNumberAttribute(s).doubleValue()) + " ";
+          clusterDocuments += String.valueOf(document.get(s)) + " ";
           continue;
         }
 
-        Double wordFrequency = documentTuple.getNumberAttribute(s).doubleValue();
-        Double currentFrequency = dimensions.get(s);
+        Double wordFrequency = (Double) document.get(s);
+        Double currentFrequency = (Double) dimensions.get(s);
         if (currentFrequency == null) {
           dimensions.put(s, wordFrequency);
         } else {
@@ -55,16 +55,13 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
       documentsCount += t.getNumberAttribute("documentsCount").intValue();
 
       if (t.hasField("clusterDocuments")) {
-        // Carry the clusterDocuments (when user as localReducer)
+        // Carry the clusterDocuments (when used as localReducer)
         clusterDocuments += t.getAttribute("clusterDocuments") + " ";
       }
     }
 
-    Tuple dimensionsTuple = new Tuple();
-    dimensionsTuple.asBsonObject().putAll(dimensions);
-
     Tuple toEmit = new Tuple();
-    toEmit.asBsonObject().put("dimensions", dimensionsTuple.asBsonObject());
+    toEmit.setAttribute("dimensions", dimensions);
     toEmit.setNumberAttribute("documentsCount", documentsCount);
     toEmit.setAttribute("clusterDocuments", clusterDocuments);
     collector.emit(reducedKey, toEmit);
