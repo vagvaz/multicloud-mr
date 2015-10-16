@@ -4,8 +4,6 @@ import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsCombiner;
 
-import org.bson.BSON;
-import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.mapdb.DBMaker;
 import org.vertx.java.core.json.JsonObject;
@@ -47,26 +45,25 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
   @Override
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     int documentsCount = 0;
-    BasicBSONObject dimensions = new BasicBSONObject();
+    Map<String, Double> dimensions = new HashMap<>();
 
     String clusterDocuments = "";  // Space-separated document ids
 
     while (iter.hasNext()) {
       Tuple t = iter.next();
-      BasicBSONObject newDimensions = (BasicBSONObject) t.getGenericAttribute("dimensions");
+      Tuple dimensionsTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("dimensions"));
       int count = t.getNumberAttribute("documentsCount").intValue();
       documentsCount += count;
 
-      for (Map.Entry e : newDimensions.entrySet()) {
-        Double wordFrequency = (Double) e.getValue();
-        Double currentFrequency = (Double) dimensions.get(e.getKey());
+      for (String s : dimensionsTuple.getFieldNames()) {
+        Double wordFrequency = dimensionsTuple.getNumberAttribute(s).doubleValue();
+        Double currentFrequency = dimensions.get(s);
         if (currentFrequency == null) {
-          dimensions.put((String) e.getKey(), wordFrequency);
+          dimensions.put(s, wordFrequency);
         } else {
-          dimensions.put((String) e.getKey(), currentFrequency + wordFrequency);
+          dimensions.put(s, currentFrequency + wordFrequency);
         }
       }
-
       clusterDocuments += t.getAttribute("clusterDocuments");
     }
 
@@ -83,43 +80,44 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
         int storedDocumentsCount = t.getNumberAttribute("documentsCount").intValue();
         BasicBSONObject storedDimensions = (BasicBSONObject) t.getGenericAttribute("dimensions");
 
-        for (Map.Entry e : dimensions.entrySet()) {
+        for (Map.Entry<String, Double> e : dimensions.entrySet()) {
           Double storedFrequency = (Double) storedDimensions.get(e.getKey());
-          Double newFrequency = (Double) e.getValue();
-          String key = (String) e.getKey();
           if (storedFrequency == null) {
-            storedDimensions.put(key, newFrequency);
+            storedDimensions.put(e.getKey(), e.getValue());
           } else {
-            storedDimensions.put(key, storedFrequency + newFrequency);
+            storedDimensions.put(e.getKey(), storedFrequency + e.getValue());
           }
         }
 
+        t.setAttribute("dimensions", storedDimensions);
         t.setNumberAttribute("documentsCount", documentsCount + storedDocumentsCount);
         t.setAttribute("clusterDocuments", clusterDocuments + t.getAttribute("clusterDocuments"));
-        t.setAttribute("dimensions", storedDimensions);
 
       } else {  // not exists in storage
         t = new Tuple();
+        BasicBSONObject dimensionsBison = new BasicBSONObject();
+        dimensionsBison.putAll(dimensions);
+        t.setAttribute("dimensions", dimensionsBison);
         t.setNumberAttribute("documentsCount", documentsCount);
         t.setAttribute("clusterDocuments", clusterDocuments);
-        t.setAttribute("dimensions", dimensions);
       }
 
       storage.put(reducedKey, t);
 
     } else {  // not composable
       double norm = 0d;
-      for (Map.Entry entry : dimensions.entrySet()) {
-        Double frequency = (Double) entry.getValue();
-        entry.setValue(frequency / (double) documentsCount);
-        norm += frequency * frequency;
+      for (Map.Entry<String, Double> entry : dimensions.entrySet()) {
+        entry.setValue(entry.getValue() / (double) documentsCount);
+        norm += entry.getValue() * entry.getValue();
       }
 
+      BasicBSONObject dimensionsBson = new BasicBSONObject();
+      dimensionsBson.putAll(dimensions);
+
       Tuple r = new Tuple();
-      r.setAttribute("newCentroid", dimensions);
+      r.setAttribute("newCentroid", dimensionsBson);
       r.setAttribute("cluster" + reducedKey, clusterDocuments);
       r.setAttribute("norm" + reducedKey, norm);
-      System.out.println("\n\n\nEMITTING REDUCED KEY: " + reducedKey + "\n\n\n");
       collector.emit(reducedKey, r);
     }
   }

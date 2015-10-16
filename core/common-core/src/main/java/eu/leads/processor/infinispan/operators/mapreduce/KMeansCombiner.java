@@ -31,13 +31,12 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
   @Override
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     Integer documentsCount = 0;
-    BasicBSONObject dimensions = new BasicBSONObject();
+    Map<String, Double> dimensions = new HashMap<>();
     String clusterDocuments = "";
 
     while (iter.hasNext()) {
       Tuple t = iter.next();
       BasicBSONObject document = (BasicBSONObject) t.getGenericAttribute("dimensions");
-
       for (String s : document.keySet()) {  // For each word
         if (s.equals("~")) {  // Skip document id (when used as combiner)
           clusterDocuments += String.valueOf(document.get(s)) + " ";
@@ -45,7 +44,7 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
         }
 
         Double wordFrequency = (Double) document.get(s);
-        Double currentFrequency = (Double) dimensions.get(s);
+        Double currentFrequency = dimensions.get(s);
         if (currentFrequency == null) {
           dimensions.put(s, wordFrequency);
         } else {
@@ -55,20 +54,18 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
       documentsCount += t.getNumberAttribute("documentsCount").intValue();
 
       if (t.hasField("clusterDocuments")) {
-        // Carry the clusterDocuments (when used as localReducer)
+        // Carry the clusterDocuments (when user as localReducer)
         clusterDocuments += t.getAttribute("clusterDocuments") + " ";
       }
     }
 
+    BasicBSONObject dimensionsBson = new BasicBSONObject();
+    dimensionsBson.putAll(dimensions);
+
     Tuple toEmit = new Tuple();
-    toEmit.setAttribute("dimensions", dimensions);
+    toEmit.setAttribute("dimensions", dimensionsBson);
     toEmit.setNumberAttribute("documentsCount", documentsCount);
     toEmit.setAttribute("clusterDocuments", clusterDocuments);
     collector.emit(reducedKey, toEmit);
-  }
-
-  @Override
-  protected void finalizeTask() {
-    System.out.println("Combiner/Reducer finished!");
   }
 }
