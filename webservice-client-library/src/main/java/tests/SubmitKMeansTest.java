@@ -254,10 +254,10 @@ public class SubmitKMeansTest {
           Tuple t = (Tuple) getKeyFrom(cache, String.valueOf(i));
           norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
           clusters[i] = t.getAttribute("cluster" + i);
-          Tuple valueTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("newCentroid"));
+          BasicBSONObject values = (BasicBSONObject) t.getGenericAttribute("newCentroid");
           newCenters[i] = new HashMap<>();
-          for (String key : valueTuple.getFieldNames()) {
-            newCenters[i].put(key, valueTuple.getNumberAttribute(key).doubleValue());
+          for (String key : values.keySet()) {
+            newCenters[i].put(key, (Double) values.get(key));
           }
         }
 

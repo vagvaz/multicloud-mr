@@ -36,15 +36,14 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
 
     while (iter.hasNext()) {
       Tuple t = iter.next();
-      Tuple documentTuple = new Tuple((BasicBSONObject) t.getGenericAttribute("dimensions"));
-      for (String s : documentTuple.getFieldNames()) {  // For each word
+      BasicBSONObject document = (BasicBSONObject) t.getGenericAttribute("dimensions");
+      for (String s : document.keySet()) {  // For each word
         if (s.equals("~")) {  // Skip document id (when used as combiner)
-          clusterDocuments +=
-              String.valueOf(documentTuple.getNumberAttribute(s).doubleValue()) + " ";
+          clusterDocuments += String.valueOf(document.get(s)) + " ";
           continue;
         }
 
-        Double wordFrequency = documentTuple.getNumberAttribute(s).doubleValue();
+        Double wordFrequency = (Double) document.get(s);
         Double currentFrequency = dimensions.get(s);
         if (currentFrequency == null) {
           dimensions.put(s, wordFrequency);
@@ -60,18 +59,13 @@ public class KMeansCombiner extends LeadsCombiner<String, Tuple> {
       }
     }
 
-    Tuple dimensionsTuple = new Tuple();
-    dimensionsTuple.asBsonObject().putAll(dimensions);
+    BasicBSONObject dimensionsBson = new BasicBSONObject();
+    dimensionsBson.putAll(dimensions);
 
     Tuple toEmit = new Tuple();
-    toEmit.asBsonObject().put("dimensions", dimensionsTuple.asBsonObject());
+    toEmit.setAttribute("dimensions", dimensionsBson);
     toEmit.setNumberAttribute("documentsCount", documentsCount);
     toEmit.setAttribute("clusterDocuments", clusterDocuments);
     collector.emit(reducedKey, toEmit);
-  }
-
-  @Override
-  protected void finalizeTask() {
-    System.out.println("Combiner/Reducer finished!");
   }
 }
