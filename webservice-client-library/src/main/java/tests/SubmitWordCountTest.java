@@ -53,6 +53,7 @@ public class SubmitWordCountTest {
     }
 
     @Override public void run() {
+      LQPConfiguration.initialize();
       int linesPerTupe = LQPConfiguration.getInstance().getConfiguration().getInt("putter.lines.per.tuple");
       File f;
 
