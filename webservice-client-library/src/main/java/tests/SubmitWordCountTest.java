@@ -53,7 +53,7 @@ public class SubmitWordCountTest {
     }
 
     @Override public void run() {
-      int linesPerTupe = 1000;
+      int linesPerTupe = LQPConfiguration.getInstance().getConfiguration().getInt("putter.lines.per.tuple");
       File f;
 
       EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
