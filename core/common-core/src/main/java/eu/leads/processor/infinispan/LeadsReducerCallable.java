@@ -128,7 +128,7 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
     collector.setEmanager(emanager);
     collector.setCombiner(null);
     collector.setUseCombiner(false);
-    collector.initializeCache(inputCache.getName(), imanager);
+    collector.initializeCache(callableIndex+":"+inputCache.getName(), imanager);
 
     this.reducer.initialize();
 

@@ -230,33 +230,18 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
       profilerLog.error("EnsembleHost EXIST " + ensembleHost);
       System.err.println("EnsembleHost EXIST " + ensembleHost);
       emanager = new EnsembleCacheManager(ensembleHost);
-      //      ensembleCacheUtilsSingle.initialize(emanager);
-      //      emanager.start();
-      //      emanager = createRemoteCacheManager();
-      //      ecache = emanager.getCache(output,new ArrayList<>(emanager.sites()),
-      //          EnsembleCacheManager.Consistency.DIST);
     } else {
       profilerLog.error("EnsembleHost NULL");
       System.err.println("EnsembleHost NULL");
       tmpprofCallable.start("Start EnsemlbeCacheManager");
       emanager = new EnsembleCacheManager(LQPConfiguration.getConf().getString("node.ip") + ":11222");
-      //      ensembleCacheUtilsSingle.initialize(emanager);
-      //      emanager.start();
-      //            emanager = createRemoteCacheManager();
     }
     emanager.start();
 
-    tmpprofCallable.end();
-    tmpprofCallable.start("Get cache ");
     ecache = emanager.getCache(output, new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
-    tmpprofCallable.end();
     outputCache = ecache;
-    //outputCache =  emanager.getCache(output,new ArrayList<>(emanager.sites()),
-    //          EnsembleCacheManager.Consistency.DIST);
     input = new LinkedList<>();
     initialize();
-    profCallable.end("end_setEnv");
-
     start = System.currentTimeMillis();
     PrintUtilities.printAndLog(profilerLog,
         InfinispanClusterSingleton.getInstance().getManager().getMemberName().toString() + ": setupEnvironment "
@@ -265,11 +250,11 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 
 
   @Override public String call() throws Exception {
-    profCallable.end("call");
+
     if (!isInitialized) {
       initialize();
     }
-    profCallable.start("Call getComponent ()");
+
     final ClusteringDependentLogic cdl =
         inputCache.getAdvancedCache().getComponentRegistry().getComponent(ClusteringDependentLogic.class);
     String compressedCacheName = inputCache.getName() + ".compressed";
@@ -284,10 +269,6 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
       }
     }
     int count = 0;
-    profCallable.end();
-    //    ProfileEvent profExecute = new ProfileEvent("Buildinglucece" + this.getClass().toString(), profilerLog);
-
-      profCallable.start("Iterate Over Local Data");
       System.out.println("Iterate Over Local Data");
   Object filter = new LocalDataFilter<K, V>(cdl);
 
@@ -304,21 +285,11 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
             Thread.yield();
           }
           Map.Entry<K, V> entry = (Map.Entry<K, V>) object;
-
-          //      V value = inputCache.get(key);
-          //          K key = (K) entry.getKey();
-          //          V value = (V) entry.getValue();
-
           if (entry.getValue() != null) {
-            //          profExecute.start("ExOn" + (++count));
-            //          ExecuteRunnable runable = EngineUtils.getRunnable();
-            //          runable.setKeyValue(key, value,this);
-            //          EngineUtils.submit(runable);
-            //            executeOn((K) key, value);
+
             callables.get((readCounter % callableParallelism)).addToInput(entry);
-            //          profExecute.end();
           }
-          //         profExecute.start("ISPNIter");
+
         }
         iterable.close();
       } catch (Exception e) {
@@ -344,14 +315,13 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     EngineUtils.waitForAllExecute();
     for (LeadsBaseCallable callable : callables) {
       callable.finalizeCallable();
-      System.err.println("--- callable finalized " + callable.getCallableIndex());
+      System.err.println("Callable finalized " + callable.getCallableIndex());
     }
     callables.clear();
     executeRunnables.clear();
-    System.err.println("LAST LINE OF " + this.getClass().toString() + " " + embeddedCacheManager.getAddress().toString()
+    PrintUtilities.printAndLog(profilerLog,"LAST LINE OF " + this.getClass().toString() + " " + embeddedCacheManager.getAddress().toString()
         + " ----------- END");
-    profilerLog.error("LAST LINE OF " + this.getClass().toString() + " " + embeddedCacheManager.getAddress().toString()
-        + " ----------- END");
+
     return embeddedCacheManager.getAddress().toString();
   }
 
@@ -433,52 +403,5 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     return input.size() ;
   }
 
-
-
-  public class qualinfo {
-    String attributeName = "";
-    String attributeType = "";
-    FilterOpType opType;
-    Object compValue = null;
-
-    public qualinfo(String attributeName, String attributeType) {
-      this.attributeName = attributeName;
-      this.attributeType = attributeType;
-      this.opType = opType;
-      this.compValue = compValue;
-    }
-
-    public qualinfo(FilterOpType opType, qualinfo left, qualinfo right) throws Exception {
-      this(left.attributeName, left.attributeType);
-      complete(right);
-      this.opType = opType;
-    }
-
-    public qualinfo(String attributeType, Object compValue) {
-      this.attributeName = attributeName;
-      this.attributeType = attributeType;
-      this.opType = opType;
-      this.compValue = compValue;
-    }
-
-    public qualinfo complete(qualinfo other) throws Exception {
-      if (!this.attributeType.equals(other.attributeType)) {
-        throw new Exception("Different Types " + this.attributeType + " " + other.attributeType);
-      }
-
-
-      if (attributeName.isEmpty()) {
-        if (!other.attributeName.isEmpty()) {
-          this.attributeName = other.attributeName;
-        }
-      } else {
-        if (other.compValue != null) {
-          this.compValue = other.compValue;
-        }
-      }
-
-      return this;
-    }
-  }
 
 }

@@ -132,7 +132,7 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
     collector.setCombiner(null);
     collector.setUseCombiner(false);
     collector.setSite(LQPConfiguration.getInstance().getMicroClusterName());
-    collector.initializeCache(inputCache.getName(), imanager);
+    collector.initializeCache(callableIndex+":"+inputCache.getName(), imanager);
     this.reducer.initialize();
     Cache dataCache = inputCache.getCacheManager().getCache(prefix + ".data");
 
