@@ -22,6 +22,7 @@ public class CountMinOperator extends MapReduceOperator {
   @Override public void init(JsonObject config) {
     super.init(conf);
     setMapper(new CountMinMapper(conf.toString()));
+//    setCombiner(new CountMinLocalReducer(conf.toString()));
     setFederationReducer(new CountMinFederationReducer(conf.toString()));
     init_statistics(this.getClass().getCanonicalName());
   }

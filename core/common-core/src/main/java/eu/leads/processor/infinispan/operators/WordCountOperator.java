@@ -58,11 +58,5 @@ public class WordCountOperator extends MapReduceOperator {
   }
 
 
-  public LeadsCombiner<?, ?> getCombiner() {
-    return combiner;
-  }
 
-  public void setCombiner(LeadsCombiner<?, ?> combiner) {
-    this.combiner = combiner;
-  }
 }

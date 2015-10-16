@@ -248,4 +248,11 @@ public abstract class MapReduceOperator extends BasicOperator {
             .toString();
     ((LeadsLocalReducerCallable) reducerLocalCallable).setLocalSite(localSite + ":11222");
   }
+  public LeadsCombiner<?, ?> getCombiner() {
+    return combiner;
+  }
+
+  public void setCombiner(LeadsCombiner<?, ?> combiner) {
+    this.combiner = combiner;
+  }
 }
