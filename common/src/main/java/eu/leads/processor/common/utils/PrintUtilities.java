@@ -1,5 +1,6 @@
 package eu.leads.processor.common.utils;
 
+import eu.leads.processor.core.Tuple;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -47,16 +48,16 @@ public class PrintUtilities {
           e.printStackTrace();
        }
        System.out.println("Map{\n");
-      for (Map.Entry<?, ?> e : map.entrySet()) {
+      for (Object e : map.keySet()) {
          try {
-            JsonObject val = new JsonObject((String) e.getValue());
-            if(val.isObject())
+           Object val = map.get(e).toString();
+            if(val instanceof Tuple || val instanceof JsonObject )
             {
 
-               raf.writeBytes(val.encodePrettily() + "\n");
+               raf.writeBytes(val.toString() + "\n");
             }
             else{
-               raf.writeBytes("\t " + e.getKey().toString() + "--->" + e.getValue() + "\n");
+               raf.writeBytes("\t " + e.toString() + "--->" + val.toString() + "\n");
             }
          } catch (IOException e1) {
             e1.printStackTrace();
