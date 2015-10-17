@@ -307,7 +307,7 @@ public class DataLoader {
           while ((line = bufferedReader.readLine()) != null) {
 
             if (!documentStarted) {
-              if (line.startsWith("doc id")) {
+              if (line.startsWith(" doc id")) {
                 documentStarted = true;
                 frequencies = new HashMap<>();
               } else {
@@ -315,7 +315,7 @@ public class DataLoader {
               }
             }
 
-            if (line.equals("doc")) {
+            if (line.equals(" doc")) {
               documentStarted = false;
               try {
                 frequencies.put("~", Double.valueOf(String.valueOf(id)
