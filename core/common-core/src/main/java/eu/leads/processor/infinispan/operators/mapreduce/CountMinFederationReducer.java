@@ -19,7 +19,9 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
   transient int w;
   transient private LeadsCollector collector;
   transient private boolean collectorInitialized;
-  transient private Map<String, Row> storage;
+  transient private Map<String, Row> rowStorage;
+  transient private Map<String, Integer> sumStorage;
+  transient private boolean reduceLocalOn;
 
   public CountMinFederationReducer() {
     super();
@@ -37,13 +39,22 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
   public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
 
     int[] singleRow = new int[w];
+    int element = 0;
 
     while (iter.hasNext()) {
       Tuple t = iter.next();
-      String coord = t.getAttribute("coord");
-      int sum = t.getNumberAttribute("sum").intValue();
-      int column = Integer.valueOf(coord.split(",")[1]);
-      singleRow[column] += sum;
+      if (t.hasField("coord")) {
+        // localReducer is on
+        reduceLocalOn = true;
+        int sum = t.getNumberAttribute("sum").intValue();
+        String coord = t.getAttribute("coord");
+        int column = Integer.valueOf(coord.split(",")[1]);
+        singleRow[column] += sum;
+      } else {
+        // localReducer is off
+        reduceLocalOn = false;
+        element += t.getNumberAttribute("count").intValue();
+      }
     }
 
     if (isComposable) {
@@ -52,29 +63,41 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
         collectorInitialized = true;
       }
 
-      Row r;
-      if (!storage.containsKey(reducedKey)) {
-        r = new Row(w);
-        for (int i = 0; i < w; i++) {
-          r.setElement(i, singleRow[i]);
+      if (reduceLocalOn) {
+        Row r = rowStorage.get(reducedKey);
+        if (r == null) {
+          r = new Row(w);
+          for (int i = 0; i < w; i++) {
+            r.setElement(i, singleRow[i]);
+          }
+        } else {
+          for (int i = 0; i < w; i++) {
+            r.setElement(i, r.getElement(i) + singleRow[i]);
+          }
         }
+        rowStorage.put(reducedKey, r);
       } else {
-        r = storage.get(reducedKey);
-        for (int i = 0; i < w; i++) {
-          r.setElement(i, r.getElement(i) + singleRow[i]);
+        Integer storedSum = sumStorage.get(reducedKey);
+        if (storedSum == null) {
+          sumStorage.put(reducedKey, element);
+        } else {
+          sumStorage.put(reducedKey, storedSum + element);
         }
       }
-      storage.put(reducedKey, r);
 
     } else {
-      String singleRowStr = "";
-      for (int i = 0; i < w; i++) {
-        singleRowStr += String.valueOf(singleRow[i]);
-        if (i < singleRow.length - 1) {
-          singleRowStr += ",";
+      if (reduceLocalOn) {
+        String singleRowStr = "";
+        for (int i = 0; i < w; i++) {
+          singleRowStr += String.valueOf(singleRow[i]);
+          if (i < singleRow.length - 1) {
+            singleRowStr += ",";
+          }
         }
+        collector.emit(reducedKey, singleRowStr);
+      } else {
+        collector.emit(reducedKey, element);
       }
-      collector.emit(reducedKey, singleRowStr);
     }
   }
 
@@ -84,7 +107,8 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
     w = conf.getInteger("w");
     collectorInitialized = false;
     if (isComposable) {
-      storage = DBMaker.tempTreeMap();
+      rowStorage = DBMaker.tempTreeMap();
+      sumStorage = DBMaker.tempTreeMap();
     }
   }
 
@@ -93,15 +117,21 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
     System.out.println(getClass().getName() + " finished!");
 
     if (isComposable) {
-      for (Map.Entry<String, Row> entry : storage.entrySet()) {
-        String singleRowStr = "";
-        for (int i = 0; i < w; i++) {
-          singleRowStr += String.valueOf(entry.getValue().getElement(i));
-          if (i < w - 1) {
-            singleRowStr += ",";
+      if (reduceLocalOn) {
+        for (Map.Entry<String, Row> entry : rowStorage.entrySet()) {
+          String singleRowStr = "";
+          for (int i = 0; i < w; i++) {
+            singleRowStr += String.valueOf(entry.getValue().getElement(i));
+            if (i < w - 1) {
+              singleRowStr += ",";
+            }
           }
+          collector.emit(entry.getKey(), singleRowStr);
         }
-        collector.emit(entry.getKey(), singleRowStr);
+      } else {
+        for (Map.Entry<String, Integer> entry : sumStorage.entrySet()) {
+          collector.emit(entry.getKey(), entry.getValue());
+        }
       }
     }
   }
