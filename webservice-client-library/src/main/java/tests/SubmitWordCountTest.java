@@ -47,6 +47,7 @@ public class SubmitWordCountTest {
 
     String id;
     long putCount;
+    private int linesPerTuple = 1000;
 
     public Putter(int i) {
       id = String.valueOf(i);
@@ -55,8 +56,8 @@ public class SubmitWordCountTest {
 
     @Override public void run() {
       LQPConfiguration.initialize();
-      int linesPerTuple = LQPConfiguration.getInstance().getConfiguration()
-          .getInt("putter.lines.per.tuple");
+      linesPerTuple = LQPConfiguration.getInstance().getConfiguration()
+          .getInt("putter.lines.per.tuple",linesPerTuple);
 
       File f;
 
@@ -294,7 +295,7 @@ public class SubmitWordCountTest {
   }
 
   private static void flushToFile(String id) throws FileNotFoundException {
-    String name = SubmitKMeansTest.class.getSimpleName();
+    String name = SubmitWordCountTest.class.getSimpleName();
     Date date = new Date();
     String filename = name+"-"+date.toString()+".txt";
     flushToFile(id,filename);

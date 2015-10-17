@@ -234,7 +234,7 @@ public class SubmitCountMinTest {
   }
 
   private static void flushToFile(String id) throws FileNotFoundException {
-    String name = SubmitKMeansTest.class.getSimpleName();
+    String name = SubmitCountMinTest.class.getSimpleName();
     Date date = new Date();
     String filename = name+"-"+date.toString()+".txt";
     flushToFile(id,filename);
