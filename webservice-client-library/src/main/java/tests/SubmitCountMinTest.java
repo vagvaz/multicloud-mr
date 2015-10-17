@@ -241,7 +241,7 @@ public class SubmitCountMinTest {
   }
 
   private static void flushToFile(String id, String filename) throws FileNotFoundException {
-    RandomAccessFile ram = new RandomAccessFile(filename,"w");
+    RandomAccessFile ram = new RandomAccessFile(filename,"rw");
     for (String mc : activeMicroClouds) {
       System.out.println(mc);
       RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
