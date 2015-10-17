@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <leads-processor-bootstrap>
-    <baseDir>/home/ubuntu/boot-conf-conf/</baseDir> <!-- here are all the conf files of the available modules-->
+    <baseDir>/home/ubuntu/boot-conf/</baseDir> <!-- here are all the conf files of the available modules-->
     <remoteDir>/tmp/</remoteDir>
     <hdfs>
         <uri>hdfs://snf-618466.vm.okeanos.grnet.gr:8020</uri>

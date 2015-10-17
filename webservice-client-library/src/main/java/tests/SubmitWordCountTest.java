@@ -9,6 +9,7 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.ensemble.EnsembleCacheManager;
+import org.infinispan.ensemble.Site;
 import org.infinispan.ensemble.cache.EnsembleCache;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -63,7 +64,7 @@ public class SubmitWordCountTest {
 
       EnsembleCache ensembleCache =
           ensembleCacheManager.getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()),
-                                        EnsembleCacheManager.Consistency.DIST);
+              EnsembleCacheManager.Consistency.DIST);
 
       while (true) {
         synchronized (files) {
@@ -300,13 +301,25 @@ public class SubmitWordCountTest {
     return result;
   }
 
+  private static Object getKeyFrom(EnsembleCache ensembleCache, Object key) {
+    Object result = null;
+    for (Object s : ensembleCache.sites()) {
+      EnsembleCache siteCache = ((Site) s).getCache(ensembleCache.getName());
+      result = siteCache.get(key);
+      if (result != null) {
+        return result;
+      }
+    }
+    return result;
+  }
+
   private static void verifyResults(String id, String[] resultWords, String ensembleString) {
     EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
     EnsembleCache cache = ensembleCacheManager
         .getCache(id, new ArrayList<>(ensembleCacheManager.sites()),
                   EnsembleCacheManager.Consistency.DIST);
     for (String word : resultWords) {
-      Object result = cache.get(word);
+      Object result = getKeyFrom(cache,word);
       if (result != null) {
         System.out.println(word + "--->" + result.toString());
       } else {
