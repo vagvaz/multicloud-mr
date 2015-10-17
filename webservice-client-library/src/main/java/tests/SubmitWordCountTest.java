@@ -267,7 +267,7 @@ public class SubmitWordCountTest {
       System.out.println("Executing...");
 
       int secs = 0;
-
+      long start = System.currentTimeMillis();
       while (true) {
         QueryStatus status = WebServiceClient.getQueryStatus(id);
         if (status.getStatus().equals("COMPLETED")) {
@@ -280,12 +280,13 @@ public class SubmitWordCountTest {
           Thread.sleep(1000);
         }
       }
-
+      long end = System.currentTimeMillis();
       printResults(id, 5);
       verifyResults(id, resultWords, ensembleString);
       printResults("metrics");
+      clearCache("metrics");
 
-      System.out.println("\nDONE IN: " + secs + " sec");
+      System.out.println("\nDONE IN: " + ((end-start)/1000f) + " sec");
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -363,7 +364,14 @@ public class SubmitWordCountTest {
     }
 
   }
-
+  private static void clearCache(String id) {
+    for (String mc : activeMicroClouds) {
+      System.out.println(mc);
+      RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
+      RemoteCache results = remoteCacheManager.getCache(id);
+      results.clear();
+    }
+  }
   private static void PrintUsage() {
     System.out
         .println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>"

@@ -221,6 +221,7 @@ public class SubmitKMeansTest {
 
       Date start = new Date();
       String[] clusters = new String[k];
+      
       while (true) {
         for (int i = 0; i < k; i++) {
           Map centroid = centroids[i];
@@ -287,9 +288,19 @@ public class SubmitKMeansTest {
                          + " sec");
 
       printResults("metrics");
+      clearCache("metrics");
 
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  private static void clearCache(String id) {
+    for (String mc : activeMicroClouds) {
+      System.out.println(mc);
+      RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
+      RemoteCache results = remoteCacheManager.getCache(id);
+     results.clear();
     }
   }
 
@@ -354,68 +365,20 @@ public class SubmitKMeansTest {
   }
 
   private static void printResults(String id) {
-    System.out.println("\n\ndd1a");
-    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
-    RemoteCache results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);
-
-    System.out.println("\n\ndd2a");
-    remoteCacheManager = createRemoteCacheManager(DD2A_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);
-    //
-    //    System.out.println("dresden");
-    //    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
-    //    results = remoteCacheManager.getCache(id);
-    //    PrintUtilities.printMap(results);
-
-/*    System.out.println("hamm5");
-    remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);*/
-
-    //    System.out.println("hamm6");
-    //    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
-    //    results = remoteCacheManager.getCache(id);
-    //    PrintUtilities.printMap(results);
-
-    //    System.out.println("\n\nlocalcluster");
-    //    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
-    //    RemoteCache results = remoteCacheManager.getCache(id);
-    //    PrintUtilities.printMap(results);
-
+    printResults(id,-1);
   }
 
   private static void printResults(String id, int numOfItems) {
-    System.out.println("\n\ndd1a");
-    RemoteCacheManager remoteCacheManager = createRemoteCacheManager(DD1A_IP);
-    RemoteCache results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results, numOfItems);
-
-    System.out.println("\n\ndd2a");
-    remoteCacheManager = createRemoteCacheManager(DD2A_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results, numOfItems);
-    //
-    //    System.out.println("dresden");
-    //    remoteCacheManager = createRemoteCacheManager(DRESDEN2_IP);
-    //    results = remoteCacheManager.getCache(id);
-    //    PrintUtilities.printMap(results, numOfItems);
-
-/*    System.out.println("hamm5");
-    remoteCacheManager = createRemoteCacheManager(HAMM5_IP);
-    results = remoteCacheManager.getCache(id);
-    PrintUtilities.printMap(results);*/
-
-    //    System.out.println("hamm6");
-    //    remoteCacheManager = createRemoteCacheManager(HAMM6_IP);
-    //    results = remoteCacheManager.getCache(id);
-    //    PrintUtilities.printMap(results, numOfItems);
-
-    //    System.out.println("\n\nlocalcluster");
-    //    RemoteCacheManager remoteCacheManager = createRemoteCacheManager("192.168.178.4");
-    //    RemoteCache results = remoteCacheManager.getCache(id);
-    //    PrintUtilities.printMap(results, numOfItems);
+    for (String mc : activeMicroClouds) {
+      System.out.println(mc);
+      RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
+      RemoteCache results = remoteCacheManager.getCache(id);
+      if (numOfItems > 0) {
+        PrintUtilities.printMap(results, numOfItems);
+      } else {
+        PrintUtilities.printMap(results);
+      }
+    }
   }
 
   private static void PrintUsage() {

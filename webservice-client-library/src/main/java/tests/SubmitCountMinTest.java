@@ -208,7 +208,7 @@ public class SubmitCountMinTest {
       System.out.println("Executing...");
 
       int secs = 0;
-
+      long start = System.currentTimeMillis();
       while (true) {
         QueryStatus status = WebServiceClient.getQueryStatus(id);
         if (status.getStatus().equals("COMPLETED")) {
@@ -221,13 +221,13 @@ public class SubmitCountMinTest {
           Thread.sleep(1000);
         }
       }
-
+      long end = System.currentTimeMillis();
       printResults(id, 0);
       //      verifyResults(id, resultWords, ensembleString);
       printResults("metrics");
+      clearCache("metrics");
 
-      System.out.println("\nDONE IN: " + secs + " sec");
-
+      System.out.println("\nDONE IN: " + ((end-start)/1000f) + " sec");
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -296,6 +296,14 @@ public class SubmitCountMinTest {
       } else {
         PrintUtilities.printMap(results);
       }
+    }
+  }
+  private static void clearCache(String id) {
+    for (String mc : activeMicroClouds) {
+      System.out.println(mc);
+      RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
+      RemoteCache results = remoteCacheManager.getCache(id);
+      results.clear();
     }
   }
 
