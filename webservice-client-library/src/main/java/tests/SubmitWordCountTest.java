@@ -283,13 +283,30 @@ public class SubmitWordCountTest {
       long end = System.currentTimeMillis();
       printResults(id, 5);
       verifyResults(id, resultWords, ensembleString);
-      printResults("metrics");
+      flushToFile("metrics");
       clearCache("metrics");
 
       System.out.println("\nDONE IN: " + ((end-start)/1000f) + " sec");
 
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  private static void flushToFile(String id) throws FileNotFoundException {
+    String name = SubmitKMeansTest.class.getSimpleName();
+    Date date = new Date();
+    String filename = name+"-"+date.toString()+".txt";
+    flushToFile(id,filename);
+  }
+
+  private static void flushToFile(String id, String filename) throws FileNotFoundException {
+    RandomAccessFile ram = new RandomAccessFile(filename,"w");
+    for (String mc : activeMicroClouds) {
+      System.out.println(mc);
+      RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
+      RemoteCache results = remoteCacheManager.getCache(id);
+      PrintUtilities.saveMapToFile(results,filename);
     }
   }
 

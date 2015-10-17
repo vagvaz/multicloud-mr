@@ -221,7 +221,7 @@ public class SubmitKMeansTest {
 
       Date start = new Date();
       String[] clusters = new String[k];
-      
+
       while (true) {
         for (int i = 0; i < k; i++) {
           Map centroid = centroids[i];
@@ -287,11 +287,28 @@ public class SubmitKMeansTest {
       System.out.println("\nDONE IN: " + ((double) (end.getTime() - start.getTime()) / 1000.0)
                          + " sec");
 
-      printResults("metrics");
+      flushToFile("metrics");
       clearCache("metrics");
 
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  private static void flushToFile(String id) throws FileNotFoundException {
+    String name = SubmitKMeansTest.class.getSimpleName();
+    Date date = new Date();
+    String filename = name+"-"+date.toString()+".txt";
+    flushToFile(id,filename);
+  }
+
+  private static void flushToFile(String id, String filename) throws FileNotFoundException {
+    RandomAccessFile ram = new RandomAccessFile(filename,"w");
+    for (String mc : activeMicroClouds) {
+      System.out.println(mc);
+      RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
+      RemoteCache results = remoteCacheManager.getCache(id);
+      PrintUtilities.saveMapToFile(results,filename);
     }
   }
 
