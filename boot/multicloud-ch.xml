@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <leads-processor-bootstrap>
-    <baseDir>/home/aangelidakis/b/</baseDir> <!-- here are all the conf files of the available modules-->
+    <baseDir>/home/ubuntu/base-conf/</baseDir> <!-- here are all the conf files of the available modules-->
     <remoteDir>/tmp/</remoteDir>
     <hdfs>
         <uri>hdfs://snf-618466.vm.okeanos.grnet.gr:8020</uri>
@@ -56,21 +56,21 @@
             <node name='leads-qe38' privateIp='10.134.1.132'>87.190.238.117</node>
         </MC>
 
-        <MC name='unine' credentials="unine">
-            <node name='172.16.0.221' usePrivate='true' privateIp='172.16.0.221'>192.42.43.31:11222</node>
-            <node name='172.16.0.222' usePrivate='true' privateIp='172.16.0.222'>192.42.43.31:11223</node>
-            <node name='172.16.0.223' usePrivate='true' privateIp='172.16.0.223'>192.42.43.31:11224</node>
-            <node name='172.16.0.224' usePrivate='true' privateIp='172.16.0.224'>192.42.43.31:11225</node>
-            <node name='172.16.0.225' usePrivate='true' privateIp='172.16.0.225'>192.42.43.31:11226</node>
-            <node name='172.16.0.226' usePrivate='true' privateIp='172.16.0.226'>192.42.43.31:11227</node>
-            <node name='172.16.0.227' usePrivate='true' privateIp='172.16.0.227'>192.42.43.31:11228</node>
-            <node name='172.16.0.228' usePrivate='true' privateIp='172.16.0.228'>192.42.43.31:11229</node>
-            <node name='172.16.0.228' usePrivate='true' privateIp='172.16.0.229'>192.42.43.31:11230</node>
-            <!-- <node name='leads-qe44' privateIp='10.134.1.130'>87.190.238.120</node> -->
-            <!-- <node name='leads-qe39' privateIp='10.134.1.131'>87.190.238.116</node> -->
-            <!-- <node name='leads-qe46' privateIp='10.134.1.129'>87.190.238.118</node> -->
-            <!-- <node name='leads-qe38' privateIp='10.134.1.132'>87.190.238.117</node> -->
-        </MC>
+        <!--<MC name='unine' credentials="unine">-->
+            <!--<node name='172.16.0.221' usePrivate='true' privateIp='172.16.0.221'>192.42.43.31:11222</node>-->
+            <!--<node name='172.16.0.222' usePrivate='true' privateIp='172.16.0.222'>192.42.43.31:11223</node>-->
+            <!--<node name='172.16.0.223' usePrivate='true' privateIp='172.16.0.223'>192.42.43.31:11224</node>-->
+            <!--<node name='172.16.0.224' usePrivate='true' privateIp='172.16.0.224'>192.42.43.31:11225</node>-->
+            <!--<node name='172.16.0.225' usePrivate='true' privateIp='172.16.0.225'>192.42.43.31:11226</node>-->
+            <!--<node name='172.16.0.226' usePrivate='true' privateIp='172.16.0.226'>192.42.43.31:11227</node>-->
+            <!--<node name='172.16.0.227' usePrivate='true' privateIp='172.16.0.227'>192.42.43.31:11228</node>-->
+            <!--<node name='172.16.0.228' usePrivate='true' privateIp='172.16.0.228'>192.42.43.31:11229</node>-->
+            <!--<node name='172.16.0.228' usePrivate='true' privateIp='172.16.0.229'>192.42.43.31:11230</node>-->
+            <!--&lt;!&ndash; <node name='leads-qe44' privateIp='10.134.1.130'>87.190.238.120</node> &ndash;&gt;-->
+            <!--&lt;!&ndash; <node name='leads-qe39' privateIp='10.134.1.131'>87.190.238.116</node> &ndash;&gt;-->
+            <!--&lt;!&ndash; <node name='leads-qe46' privateIp='10.134.1.129'>87.190.238.118</node> &ndash;&gt;-->
+            <!--&lt;!&ndash; <node name='leads-qe38' privateIp='10.134.1.132'>87.190.238.117</node> &ndash;&gt;-->
+        <!--</MC>-->
     </adresses> <!-- localhost, 5.147.254.198-->
     <startUpDelay>2</startUpDelay> <!--delay between modules startup (seconds) -->
     <processor>
@@ -103,7 +103,7 @@
             <id>cloudandheat</id>
             <username>ubuntu</username>
             <!--<password>testpass</password> -->
-            <rsa>/home/aangelidakis/.ssh/leads_cluster</rsa> <!-- a filename -->
+            <rsa>/home/ubuntu/.ssh/leads_cluster</rsa> <!-- a filename -->
         </credentials>
         <credentials>
             <id>softnet</id>
