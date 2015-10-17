@@ -44,20 +44,28 @@ public class SubmitKMeansTest {
   private static Double[] norms;
   private static int k;
 
-  private static void putData(String dataDirectory) {
+  /**
+   *
+   * @param   dataDirectory
+   * @param   loadData if false only the centroids will be loaded
+   */
+  private static void putData(String dataDirectory, boolean loadData) {
 
     File datasetDirectory = new File(dataDirectory);
     File[] allFiles = datasetDirectory.listFiles();
     files = new Vector<File>();
-
+    int loadedFilesCounter = 0;
     for (File f : allFiles) {
       files.add(f);
+      if (!loadData && ++loadedFilesCounter == k) {
+        break;
+      }
     }
 
     Vector<Thread> threads = new Vector<>(PUT_THREADS_COUNT);
 
     for (int i = 0; i < PUT_THREADS_COUNT; i++) {
-      threads.add(new Thread(new Putter(i)));
+      threads.add(new Thread(new Putter(i, loadData)));
     }
 
     System.out.print("Loading data to '" + CACHE_NAME + "' cache\n ");
@@ -209,9 +217,7 @@ public class SubmitKMeansTest {
       //      ensembleString += "80.156.222.26" + ":11222|" + "87.190.238.120" + ":11222|";
       ensembleString = ensembleString.substring(0, ensembleString.length() - 1);
 
-      if (loadData) {
-        putData(dataPath);
-      }
+      putData(dataPath, loadData);
 
       Date start = new Date();
       String[] clusters = new String[k];
@@ -426,22 +432,29 @@ public class SubmitKMeansTest {
     int id;
     long putCount;
     int fileIsCenterIndex;
+    boolean loadData;
 
-    public Putter(int i) {
+    public Putter(int i, boolean loadData) {
       id = i;
       putCount = 0;
       centerIndex = k;
       fileIsCenterIndex = -1;
+      this.loadData = loadData;
     }
 
     @Override public void run() {
       File f;
 
-      EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
+      EnsembleCacheManager ensembleCacheManager;
+      EnsembleCache ensembleCache = null;
 
-      EnsembleCache ensembleCache = ensembleCacheManager
-          .getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()),
-                    EnsembleCacheManager.Consistency.DIST);
+      if (loadData) {
+        ensembleCacheManager = new EnsembleCacheManager((ensembleString));
+        ensembleCache = ensembleCacheManager.getCache(CACHE_NAME,
+                                                      new ArrayList<>(ensembleCacheManager.sites()),
+                                                      EnsembleCacheManager.Consistency.DIST);
+      }
+
       while (true) {
         synchronized (files) {
           if (files.size() > 0) {
@@ -482,7 +495,9 @@ public class SubmitKMeansTest {
           data.asBsonObject().putAll(frequencies);
           //          System.out.println("Putting size " + frequencies.size());
           //          System.out.println("Putting id " + frequencies.get("~"));
-          ensembleCache.put(String.valueOf(id) + "-" + String.valueOf(putCount++), data);
+          if (loadData) {
+            ensembleCache.put(String.valueOf(id) + "-" + String.valueOf(putCount++), data);
+          }
 
           if (fileIsCenterIndex >= 0) {
             centroids[fileIsCenterIndex] = frequencies;
