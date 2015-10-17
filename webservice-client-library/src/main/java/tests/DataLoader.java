@@ -292,7 +292,7 @@ public class DataLoader {
           }
         }
 
-        System.out.println("[H] " + id + ": f.getName() = " + f.getName());
+        System.out.println("[H]" + id + ": f.getName() = " + f.getName());
 
         try {
           BufferedReader bufferedReader =
