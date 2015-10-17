@@ -156,21 +156,21 @@ public class DataLoader {
     }
 
     if (loadDocuments) {
-      System.out.print("Loading documents to '" + documentsCacheName + "' cache\n ");
+      System.out.println("Loading documents to '" + documentsCacheName + "' cache\n ");
       for (Thread t : documentThreads) {
         t.start();
       }
     }
 
     if (loadHistograms) {
-      System.out.print("Loading histograms to '" + histogramsCacheName + "' cache\n ");
+      System.out.println("Loading histograms to '" + histogramsCacheName + "' cache\n ");
       for (Thread t : histogramThreads) {
         t.start();
       }
     }
 
     if (loadDocuments) {
-      System.out.print("Waiting for document loading to finish...");
+      System.out.println("Waiting for document loading to finish...");
       for (Thread t : documentThreads) {
         try {
           t.join();
@@ -182,7 +182,7 @@ public class DataLoader {
     }
 
     if (loadHistograms) {
-      System.out.print("Waiting for histogram loading to finish...");
+      System.out.println("Waiting for histogram loading to finish...");
       for (Thread t : histogramThreads) {
         try {
           t.join();
@@ -283,6 +283,9 @@ public class DataLoader {
       ensembleCache = ensembleCacheManager.getCache(histogramsCacheName,
                                                     new ArrayList<>(ensembleCacheManager.sites()),
                                                     EnsembleCacheManager.Consistency.DIST);
+      boolean documentStarted = false;
+      int documentsCount = 0;  // documents added by this thread
+
       while (true) {
         synchronized (histogramFiles) {
           if (histogramFiles.size() > 0) {
@@ -299,9 +302,32 @@ public class DataLoader {
               new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           String line;
-          Map<String, Double> frequencies = new HashMap<>();
+          Map<String, Double> frequencies = null;
 
           while ((line = bufferedReader.readLine()) != null) {
+
+            if (!documentStarted) {
+              if (line.startsWith("doc id")) {
+                documentStarted = true;
+                frequencies = new HashMap<>();
+              } else {
+                continue;
+              }
+            }
+
+            if (line.equals("doc")) {
+              documentStarted = false;
+              try {
+                frequencies.put("~", Double.valueOf(String.valueOf(id)
+                                                    + String.valueOf(documentsCount++)));
+              } catch (Exception e) {
+                e.printStackTrace();
+              }
+              Tuple data = new Tuple();
+              data.asBsonObject().putAll(frequencies);
+              ensembleCache.put(String.valueOf(id) + "-" + String.valueOf(putCount++), data);
+              continue;
+            }
 
             String[] words = line.split(" ");
 
@@ -317,10 +343,6 @@ public class DataLoader {
               }
             }
           }
-          frequencies.put("~", Double.valueOf(f.getName().hashCode()));
-          Tuple data = new Tuple();
-          data.asBsonObject().putAll(frequencies);
-          ensembleCache.put(String.valueOf(id) + "-" + String.valueOf(putCount++), data);
 
           bufferedReader.close();
         } catch (FileNotFoundException e) {
