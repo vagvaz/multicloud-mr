@@ -9,6 +9,7 @@ import org.vertx.java.core.json.JsonObject;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,7 @@ public class PrintUtilities {
        System.out.println("end of map }");
    }
 
-    public static void printList(List<?> list) {
+    public static void printList(Collection<?> list) {
         System.err.println("List{");
         Iterator<?> it = list.iterator();
         while (it.hasNext()) {
