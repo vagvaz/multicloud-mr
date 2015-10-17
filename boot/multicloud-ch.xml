@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <leads-processor-bootstrap>
-    <baseDir>/home/ubuntu/base-conf/</baseDir> <!-- here are all the conf files of the available modules-->
+    <baseDir>/home/ubuntu/boot-conf-conf/</baseDir> <!-- here are all the conf files of the available modules-->
     <remoteDir>/tmp/</remoteDir>
     <hdfs>
         <uri>hdfs://snf-618466.vm.okeanos.grnet.gr:8020</uri>
@@ -46,13 +46,13 @@
         <MC name='dd2a' credentials="cloudandheat">
             <node name='leads-qe47' privateIp='10.134.1.129'>87.190.238.119</node>
             <node name='leads-qe43' privateIp='10.134.1.132'>87.190.238.125</node>
-            <node name='leads-qe42' privateIp='10.134.1.130'>87.190.238.124</node>
+            <!--<node name='leads-qe42' privateIp='10.134.1.130'>87.190.238.124</node>-->
             <!--<node name='leads-qe41' privateIp='10.134.1.131'>87.190.238.123</node>-->
             <node name='leads-qe40' privateIp='10.134.1.129'>87.190.238.122</node>
             <!--<node name='leads-qe45' privateIp='10.134.1.132'>87.190.238.121</node>-->
-            <!--<node name='leads-qe44' privateIp='10.134.1.130'>87.190.238.120</node>-->
-            <!--<node name='leads-qe39' privateIp='10.134.1.131'>87.190.238.116</node>-->
-            <node name='leads-qe46' privateIp='10.134.1.129'>87.190.238.118</node>
+            <node name='leads-qe44' privateIp='10.134.1.130'>87.190.238.120</node>
+            <node name='leads-qe39' privateIp='10.134.1.131'>87.190.238.116</node>
+            <!--<node name='leads-qe46' privateIp='10.134.1.129'>87.190.238.118</node>-->
             <node name='leads-qe38' privateIp='10.134.1.132'>87.190.238.117</node>
         </MC>
 
