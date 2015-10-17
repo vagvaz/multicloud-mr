@@ -1,5 +1,6 @@
 package tests;
 
+import eu.leads.processor.common.infinispan.EnsembleCacheUtils;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
@@ -149,9 +150,13 @@ public class DataLoader {
       for (File f : allFiles) {
         histogramFiles.add(f);
       }
+
+      EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
+      EnsembleCacheUtils.initialize(ensembleCacheManager, false);
+
       histogramThreads = new Vector<>(putThreadsCount);
       for (int i = 0; i < putThreadsCount; i++) {
-        histogramThreads.add(new Thread(new HistogramLoader(i)));
+        histogramThreads.add(new Thread(new HistogramLoader(i, ensembleCacheManager)));
       }
     }
 
@@ -266,20 +271,20 @@ public class DataLoader {
 
     int id;
     long putCount;
+    private EnsembleCacheManager ensembleCacheManager;
 
-    public HistogramLoader(int id) {
+    public HistogramLoader(int id, EnsembleCacheManager ensembleCacheManager) {
       this.id = id;
       putCount = 0;
+      this.ensembleCacheManager = ensembleCacheManager;
     }
 
     @Override
     public void run() {
       File f;
 
-      EnsembleCacheManager ensembleCacheManager;
       EnsembleCache ensembleCache = null;
 
-      ensembleCacheManager = new EnsembleCacheManager((ensembleString));
       ensembleCache = ensembleCacheManager.getCache(histogramsCacheName,
                                                     new ArrayList<>(ensembleCacheManager.sites()),
                                                     EnsembleCacheManager.Consistency.DIST);
@@ -326,6 +331,8 @@ public class DataLoader {
               Tuple data = new Tuple();
               data.asBsonObject().putAll(frequencies);
               ensembleCache.put(String.valueOf(id) + "-" + String.valueOf(putCount++), data);
+              System.out.println("putting document " + String.valueOf(id)
+                                 + String.valueOf(documentsCount));
               continue;
             }
 
