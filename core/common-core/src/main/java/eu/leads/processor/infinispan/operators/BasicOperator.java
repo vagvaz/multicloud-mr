@@ -775,7 +775,8 @@ public abstract class BasicOperator extends Thread implements Operator {
   }
 
   public void setReducerCallableEnsembleHost() {
-    reducerCallable.setEnsembleHost(computeEnsembleHost(false));
+
+    reducerCallable.setEnsembleHost(computeEnsembleHost(false,true));
   }
 
   public void setReducerLocaleEnsembleHost() {
@@ -795,6 +796,34 @@ public abstract class BasicOperator extends Thread implements Operator {
 
     Collections.sort(sites);
     if (isMap && reduceLocal) { // compute is run for map and there reducelocal should run
+      result += globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName())
+          .get(0).toString() + "|";
+    } else {
+      for (String site : sites) {
+        // If reduceLocal, we only need the local micro-cloud
+        result += globalConfig.getObject("componentsAddrs").getArray(site).get(0).toString() + "|";
+
+      }
+    }
+    result = result.substring(0, result.length() - 1);
+    profilerLog.error("EnsembleHost: " + result);
+
+    return result;
+  }
+
+  public String computeEnsembleHost(boolean isMap,boolean islocal) {
+    String result = "";
+    JsonObject targetEndpoints = action.getData().getObject("operator").getObject("targetEndpoints");
+    List<String> sites = new ArrayList<>();
+
+    for (String targetMC : targetEndpoints.getFieldNames()) {
+      //         JsonObject mc = targetEndpoints.getObject(targetMC);
+      sites.add(targetMC);
+      //
+    }
+
+    Collections.sort(sites);
+    if (islocal) { // compute is run for map and there reducelocal should run
       result += globalConfig.getObject("componentsAddrs").getArray(LQPConfiguration.getInstance().getMicroClusterName())
           .get(0).toString() + "|";
     } else {
