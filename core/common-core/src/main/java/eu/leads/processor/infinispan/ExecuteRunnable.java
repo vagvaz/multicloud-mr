@@ -50,6 +50,7 @@ public class ExecuteRunnable implements Runnable {
         try {
           if(callable.isContinueRunning() && callable.isEmpty()) {
             synchronized (callable.getInput()) {
+//              System.err.println(callable.getCallableIndex()+"IN SLEEPING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
               callable.getInput().wait();
             }
           }
@@ -64,6 +65,8 @@ public class ExecuteRunnable implements Runnable {
         value = entry.getValue();
         callable.executeOn(key, value);
         entry = callable.poll();
+//        System.out.println("stuck here ");
+//        System.err.println(callable.getCallableIndex()+"INSIDE POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
       }
 
       callable = null;

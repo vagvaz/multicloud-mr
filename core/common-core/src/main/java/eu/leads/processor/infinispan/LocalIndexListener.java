@@ -147,11 +147,12 @@ import java.util.concurrent.ConcurrentLinkedDeque;
     //        this.keysCache = manager.getLocalCache(cacheName+".index.keys");
     //        this.dataCache = manager.getLocalCache(cacheName+".index.data");
     //        this.index = new IntermediateKeyIndex(keysCache,dataCache);
-    queue = new ConcurrentDiskQueue(500);
+
 //    queue = new ConcurrentDiskQueue(500);
 //    queue = new ArrayDeque();
     Thread thread = new Thread(this);
     parallelism = LQPConfiguration.getInstance().getConfiguration().getInt("node.engine.parallelism", 4);
+    queue = new ConcurrentDiskQueue( parallelism*LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size",500));
     indexes = new ArrayList<>(parallelism);
     for (int i = 0; i < parallelism; i++) {
       indexes.add(new LevelDBIndex(

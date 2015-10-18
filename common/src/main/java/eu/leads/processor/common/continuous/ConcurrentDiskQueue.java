@@ -1,7 +1,6 @@
 package eu.leads.processor.common.continuous;
 
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
@@ -21,6 +20,7 @@ import java.util.concurrent.BlockingQueue;
 public class ConcurrentDiskQueue implements java.util.Queue {
 
   BlockingQueue queue;
+  Deque inMemory;
   int threshold = 0;
   DB db;
 
@@ -29,24 +29,25 @@ public class ConcurrentDiskQueue implements java.util.Queue {
     db = DBMaker.tempFileDB()
         .fileMmapEnable()
         .fileMmapEnableIfSupported()
-//        .cacheSize(blockSize)
+            //        .cacheSize(blockSize)
         .deleteFilesAfterClose()
         .closeOnJvmShutdown()
         .transactionDisable()
         .asyncWriteEnable()
-//        .asyncWriteQueueSize(blockSize)
+            //        .asyncWriteQueueSize(blockSize)
         .make();
     queue = db.getQueue("fifo");
+    inMemory = new LinkedList();
   }
 
   @Override
   public int size() {
-    return queue.size();
+    return inMemory.size();
   }
 
   @Override
-  public boolean isEmpty() {
-    return queue.isEmpty();
+  public synchronized boolean isEmpty() {
+    return ( queue.isEmpty() && inMemory.isEmpty());
   }
 
   @Override
@@ -70,8 +71,11 @@ public class ConcurrentDiskQueue implements java.util.Queue {
   }
 
   @Override
-  public boolean add(Object o) {
-    return queue.add(o);
+  public synchronized boolean  add(Object o) {
+    if(inMemory.size() > threshold)
+      return queue.add(o);
+    else
+      return inMemory.add(o);
   }
 
   @Override
@@ -87,6 +91,7 @@ public class ConcurrentDiskQueue implements java.util.Queue {
   @Override
   public void clear() {
     queue.clear();
+    inMemory.clear();
   }
 
   @Override
@@ -115,7 +120,10 @@ public class ConcurrentDiskQueue implements java.util.Queue {
   }
 
   @Override
-  public Object poll() {
+  public synchronized Object poll() {
+    if(inMemory.size() > 0)
+      return inMemory.poll();
+
     return queue.poll();
   }
 

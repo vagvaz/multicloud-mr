@@ -69,7 +69,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   transient protected FilterOperatorTree tree = null;
   transient protected List<LeadsBaseCallable> callables;
   transient protected List<ExecuteRunnable> executeRunnables;
-  transient ConcurrentDiskQueue input;
+  transient Queue input;
   protected int callableIndex = -1;
   protected int callableParallelism = 1;
   protected boolean continueRunning = true;
@@ -89,6 +89,8 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   protected ProfileEvent profCallable;
   protected LeadsCollector collector;
   private int listSize;
+  private int sleepTimeMilis;
+  private int sleepTimeNanos;
 
   public LeadsBaseCallable() {
     callableParallelism = LQPConfiguration.getInstance().getConfiguration().getInt("node.engine.parallelism", 4);
@@ -183,6 +185,10 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   @Override public void setEnvironment(Cache<K, V> cache, Set<K> inputKeys) {
     profilerLog = LoggerFactory.getLogger("###PROF###" + this.getClass().toString());
     listSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size",500);
+    sleepTimeMilis =
+        LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.milis", 0);
+    sleepTimeNanos =
+        LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.nanos", 10000);
     EngineUtils.initialize();
     PrintUtilities.printAndLog(profilerLog,
         InfinispanClusterSingleton.getInstance().getManager().getMemberName().toString() + ": setupEnvironment");
@@ -257,7 +263,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 
     ecache = emanager.getCache(output, new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
     outputCache = ecache;
-    input = new ConcurrentDiskQueue(listSize);
+    input = new LinkedList<>();
     initialize();
     start = System.currentTimeMillis();
     PrintUtilities.printAndLog(profilerLog,
@@ -310,6 +316,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
         for (ExecuteRunnable runnable : executeRunnables) {
           EngineUtils.submit(runnable);
         }
+        int i = 0;
         while (iterable.hasNext()) {
           Map.Entry<byte[], byte[]> entryIspn = iterable.next();
           String key = (String) m.objectFromByteBuffer(entryIspn.getKey());
@@ -326,8 +333,20 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
           }
           Map.Entry<K, V> entry = new AbstractMap.SimpleEntry(key, tuple);
           if (entry.getValue() != null) {
-
-            callables.get((readCounter % callableParallelism)).addToInput(entry);
+            i = 0;
+            while(true) {
+//              System.out.println("CALL " + i + callables.get(i).getInput().size() );
+              if(callables.get(i).getInput().size() <= listSize) {
+                callables.get(i).addToInput(entry);
+//                System.out.println("CHONE  " + i + callables.get(i).getInput().size() );
+                break;
+              }
+              if(i == callableParallelism-1) {
+//                System.out.println("Sleeping because everyting full");
+                Thread.sleep(sleepTimeMilis, sleepTimeNanos);
+              }
+              i = (i+1)%callableParallelism;
+            }
           }
 
         }
@@ -370,7 +389,8 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   }
 
   private void addToInput(Map.Entry<K, V> entry) {
-//        synchronized (input){
+    //    synchronized (input){
+    synchronized (input){
     input.add(entry);
 //    while (input.size() >= listSize) {
 //      try {
@@ -381,7 +401,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 //            Thread.yield();
 //    }
 //        }
-      synchronized (input){
+
         input.notify();
 //=======
 //    int listSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size", 500);
@@ -401,11 +421,13 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   }
 
   public Map.Entry poll() {
+
     Map.Entry result = null;
-//        synchronized (input){
+        synchronized (input){
     result = (Map.Entry) input.poll();
-//        }
-    processed++;
+        }
+    if(result != null)
+      processed++;
     if(processed > processThreshold ){
       profilerLog.error(callableIndex + " processed " + processed);
       processThreshold *= 1.3;
@@ -459,9 +481,9 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 
   public boolean isEmpty() {
     boolean result = false;
-//    synchronized (input) {
+    synchronized (input) {
       result = input.isEmpty();
-//    }
+    }
     return result;
   }
 
