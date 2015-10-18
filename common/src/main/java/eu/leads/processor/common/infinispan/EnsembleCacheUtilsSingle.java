@@ -73,7 +73,7 @@ public class EnsembleCacheUtilsSingle {
     computeBytes = LQPConfiguration.getInstance().getConfiguration().getBoolean("keep.network.metrics",false);
     auxExecutor = new ThreadPoolExecutor((int)threadBatch,(int)(threadBatch),1000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>());
     runnables = new ConcurrentLinkedQueue<>();
-    for (int i = 0; i <  (threadBatch); i++) {
+    for (int i = 0; i <  15*(threadBatch); i++) {
       runnables.add(new SyncPutRunnable(this));
     }
     initialized = true;
@@ -268,7 +268,7 @@ public class EnsembleCacheUtilsSingle {
   }
   public  void waitForAuxPuts() throws InterruptedException {
 //    System.err.println("WaitForAuxPuts");
-    while(runnables.size() != (threadBatch)) {
+    while(runnables.size() != 15*(threadBatch)) {
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
 

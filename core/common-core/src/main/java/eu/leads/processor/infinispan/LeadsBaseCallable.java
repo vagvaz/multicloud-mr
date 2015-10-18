@@ -329,7 +329,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     //    synchronized (input){
     while (input.size() >= 1000) {
       try {
-        Thread.sleep(1000);
+        Thread.sleep(10);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
