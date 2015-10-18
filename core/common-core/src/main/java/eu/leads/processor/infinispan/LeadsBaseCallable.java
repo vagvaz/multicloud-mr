@@ -425,13 +425,17 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   }
 
   public Map.Entry poll() {
-
+    profilerLog.error(callableIndex+": POLL CALLED ");
     Map.Entry result = null;
         synchronized (input){
     result = (Map.Entry) input.poll();
         }
+
     if(result != null)
+    {
+      profilerLog.error(callableIndex+": POLL CALLED  PROCESSED " + processed);
       processed++;
+    }
     if(processed > processThreshold ){
       profilerLog.error(callableIndex + " processed " + processed);
       processThreshold *= 1.3;

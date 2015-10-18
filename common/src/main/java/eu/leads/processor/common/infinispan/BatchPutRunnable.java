@@ -12,6 +12,7 @@ import java.util.Map;
  */
 public class BatchPutRunnable implements Runnable{
   private EnsembleCacheUtilsSingle owner;
+  Logger log = LoggerFactory.getLogger(BatchPutRunnable.class);
   TupleBuffer buffer = null;
     int retries = 10;
     Logger log = LoggerFactory.getLogger(BatchPutRunnable.class);
@@ -32,9 +33,11 @@ public class BatchPutRunnable implements Runnable{
         return buffer;
     }
     public void setBuffer(TupleBuffer buffer){
-        this.buffer = buffer;
+      log.error("SET BUF");
+      this.buffer = buffer;
     }
     @Override public void run() {
+      log.error("--- START BATCH RUN");
         boolean isok = false;
       Map data = buffer.flushToMC();
       if(data==null || data.size() == 0){
@@ -57,6 +60,7 @@ public class BatchPutRunnable implements Runnable{
             while(retries > 0 && !isok){
                 cache.put(uuid + ":" + Long.toString(counter),bytes);
                 isok = true;
+              log.error("++++ END BATCH RUN");
             }
         }
         catch (Exception e){
