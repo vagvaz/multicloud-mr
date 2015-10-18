@@ -114,13 +114,6 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
   private void processEvent(Object key,Object value) {
     EventTriplet e = new EventTriplet(EventType.CREATED,key,value);
-    while(queue.size() > 1000){
-      try {
-        Thread.sleep(10);
-      } catch (InterruptedException e1) {
-        e1.printStackTrace();
-      }
-    }
     queue.add(e);
     synchronized (mutex) {
       mutex.notify();
@@ -159,7 +152,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 //    queue = new ArrayDeque();
     Thread thread = new Thread(this);
     parallelism = LQPConfiguration.getInstance().getConfiguration().getInt("node.engine.parallelism", 4);
-    queue = new LinkedList();// parallelism*LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size",500));
+    queue = new ConcurrentDiskQueue( parallelism*LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size",500));
     indexes = new ArrayList<>(parallelism);
     for (int i = 0; i < parallelism; i++) {
       indexes.add(new LevelDBIndex(

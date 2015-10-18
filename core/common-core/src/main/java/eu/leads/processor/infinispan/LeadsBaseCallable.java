@@ -292,7 +292,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
       }
     }
     int count = 0;
-      System.out.println("Iterate Over Local Data");
+      System.err.println("Iterate Over Local Data");
   Object filter = new LocalDataFilter<K, V>(cdl);
 //
 //      CloseableIterable iterable = inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL)
@@ -335,7 +335,9 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
           int roundRobinWithoutAddition=0;
           if (entry.getValue() != null ) {
             while(true) {
+              System.err.println(i + ": size " + callables.get(i).getInput().size() );
               if(callables.get(i).getInput().size() <= listSize) {
+                System.err.println(i + ": chosen " + callables.get(i).getInput().size() );
                 callables.get(i).addToInput(entry);
                 i = (i+1)%callableParallelism;
                 break;
@@ -343,7 +345,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
               i = (i+1)%callableParallelism;
               roundRobinWithoutAddition++;
               if(roundRobinWithoutAddition == callableParallelism) {
-                System.out.println("Sleeping because everyting full");
+                System.err.println("Sleeping because everyting full");
                 Thread.sleep(sleepTimeMilis, sleepTimeNanos);
                 roundRobinWithoutAddition=0;
               }
