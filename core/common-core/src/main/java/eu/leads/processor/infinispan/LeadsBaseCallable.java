@@ -78,6 +78,8 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   long end = 0;
   int readCounter = 0;
   int processed = 0;
+  int processThreshold = 1000;
+  int readThreshold = 10000;
   //  transient protected RemoteCache outputCache;
   //  transient protected RemoteCache ecache;
   //  transient protected RemoteCacheManager emanager;
@@ -318,8 +320,9 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
           Tuple tuple = (Tuple) m.objectFromByteBuffer(value.getValueBytes().getBuf());
           //        profExecute.end();
           readCounter++;
-          if (readCounter % 10000 == 0) {
+          if (readCounter > readThreshold) {
             profilerLog.error(callableIndex+" Read: " + readCounter );
+            readThreshold *= 1.3;
           }
           Map.Entry<K, V> entry = new AbstractMap.SimpleEntry(key, tuple);
           if (entry.getValue() != null) {
@@ -403,8 +406,9 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     result = (Map.Entry) input.poll();
 //        }
     processed++;
-    if(processed % 1000 == 0 ){
+    if(processed > processThreshold ){
       profilerLog.error(callableIndex + " processed " + processed);
+      processThreshold *= 1.3;
     }
     return result;
   }
