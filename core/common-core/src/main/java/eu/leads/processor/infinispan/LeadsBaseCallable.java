@@ -325,17 +325,17 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     return embeddedCacheManager.getAddress().toString();
   }
 
-  private synchronized void addToInput(Map.Entry<K, V> entry) {
+  private void addToInput(Map.Entry<K, V> entry) {
     //    synchronized (input){
+    input.add(entry);
     while (input.size() >= 1000) {
 //        Thread.sleep(10);
-        Thread.yield();
+      Thread.yield();
     }
-    input.add(entry);
     //    }
   }
 
-  public synchronized Map.Entry poll() {
+  public Map.Entry poll() {
     Map.Entry result = null;
     //    synchronized (input){
     result = input.poll();
