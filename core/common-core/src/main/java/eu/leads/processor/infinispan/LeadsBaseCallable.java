@@ -8,29 +8,40 @@ import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.common.utils.ProfileEvent;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.EngineUtils;
+import eu.leads.processor.core.Tuple;
 import eu.leads.processor.math.FilterOpType;
 import eu.leads.processor.math.FilterOperatorNode;
 import eu.leads.processor.math.FilterOperatorTree;
 import eu.leads.processor.math.MathUtils;
 import org.infinispan.Cache;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.util.CloseableIterable;
 import org.infinispan.context.Flag;
 import org.infinispan.distexec.DistributedCallable;
 import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.cache.EnsembleCache;
+import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.filter.KeyValueFilter;
 import org.infinispan.interceptors.locking.ClusteringDependentLogic;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.marshall.core.MarshalledEntryImpl;
+import org.infinispan.persistence.leveldb.LevelDBStore;
+import org.infinispan.persistence.manager.PersistenceManager;
+import org.infinispan.persistence.manager.PersistenceManagerImpl;
+import org.infinispan.persistence.spi.InitializationContext;
 import org.infinispan.query.SearchManager;
 import org.infinispan.query.dsl.FilterConditionContext;
 import org.infinispan.query.dsl.FilterConditionEndContext;
 import org.infinispan.query.dsl.QueryFactory;
+import org.iq80.leveldb.DB;
+import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -271,20 +282,42 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     int count = 0;
       System.out.println("Iterate Over Local Data");
   Object filter = new LocalDataFilter<K, V>(cdl);
+//
+//      CloseableIterable iterable = inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL)
+//          .filterEntries((KeyValueFilter<? super K, ? super V>) filter);
+    ComponentRegistry registry = inputCache.getAdvancedCache().getComponentRegistry();
+    PersistenceManagerImpl persistenceManager =
+        (PersistenceManagerImpl) registry.getComponent(PersistenceManager.class);
+    LevelDBStore dbStore = (LevelDBStore) persistenceManager.getAllLoaders().get(0);
 
-      CloseableIterable iterable = inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL)
-          .filterEntries((KeyValueFilter<? super K, ? super V>) filter);
+    try {
+      Field db = dbStore.getClass().getDeclaredField("db");
+      db.setAccessible(true);
+      DB realDb = (DB) db.get(dbStore);
+      DBIterator iterable = realDb.iterator();
+      iterable.seekToFirst();
+      Field ctxField = dbStore.getClass().getDeclaredField("ctx");
+      ctxField.setAccessible(true);
+      InitializationContext ctx = (InitializationContext) ctxField.get(dbStore);
+      Marshaller m = ctx.getMarshaller();
       try {
         for (ExecuteRunnable runnable : executeRunnables) {
           EngineUtils.submit(runnable);
         }
-        for (Object object : iterable) {
+        while (iterable.hasNext()) {
+          Map.Entry<byte[], byte[]> entryIspn = iterable.next();
+          String key = (String) m.objectFromByteBuffer(entryIspn.getKey());
+          org.infinispan.marshall.core.MarshalledEntryImpl value =
+              (MarshalledEntryImpl) m.objectFromByteBuffer(entryIspn.getValue());
+
+
+          Tuple tuple = (Tuple) m.objectFromByteBuffer(value.getValueBytes().getBuf());
           //        profExecute.end();
           readCounter++;
           if (readCounter % 10000 == 0) {
             Thread.yield();
           }
-          Map.Entry<K, V> entry = (Map.Entry<K, V>) object;
+          Map.Entry<K, V> entry = new AbstractMap.SimpleEntry(key, tuple);
           if (entry.getValue() != null) {
 
             callables.get((readCounter % callableParallelism)).addToInput(entry);
@@ -296,8 +329,8 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
         iterable.close();
         if (e instanceof InterruptedException) {
           profilerLog.error(this.imanager.getCacheManager().getAddress().toString() + " was interrupted ");
-          for(ExecuteRunnable ex : executeRunnables){
-            if(ex.isRunning()) {
+          for (ExecuteRunnable ex : executeRunnables) {
+            if (ex.isRunning()) {
               ex.cancel();
             }
           }
@@ -306,7 +339,11 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
           PrintUtilities.logStackTrace(profilerLog, e.getStackTrace());
         }
       }
-
+    } catch (NoSuchFieldException e) {
+      e.printStackTrace();
+    } catch (IllegalAccessException e) {
+      e.printStackTrace();
+    }
     //    profCallable.end();
     for (LeadsBaseCallable callable : callables) {
       callable.setContinueRunning(false);
@@ -329,8 +366,12 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     //    synchronized (input){
     input.add(entry);
     while (input.size() >= 1000) {
-//        Thread.sleep(10);
-      Thread.yield();
+      try {
+        Thread.sleep(0,10000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      //      Thread.yield();
     }
     //    }
   }
