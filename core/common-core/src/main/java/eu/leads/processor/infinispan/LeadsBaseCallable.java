@@ -328,11 +328,8 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   private synchronized void addToInput(Map.Entry<K, V> entry) {
     //    synchronized (input){
     while (input.size() >= 1000) {
-      try {
-        Thread.sleep(10);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
+//        Thread.sleep(10);
+        Thread.yield();
     }
     input.add(entry);
     //    }
