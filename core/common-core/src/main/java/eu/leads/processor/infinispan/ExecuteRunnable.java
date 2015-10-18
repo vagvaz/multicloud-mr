@@ -48,13 +48,7 @@ public class ExecuteRunnable implements Runnable {
           entry = callable.poll();
         }
         try {
-          sleep++;
-          if(sleep % 1000 == 0)
-//          System.err.println(callable.getCallableIndex()+" Sleeping " + sleep + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
-//          Thread.sleep(0, 100000);
-//          Thread.yield();
           if(callable.isContinueRunning() && callable.isEmpty()) {
-//            System.err.println(callable.getCallableIndex()+"TRUE Sleeping " + sleep + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
             synchronized (callable.getInput()) {
               callable.getInput().wait();
             }
@@ -64,6 +58,14 @@ public class ExecuteRunnable implements Runnable {
         }
 
       }
+      entry = callable.poll();
+      while (entry != null) {
+        key = entry.getKey();
+        value = entry.getValue();
+        callable.executeOn(key, value);
+        entry = callable.poll();
+      }
+
       callable = null;
       EngineUtils.addRunnable(this);
       isRunning = false;

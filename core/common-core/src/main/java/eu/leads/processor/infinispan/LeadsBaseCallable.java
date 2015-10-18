@@ -380,6 +380,20 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 //        }
       synchronized (input){
         input.notify();
+//=======
+//    int listSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size", 500);
+//    int sleepTimeMilis =
+//        LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.milis", 0);
+//    int sleepTimeNanos =
+//        LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.nanos", 10000);
+//    //    synchronized (input){
+//    input.add(entry);
+//    while (input.size() >= listSize) {
+//      try {
+//        Thread.sleep(sleepTimeMilis, sleepTimeNanos);
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//>>>>>>> 639dbb647e138d20d76d0e88b841dc15a15a159c
       }
   }
 
