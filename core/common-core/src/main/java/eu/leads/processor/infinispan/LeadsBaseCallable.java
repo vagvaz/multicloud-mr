@@ -338,7 +338,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     //    }
   }
 
-  public  Map.Entry poll() {
+  public synchronized Map.Entry poll() {
     Map.Entry result = null;
     //    synchronized (input){
     result = input.poll();
