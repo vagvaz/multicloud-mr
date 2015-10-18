@@ -20,8 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
@@ -33,7 +32,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
   String cacheName;
   //    transient LevelDBIndex index;
   //    transient List<LevelDBIndex> indexes;
-  transient ConcurrentDiskQueue queue;
+  transient Queue queue;
   transient Thread thread;
   transient List<LevelDBIndex> indexes;
   transient Cache targetCache;
@@ -149,7 +148,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
     //        this.dataCache = manager.getLocalCache(cacheName+".index.data");
     //        this.index = new IntermediateKeyIndex(keysCache,dataCache);
     queue = new ConcurrentDiskQueue(500);
-
+//    queue = new ConcurrentDiskQueue(500);
+//    queue = new ArrayDeque();
     Thread thread = new Thread(this);
     parallelism = LQPConfiguration.getInstance().getConfiguration().getInt("node.engine.parallelism", 4);
     indexes = new ArrayList<>(parallelism);

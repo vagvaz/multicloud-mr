@@ -1,5 +1,6 @@
 package eu.leads.processor.infinispan;
 
+import eu.leads.processor.common.continuous.ConcurrentDiskQueue;
 import eu.leads.processor.common.infinispan.BatchPutListener;
 import eu.leads.processor.common.infinispan.ClusterInfinispanManager;
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
@@ -44,6 +45,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by vagvaz on 2/18/15.
@@ -66,7 +69,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   transient protected FilterOperatorTree tree = null;
   transient protected List<LeadsBaseCallable> callables;
   transient protected List<ExecuteRunnable> executeRunnables;
-  transient Queue<Map.Entry<K, V>> input;
+  transient ConcurrentDiskQueue input;
   protected int callableIndex = -1;
   protected int callableParallelism = 1;
   protected boolean continueRunning = true;
@@ -74,7 +77,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   long start = 0;
   long end = 0;
   int readCounter = 0;
-
+  int processed = 0;
   //  transient protected RemoteCache outputCache;
   //  transient protected RemoteCache ecache;
   //  transient protected RemoteCacheManager emanager;
@@ -83,6 +86,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   transient Logger profilerLog;
   protected ProfileEvent profCallable;
   protected LeadsCollector collector;
+  private int listSize;
 
   public LeadsBaseCallable() {
     callableParallelism = LQPConfiguration.getInstance().getConfiguration().getInt("node.engine.parallelism", 4);
@@ -162,21 +166,21 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     return input;
   }
 
-  public void setInput(Queue<Map.Entry<K, V>> input) {
-    this.input = input;
-  }
-
   public boolean isContinueRunning() {
     return continueRunning;
   }
 
   public void setContinueRunning(boolean continueRunning) {
     this.continueRunning = continueRunning;
+    synchronized (input){
+      input.notify();
+    }
+
   }
 
   @Override public void setEnvironment(Cache<K, V> cache, Set<K> inputKeys) {
     profilerLog = LoggerFactory.getLogger("###PROF###" + this.getClass().toString());
-
+    listSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size",500);
     EngineUtils.initialize();
     PrintUtilities.printAndLog(profilerLog,
         InfinispanClusterSingleton.getInstance().getManager().getMemberName().toString() + ": setupEnvironment");
@@ -251,7 +255,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 
     ecache = emanager.getCache(output, new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
     outputCache = ecache;
-    input = new LinkedList<>();
+    input = new ConcurrentDiskQueue(listSize);
     initialize();
     start = System.currentTimeMillis();
     PrintUtilities.printAndLog(profilerLog,
@@ -315,7 +319,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
           //        profExecute.end();
           readCounter++;
           if (readCounter % 10000 == 0) {
-            Thread.yield();
+            profilerLog.error(callableIndex+" Read: " + readCounter );
           }
           Map.Entry<K, V> entry = new AbstractMap.SimpleEntry(key, tuple);
           if (entry.getValue() != null) {
@@ -363,24 +367,31 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   }
 
   private void addToInput(Map.Entry<K, V> entry) {
-    //    synchronized (input){
+//        synchronized (input){
     input.add(entry);
-    while (input.size() >= 1000) {
-      try {
-        Thread.sleep(0,10000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
+//    while (input.size() >= listSize) {
+//      try {
+//        Thread.sleep(0,10000);
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//      }
+//            Thread.yield();
+//    }
+//        }
+      synchronized (input){
+        input.notify();
       }
-      //      Thread.yield();
-    }
-    //    }
   }
 
   public Map.Entry poll() {
     Map.Entry result = null;
-    //    synchronized (input){
-    result = input.poll();
-    //    }
+//        synchronized (input){
+    result = (Map.Entry) input.poll();
+//        }
+    processed++;
+    if(processed % 1000 == 0 ){
+      profilerLog.error(callableIndex + " processed " + processed);
+    }
     return result;
   }
 

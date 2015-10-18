@@ -8,6 +8,7 @@ import eu.leads.processor.infinispan.ComplexIntermediateKey;
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.util.concurrent.NotifyingFuture;
+import org.infinispan.context.Flag;
 import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.Site;
 import org.infinispan.ensemble.cache.EnsembleCache;
@@ -73,7 +74,7 @@ public class EnsembleCacheUtilsSingle {
     computeBytes = LQPConfiguration.getInstance().getConfiguration().getBoolean("keep.network.metrics",false);
     auxExecutor = new ThreadPoolExecutor((int)threadBatch,(int)(threadBatch),1000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<Runnable>());
     runnables = new ConcurrentLinkedQueue<>();
-    for (int i = 0; i <  15*(threadBatch); i++) {
+    for (int i = 0; i <  LQPConfiguration.getInstance().getConfiguration().getInt("node.thread.multiplier",100)*(threadBatch); i++) {
       runnables.add(new SyncPutRunnable(this));
     }
     initialized = true;
@@ -86,7 +87,7 @@ public class EnsembleCacheUtilsSingle {
     microclouds = new ConcurrentHashMap<>();
     //            microcloudThreads  = new ConcurrentHashMap<>();
     microcloudRunnables = new ConcurrentLinkedQueue<>();
-    for (int index = 0; index < 10*totalBatchPutThreads; index++){
+    for (int index = 0; index < LQPConfiguration.getInstance().getConfiguration().getInt("node.thread.multiplier",100)*totalBatchPutThreads; index++){
       microcloudRunnables.add(new BatchPutRunnable(3,this));
     }
     System.err.println("SIUZE microcloud run " + microcloudRunnables.size());
@@ -268,7 +269,8 @@ public class EnsembleCacheUtilsSingle {
   }
   public  void waitForAuxPuts() throws InterruptedException {
 //    System.err.println("WaitForAuxPuts");
-    while(runnables.size() != 15*(threadBatch)) {
+//    while(runnables.size() != 15*(threadBatch)) {
+    while(auxExecutor.getActiveCount() > 1) {
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
 
@@ -307,7 +309,8 @@ public class EnsembleCacheUtilsSingle {
     //flush remotely batchputlisteners
 
 //    System.err.println("Wait batchput");
-    while( microcloudRunnables.size() !=  10*totalBatchPutThreads){
+//    while( microcloudRunnables.size() !=  10*totalBatchPutThreads){
+    while( batchPutExecutor.getActiveCount() > 1){
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
         System.err.println("microRunna " + microcloudRunnables.size() + " instead of " + (10*totalBatchPutThreads));
@@ -459,6 +462,7 @@ public class EnsembleCacheUtilsSingle {
     Cache localCache =
         (Cache) localManager.getPersisentCache(  cache.getName());
     putToCacheDirect(localCache, key, value);
+//      localCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(key,value);
   }
 
   public  void putToCacheDirect(BasicCache cache,Object key,Object value){

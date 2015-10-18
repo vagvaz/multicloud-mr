@@ -1,7 +1,9 @@
 package eu.leads.processor.infinispan;
 
+import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.core.EngineUtils;
 
+import java.util.Queue;
 import java.util.Map;
 
 /**
@@ -29,23 +31,38 @@ public class ExecuteRunnable implements Runnable {
 
   @Override public void run() {
     isRunning = true;
+    int sleep = 0;
+    int run = 0;
     try {
       Map.Entry entry = null;
       while (callable.isContinueRunning() || !callable.isEmpty()) {
 //        System.err.println(callable.getCallableIndex()+": "+ callable.isContinueRunning() + " " + callable.isEmpty() + " sz " + callable.getSize());
+//        System.err.println(callable.getCallableIndex()+" POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
         entry = callable.poll();
         while (entry != null) {
+//          System.err.println(callable.getCallableIndex()+" Run " + run++);
+//          System.err.println(callable.getCallableIndex()+"INSIDE POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
           key = entry.getKey();
           value = entry.getValue();
           callable.executeOn(key, value);
           entry = callable.poll();
         }
         try {
-          Thread.sleep(0, 10000);
-          Thread.yield();
+          sleep++;
+          if(sleep % 1000 == 0)
+//          System.err.println(callable.getCallableIndex()+" Sleeping " + sleep + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
+//          Thread.sleep(0, 100000);
+//          Thread.yield();
+          if(callable.isContinueRunning() && callable.isEmpty()) {
+//            System.err.println(callable.getCallableIndex()+"TRUE Sleeping " + sleep + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
+            synchronized (callable.getInput()) {
+              callable.getInput().wait();
+            }
+          }
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
+
       }
       callable = null;
       EngineUtils.addRunnable(this);
