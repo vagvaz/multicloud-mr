@@ -335,9 +335,9 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
           int roundRobinWithoutAddition=0;
           if (entry.getValue() != null ) {
             while(true) {
-              System.err.println(i + ": size " + callables.get(i).getInput().size() );
+              PrintUtilities.printAndLog(profilerLog, i + ": size " + callables.get(i).getInput().size());
               if(callables.get(i).getInput().size() <= listSize) {
-                System.err.println(i + ": chosen " + callables.get(i).getInput().size() );
+                PrintUtilities.printAndLog(profilerLog, i + ": chosen " + callables.get(i).getInput().size());
                 callables.get(i).addToInput(entry);
                 i = (i+1)%callableParallelism;
                 break;
@@ -345,7 +345,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
               i = (i+1)%callableParallelism;
               roundRobinWithoutAddition++;
               if(roundRobinWithoutAddition == callableParallelism) {
-                System.err.println("Sleeping because everyting full");
+                PrintUtilities.printAndLog(profilerLog,"Sleeping because everyting full");
                 Thread.sleep(sleepTimeMilis, sleepTimeNanos);
                 roundRobinWithoutAddition=0;
               }

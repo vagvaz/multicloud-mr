@@ -2,6 +2,8 @@ package eu.leads.processor.infinispan;
 
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.core.EngineUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Queue;
 import java.util.Map;
@@ -14,6 +16,7 @@ public class ExecuteRunnable implements Runnable {
   Object value;
   private LeadsBaseCallable callable;
   private boolean isRunning = false;
+  private static Logger log = LoggerFactory.getLogger(ExecuteRunnable.class);
 
   public ExecuteRunnable(LeadsBaseCallable callable) {
     this.callable = callable;
@@ -50,7 +53,9 @@ public class ExecuteRunnable implements Runnable {
         try {
           if(callable.isContinueRunning() && callable.isEmpty()) {
             synchronized (callable.getInput()) {
-              System.err.println(callable.getCallableIndex()+"IN SLEEPING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
+              PrintUtilities.printAndLog(log,
+                  callable.getCallableIndex() + "IN SLEEPING " + " is " + callable.isContinueRunning() + " " + callable
+                      .isEmpty() + " " + ((Queue) callable.getInput()).size());
               callable.getInput().wait();
             }
           }
