@@ -332,20 +332,22 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
             readThreshold *= 1.3;
           }
           Map.Entry<K, V> entry = new AbstractMap.SimpleEntry(key, tuple);
-          if (entry.getValue() != null) {
-            i = 0;
+          int roundRobinWithoutAddition=0;
+          if (entry.getValue() != null ) {
             while(true) {
-//              System.out.println("CALL " + i + callables.get(i).getInput().size() );
               if(callables.get(i).getInput().size() <= listSize) {
                 callables.get(i).addToInput(entry);
-//                System.out.println("CHONE  " + i + callables.get(i).getInput().size() );
+                i = (i+1)%callableParallelism;
                 break;
               }
-              if(i == callableParallelism-1) {
-//                System.out.println("Sleeping because everyting full");
-                Thread.sleep(sleepTimeMilis, sleepTimeNanos);
-              }
               i = (i+1)%callableParallelism;
+              roundRobinWithoutAddition++;
+              if(roundRobinWithoutAddition == callableParallelism) {
+                System.out.println("Sleeping because everyting full");
+                Thread.sleep(sleepTimeMilis, sleepTimeNanos);
+                roundRobinWithoutAddition=0;
+              }
+              //              i = (i+1)%callableParallelism;
             }
           }
 

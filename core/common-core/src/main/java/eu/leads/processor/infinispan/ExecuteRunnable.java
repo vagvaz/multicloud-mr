@@ -50,7 +50,7 @@ public class ExecuteRunnable implements Runnable {
         try {
           if(callable.isContinueRunning() && callable.isEmpty()) {
             synchronized (callable.getInput()) {
-//              System.err.println(callable.getCallableIndex()+"IN SLEEPING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
+              System.err.println(callable.getCallableIndex()+"IN SLEEPING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
               callable.getInput().wait();
             }
           }
