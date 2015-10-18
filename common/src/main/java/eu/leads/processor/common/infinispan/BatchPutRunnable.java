@@ -12,7 +12,6 @@ import java.util.Map;
  */
 public class BatchPutRunnable implements Runnable{
   private EnsembleCacheUtilsSingle owner;
-  Logger log = LoggerFactory.getLogger(BatchPutRunnable.class);
   TupleBuffer buffer = null;
     int retries = 10;
     Logger log = LoggerFactory.getLogger(BatchPutRunnable.class);
