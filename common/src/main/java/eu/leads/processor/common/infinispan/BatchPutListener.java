@@ -68,9 +68,9 @@ public class BatchPutListener implements LeadsListener,Runnable {
         futures = new ConcurrentHashMap<>();
         System.err.println("init ensembleCacheUtilsSingle");
         ensembleCacheUtilsSingle  = new EnsembleCacheUtilsSingle();
-        Thread thread = new Thread(this);
-        queue = new ConcurrentDiskQueue(500);
-        thread.start();
+//        Thread thread = new Thread(this);
+//        queue = new ConcurrentDiskQueue(500);
+//        thread.start();
         System.err.println("end");
     }
 
@@ -101,18 +101,25 @@ public class BatchPutListener implements LeadsListener,Runnable {
     }
 
     private void batchPut(Object key, Object value) {
-//                System.out.println("RUN BatchPut " + key.toString());
-        try {
-            byte[] b = (byte[]) value;
-            if (b.length == 1 && b[0] == -1) {
-                waitForPendingPuts();
-                return;
-            }
-            queue.add(new EventTriplet(EventType.CREATED,key,value));
-
-        }catch (Exception e){
-            e.printStackTrace();
+        TupleBuffer tupleBuffer = new TupleBuffer((byte[]) value);
+        //            Map tmpb = new HashMap();
+        for (Map.Entry<Object, Object> entry : tupleBuffer.getBuffer().entrySet()) {
+            ensembleCacheUtilsSingle.putToCacheDirect(targetCache,entry.getKey(),entry.getValue());
+            //                targetCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAll(tupleBuffer.getBuffer());//(entry.getKey(),entry.getValue());
         }
+
+//                System.out.println("RUN BatchPut " + key.toString());
+//        try {
+//            byte[] b = (byte[]) value;
+//            if (b.length == 1 && b[0] == -1) {
+//                waitForPendingPuts();
+//                return;
+//            }
+//            queue.add(new EventTriplet(EventType.CREATED,key,value));
+//
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
 //        System.err.println("END PATH PUT " + key.toString());
     }
 
@@ -125,39 +132,39 @@ public class BatchPutListener implements LeadsListener,Runnable {
     }
 
     public void waitForPendingPuts(){
-        if(futures == null)
-            return;
+//        if(futures == null)
+//            return;
 
 //        boolean isok = false;
 //        boolean retry = false;
 //        while(!isok){
 //
-//            try {
-//                ensembleCacheUtilsSingle.waitForAuxPuts();
+            try {
+                ensembleCacheUtilsSingle.waitForAuxPuts();
 //            } catch (Exception e) {
 //                PrintUtilities.logStackTrace(log,e.getStackTrace());
 //            }
 //            try{
 //
 //                isok = true;
-//            }
-//            catch (Exception e){
+            }
+            catch (Exception e){
 //                System.err.println("Exception " +  e.getClass().toString() + " in BatchPUtListener waitForPendingPuts" + e.getMessage());
-//                e.printStackTrace();
-//                PrintUtilities.logStackTrace(log, e.getStackTrace());
+                e.printStackTrace();
+                PrintUtilities.logStackTrace(log, e.getStackTrace());
 //                retry = true;
 //                isok = true;
+            }
+//        }
+//        flush = true;
+//        synchronized (mutex){
+//            mutex.notify();
+//            try {
+//                mutex.wait();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
 //            }
 //        }
-        flush = true;
-        synchronized (mutex){
-            mutex.notify();
-            try {
-                mutex.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override public void run() {

@@ -113,11 +113,14 @@ import java.util.concurrent.ConcurrentLinkedDeque;
   }
 
   private void processEvent(Object key,Object value) {
-    EventTriplet e = new EventTriplet(EventType.CREATED,key,value);
-    queue.add(e);
-    synchronized (mutex) {
-      mutex.notify();
-    }
+//    EventTriplet e = new EventTriplet(EventType.CREATED,key,value);
+//    queue.add(e);
+//    synchronized (mutex) {
+//      mutex.notify();
+//    }
+    int indx = Math.abs(key.hashCode()) % parallelism;
+    indexes.get(indx).put(key, value);
+
   }
 
   @CacheEntryModified public void modified(CacheEntryModifiedEvent event) {
@@ -162,7 +165,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
     }
     log = LoggerFactory.getLogger(LocalIndexListener.class);
     pevent = new ProfileEvent("indexPut", log);
-    thread.start();
+//    thread.start();
   }
 
   @Override public void initialize(InfinispanManager manager) {
@@ -214,23 +217,23 @@ import java.util.concurrent.ConcurrentLinkedDeque;
   }
 
   public  void waitForAllData() {
-    if(isFlushed){
-      return;
-    }
+//    if(isFlushed){
+//      return;
+//    }
     for (LevelDBIndex index : indexes) {
       index.flush();
     }
-    synchronized (mutex) {
-      flush = true;
-      try {
-        mutex.notify();
-        mutex.wait();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-
-    isFlushed = true;
+//    synchronized (mutex) {
+//      flush = true;
+//      try {
+//        mutex.notify();
+//        mutex.wait();
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//      }
+//    }
+//
+//    isFlushed = true;
 
   }
 
