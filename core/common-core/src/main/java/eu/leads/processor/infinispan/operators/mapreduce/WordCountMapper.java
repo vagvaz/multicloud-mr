@@ -10,6 +10,7 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
+  int w = 0;
   public WordCountMapper(JsonObject configuration) {
     super(configuration);
   }
@@ -28,7 +29,9 @@ public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
         if (word != null && word.length() > 0) {
           Tuple outputTuple = new Tuple();
           outputTuple.setAttribute("count", 1);
-          collector.emit(word, outputTuple);
+          w++;
+          if(w % 10 == 0)
+            collector.emit(word, outputTuple);
         }
       }
     }
