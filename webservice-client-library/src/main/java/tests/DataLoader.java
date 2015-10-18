@@ -283,12 +283,12 @@ public class DataLoader {
     public void run() {
       File f;
 
-      EnsembleCache ensembleCache = null;
-
-      ensembleCache = ensembleCacheManager.getCache(histogramsCacheName,
-                                                    new ArrayList<>(ensembleCacheManager.sites()),
-                                                    EnsembleCacheManager.Consistency.DIST);
+      EnsembleCache ensembleCache =
+          ensembleCacheManager.getCache(histogramsCacheName,
+                                        new ArrayList<>(ensembleCacheManager.sites()),
+                                        EnsembleCacheManager.Consistency.DIST);
       boolean documentStarted = false;
+      boolean isWiki = false;
       int documentsCount = 0;  // documents added by this thread
 
       while (true) {
@@ -302,6 +302,10 @@ public class DataLoader {
 
         System.out.println("[H]" + id + ": f.getName() = " + f.getName());
 
+        if (f.getName().endsWith(".wiki")) {
+          isWiki = true;
+        }
+
         try {
           BufferedReader bufferedReader =
               new BufferedReader(new InputStreamReader(new FileInputStream(f)));
@@ -309,9 +313,13 @@ public class DataLoader {
           String line;
           Map<String, Double> frequencies = null;
 
+          if (!isWiki) {
+            frequencies = new HashMap<>();
+          }
+
           while ((line = bufferedReader.readLine()) != null) {
 
-            if (!documentStarted) {
+            if (!documentStarted && isWiki) {
               if (line.startsWith(" doc id")) {
                 documentStarted = true;
                 frequencies = new HashMap<>();
@@ -320,7 +328,7 @@ public class DataLoader {
               }
             }
 
-            if (line.equals(" doc")) {
+            if (line.equals(" doc") && isWiki) {
               documentStarted = false;
               try {
                 frequencies.put("~", Double.valueOf(String.valueOf(id)
@@ -328,10 +336,12 @@ public class DataLoader {
               } catch (Exception e) {
                 e.printStackTrace();
               }
+
               Tuple data = new Tuple();
               data.asBsonObject().putAll(frequencies);
-              ensembleCache.put(String.valueOf(id) + "-" + String.valueOf(putCount++), data);
-              System.out.println("putting document " + String.valueOf(id)
+              EnsembleCacheUtils.putToCache(ensembleCache, String.valueOf(id) + "-"
+                                                           + String.valueOf(putCount++), data);
+              System.out.println("putting WIKI document " + String.valueOf(id)
                                  + String.valueOf(documentsCount));
               continue;
             }
@@ -349,6 +359,22 @@ public class DataLoader {
                 frequencies.put(word, wordFrequency + 1);
               }
             }
+          }
+
+          if (!isWiki) {
+            try {
+              frequencies.put("~", Double.valueOf(String.valueOf(id)
+                                                  + String.valueOf(documentsCount++)));
+            } catch (Exception e) {
+              e.printStackTrace();
+            }
+
+            Tuple data = new Tuple();
+            data.asBsonObject().putAll(frequencies);
+            EnsembleCacheUtils.putToCache(ensembleCache, String.valueOf(id) + "-"
+                                                         + String.valueOf(putCount++), data);
+            System.out.println("putting NON-WIKI document " + String.valueOf(id)
+                               + String.valueOf(documentsCount));
           }
 
           bufferedReader.close();
