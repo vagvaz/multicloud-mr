@@ -47,9 +47,9 @@ public class ExecuteRunnable implements Runnable {
 //          System.err.println(callable.getCallableIndex()+"INSIDE POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
           key = entry.getKey();
           value = entry.getValue();
-          log.error(callable.getCallableIndex()+": EXON  PROCESSED {" );
+//          log.error(callable.getCallableIndex()+": EXON  PROCESSED {" );
           callable.executeOn(key, value);
-          log.error(callable.getCallableIndex()+": EXON  PROCESSED }" );
+//          log.error(callable.getCallableIndex()+": EXON  PROCESSED }" );
           entry = callable.poll();
         }
         try {

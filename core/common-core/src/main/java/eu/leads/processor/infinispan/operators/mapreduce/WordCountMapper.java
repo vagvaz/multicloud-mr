@@ -29,9 +29,7 @@ public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
         if (word != null && word.length() > 0) {
           Tuple outputTuple = new Tuple();
           outputTuple.setAttribute("count", 1);
-          w++;
-          if(w % 10 == 0)
-            collector.emit(word, outputTuple);
+          collector.emit(word, outputTuple);
         }
       }
     }
