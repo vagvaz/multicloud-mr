@@ -24,8 +24,14 @@ public class LocalCollector<K, V> extends LeadsCollector<K, V> {
     List<V> values = combinedValues.get(key);
     if (values == null) {
       values = new LinkedList<>();
+      combinedValues.put(key, values);
     }
     values.add(value);
-    combinedValues.put(key, values);
+
+  }
+
+  @Override
+  public void reset(){
+    combinedValues.clear();
   }
 }

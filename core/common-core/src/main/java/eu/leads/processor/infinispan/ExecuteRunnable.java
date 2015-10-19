@@ -47,7 +47,8 @@ public class ExecuteRunnable implements Runnable {
 //          System.err.println(callable.getCallableIndex()+"INSIDE POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
           key = entry.getKey();
           value = entry.getValue();
-//          log.error(callable.getCallableIndex()+": EXON  PROCESSED {" );
+//          if(run % 100 == 0)
+//            log.error(callable.getCallableIndex()+": EXON  PROCESSED { " + run++ );
           callable.executeOn(key, value);
 //          log.error(callable.getCallableIndex()+": EXON  PROCESSED }" );
           entry = callable.poll();
@@ -55,9 +56,9 @@ public class ExecuteRunnable implements Runnable {
         try {
           if(callable.isContinueRunning() && callable.isEmpty()) {
             synchronized (callable.getInput()) {
-              PrintUtilities.printAndLog(log,
-                  callable.getCallableIndex() + "IN SLEEPING " + " is " + callable.isContinueRunning() + " " + callable
-                      .isEmpty() + " " + ((Queue) callable.getInput()).size());
+//              PrintUtilities.printAndLog(log,
+//                  callable.getCallableIndex() + "IN SLEEPING " + " is " + callable.isContinueRunning() + " " + callable
+//                      .isEmpty() + " " + ((Queue) callable.getInput()).size());
               callable.getInput().wait();
             }
           }

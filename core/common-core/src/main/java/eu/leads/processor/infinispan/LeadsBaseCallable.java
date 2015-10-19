@@ -79,7 +79,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   int readCounter = 0;
   int processed = 0;
   int processThreshold = 1000;
-  int readThreshold = 10000;
+  int readThreshold = 1000;
   //  transient protected RemoteCache outputCache;
   //  transient protected RemoteCache ecache;
   //  transient protected RemoteCacheManager emanager;
@@ -317,12 +317,17 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
           EngineUtils.submit(runnable);
         }
         int i = 0;
+        List<Map.Entry> buffer = new LinkedList<>();
         while (iterable.hasNext()) {
-          Map.Entry<byte[], byte[]> entryIspn = iterable.next();
-          String key = (String) m.objectFromByteBuffer(entryIspn.getKey());
-          org.infinispan.marshall.core.MarshalledEntryImpl value =
-              (MarshalledEntryImpl) m.objectFromByteBuffer(entryIspn.getValue());
 
+          buffer.clear();
+          boolean tocontinue =true;
+          for(; tocontinue && buffer.size() < callableParallelism*listSize;){
+
+            Map.Entry<byte[], byte[]> entryIspn = iterable.next();
+            String key = (String) m.objectFromByteBuffer(entryIspn.getKey());
+            org.infinispan.marshall.core.MarshalledEntryImpl value =
+                (MarshalledEntryImpl) m.objectFromByteBuffer(entryIspn.getValue());
 
           Tuple tuple = (Tuple) m.objectFromByteBuffer(value.getValueBytes().getBuf());
           //        profExecute.end();
@@ -331,25 +336,38 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
             profilerLog.error(callableIndex+" Read: " + readCounter );
             readThreshold *= 1.3;
           }
-          Map.Entry<K, V> entry = new AbstractMap.SimpleEntry(key, tuple);
-          int roundRobinWithoutAddition=0;
-          if (entry.getValue() != null ) {
-            while(true) {
-//              PrintUtilities.printAndLog(profilerLog, i + ": size " + callables.get(i).getInput().size());
-              if(callables.get(i).getInput().size() <= listSize) {
-//                PrintUtilities.printAndLog(profilerLog, i + ": chosen " + callables.get(i).getInput().size());
-                callables.get(i).addToInput(entry);
-                i = (i+1)%callableParallelism;
-                break;
+          Map.Entry<K, V> bufferentry = new AbstractMap.SimpleEntry(key, tuple);
+              buffer.add(bufferentry);
+            if(buffer.size() != listSize){
+              tocontinue = iterable.hasNext();
+            }else{
+              tocontinue = false;
+            }
+          }
+//          profilerLog.error("Read Buffer " + buffer.size());
+//          for (int j = 0; j < callableParallelism; j++) {
+//            profilerLog.error(j+": " + j + callables.get(j).getInput().size());
+//          }
+          for(Map.Entry entry : buffer ) {
+            int roundRobinWithoutAddition = 0;
+            if (entry.getValue() != null) {
+              while (true) {
+                //              PrintUtilities.printAndLog(profilerLog, i + ": size " + callables.get(i).getInput().size());
+                if (callables.get(i).getSize() <= listSize) {
+                  //                PrintUtilities.printAndLog(profilerLog, i + ": chosen " + callables.get(i).getInput().size());
+                  callables.get(i).addToInput(entry);
+                  i = (i + 1) % callableParallelism;
+                  break;
+                }
+                i = (i + 1) % callableParallelism;
+                roundRobinWithoutAddition++;
+                if (roundRobinWithoutAddition % callableParallelism == 0) {
+//                  PrintUtilities.printAndLog(profilerLog, "Sleeping because everyting full " + roundRobinWithoutAddition);
+                  Thread.sleep((roundRobinWithoutAddition/callableParallelism)*sleepTimeMilis, (roundRobinWithoutAddition/callableParallelism)*sleepTimeNanos);
+//                  roundRobinWithoutAddition = 0;
+                }
+                //              i = (i+1)%callableParallelism;
               }
-              i = (i+1)%callableParallelism;
-              roundRobinWithoutAddition++;
-              if(roundRobinWithoutAddition == callableParallelism) {
-//                PrintUtilities.printAndLog(profilerLog,"Sleeping because everyting full");
-                Thread.sleep(sleepTimeMilis, sleepTimeNanos);
-                roundRobinWithoutAddition=0;
-              }
-              //              i = (i+1)%callableParallelism;
             }
           }
 
@@ -504,7 +522,9 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
   }
 
   public int getSize() {
-    return input.size() ;
+    synchronized (input) {
+      return input.size();
+    }
   }
 
 

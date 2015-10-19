@@ -132,7 +132,7 @@ public class EnsembleCacheUtilsSingle {
       if(localManager == null && isEmbedded){
         localManager = InfinispanClusterSingleton.getInstance().getManager();
         if(localMC == null)
-          localMC = resolveMCName();
+            localMC = resolveMCName();
       }
 
       partitioner = new HashBasedPartitioner(cachesList);
@@ -293,14 +293,22 @@ public class EnsembleCacheUtilsSingle {
             runnable.setBuffer(cache.getValue());
             batchPutExecutor.submit(runnable);
           }
-        }
+//          else{
+//            BatchPutRunnable runnable = getBatchPutRunnable();
+//            runnable.setBuffer(cache.getValue());
+//            batchPutExecutor.submit(runnable);
+//          }
+//        }
         //                else{
         //                    cache.getValue().flushToMC();
         //     vagvaz           }
         else{
-          if(cache.getValue().getBuffer().size() > 0) {
-            Cache localCache = (Cache) localManager.getPersisentCache(cache.getKey());
-            cache.getValue().flushToLocalCache();
+//          if(cache.getValue().getBuffer().size() > 0) {
+//            BatchPutRunnable runnable = getBatchPutRunnable();
+//                        runnable.setBuffer(cache.getValue());
+//                        batchPutExecutor.submit(runnable);
+//            Cache localCache = (Cache) localManager.getPersisentCache(cache.getKey());
+//            cache.getValue().flushToLocalCache();
             //                        cache.getValue().release();
           }
         }
@@ -314,7 +322,7 @@ public class EnsembleCacheUtilsSingle {
       try {
         //            auxExecutor.awaitTermination(100,TimeUnit.MILLISECONDS);
         System.err.println("microRunna " + microcloudRunnables.size() + " instead of " + (10*totalBatchPutThreads));
-        Thread.sleep(10000);
+        Thread.sleep(2000);
       } catch (InterruptedException e) {
         e.printStackTrace();
         PrintUtilities.logStackTrace(log,e.getStackTrace()); throw e;
@@ -441,29 +449,30 @@ public class EnsembleCacheUtilsSingle {
     if(value instanceof Tuple && computeBytes){
       localBytes += ((Tuple)value).getSerializedSize();
     }
-        Map<String,TupleBuffer> mcBufferMap = microclouds.get(localMC);
-    //
-        if(mcBufferMap == null) { // create buffer map for localMC
-          mcBufferMap = new ConcurrentHashMap<String, TupleBuffer>();
-          microclouds.put(localMC, mcBufferMap);
-        }
-        Cache localCache = (Cache) InfinispanClusterSingleton.getInstance().getManager().getPersisentCache(cache.getName());
-        TupleBuffer tupleBuffer = mcBufferMap.get(cache.getName());
-        if(tupleBuffer == null){
-          tupleBuffer= new TupleBuffer(localBatchSize,localCache,this);
-          microclouds.get(localMC).put(cache.getName(),tupleBuffer);
-        }
+    //start
+//        Map<String,TupleBuffer> mcBufferMap = microclouds.get(localMC);
+//    //
+//        if(mcBufferMap == null) { // create buffer map for localMC
+//          mcBufferMap = new ConcurrentHashMap<String, TupleBuffer>();
+//          microclouds.put(localMC, mcBufferMap);
+//        }
+//        Cache localCache = (Cache) InfinispanClusterSingleton.getInstance().getManager().getPersisentCache(cache.getName());
+//        TupleBuffer tupleBuffer = mcBufferMap.get(cache.getName());
+//        if(tupleBuffer == null){
+//          tupleBuffer= new TupleBuffer(localBatchSize,localCache,this);
+//          microclouds.get(localMC).put(cache.getName(),tupleBuffer);
+//        }
+//
+//        if(tupleBuffer.add(key, value)){
+//          BatchPutRunnable batchPutRunnable = getBatchPutRunnable();
+//          batchPutRunnable.setParameters(tupleBuffer.flushToLocalCache());
+//          batchPutExecutor.submit(batchPutRunnable);
+//        }
+// end
+    Cache localCache =
+        (Cache) localManager.getPersisentCache(  cache.getName());
+    putToCacheDirect(localCache, key, value);
 
-        if(tupleBuffer.add(key, value)){
-          BatchPutRunnable batchPutRunnable = getBatchPutRunnable();
-          batchPutRunnable.setBuffer(tupleBuffer);
-          batchPutExecutor.submit(batchPutRunnable);
-        }
-
-//    Cache localCache =
-//        (Cache) localManager.getPersisentCache(  cache.getName());
-//    putToCacheDirect(localCache, key, value);
-//      localCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).put(key,value);
   }
 
   public  void putToCacheDirect(BasicCache cache,Object key,Object value){

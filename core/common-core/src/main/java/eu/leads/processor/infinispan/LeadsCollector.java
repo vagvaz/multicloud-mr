@@ -2,6 +2,7 @@ package eu.leads.processor.infinispan;
 
 import eu.leads.processor.common.infinispan.EnsembleCacheUtilsSingle;
 import eu.leads.processor.common.infinispan.InfinispanManager;
+import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
@@ -52,10 +53,12 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 //  private long remoteData;
   protected Map<KOut, List<VOut>> combinedValues;
   private EnsembleCacheUtilsSingle ensembleCacheUtilsSingle;
+  private LocalCollector localCollector;
 
   public LeadsCollector(int maxCollectorSize, String collectorCacheName) {
     super();
-
+    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
+    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent",75);
 //    this.maxCollectorSize = maxCollectorSize;
     cacheName = collectorCacheName;
     emitCount = 0;
@@ -63,6 +66,8 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   public LeadsCollector(int maxCollectorSize, String cacheName, InfinispanManager manager) {
 //    this.maxCollectorSize = maxCollectorSize;
+    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
+    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent",75);
     emitCount = 0;
     this.imanager = manager;
     this.cacheName = cacheName;
@@ -217,6 +222,9 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   }
 
   public void initializeCache(String inputCacheName, InfinispanManager imanager) {
+    localCollector = new LocalCollector(0,"");
+    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
+    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent",75);
     ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
     ensembleCacheUtilsSingle.initialize(emanager);
     this.imanager = imanager;
@@ -253,9 +261,9 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
           List<VOut> values = buffer.get(key);
           if(values == null) {
             values = new LinkedList<>();
+            buffer.put(key, values);
           }
           values.add(value);
-          buffer.put(key, values);
           emitCount++;
           if(isOverflown()){
             combine(false);
@@ -278,12 +286,16 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   }
 
   private void combine(boolean force) { //force the output of values
-    LeadsCollector localCollector = new LocalCollector(0,"");
+//    log.error("Run combine " + maxCollectorSize + " " + buffer.size());
+    localCollector = new LocalCollector(0,"");
+    int lastSize = emitCount;
     for(Map.Entry<KOut,List<VOut>> entry : buffer.entrySet()){
       combiner.reduce(entry.getKey(),entry.getValue().iterator(),localCollector);
     }
+
     Map<KOut,List<VOut>> combinedValues = localCollector.getCombinedValues();
-    if( force  || (combinedValues.size() >= maxCollectorSize*percent )) {
+    if( force  || (combinedValues.size() >= maxCollectorSize*percent ) || (lastSize *percent <= combinedValues.size()) ) {
+//      PrintUtilities.printAndLog(log,"Flush " + combinedValues.size() + " " + lastSize);
       for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
         for (VOut v : entry.getValue()) {
           output(entry.getKey(), v);
@@ -297,6 +309,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       buffer = combinedValues;
       emitCount = buffer.size(); // the size is only one per each key
     }
+    localCollector =null;
   }
 
   private void output(KOut key, VOut value) {
@@ -346,11 +359,11 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       e.printStackTrace();
     }
   }
-
-  public void initializeCache(EmbeddedCacheManager manager) {
-    imanager = new ClusterInfinispanManager(manager);
-    storeCache = (Cache) imanager.getPersisentCache(cacheName);
-  }
+//
+//  public void initializeCache(EmbeddedCacheManager manager) {
+//    imanager = new ClusterInfinispanManager(manager);
+//    storeCache = (Cache) imanager.getPersisentCache(cacheName);
+//  }
 
 
   public void reset() {
