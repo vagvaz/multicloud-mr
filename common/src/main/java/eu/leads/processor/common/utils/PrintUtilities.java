@@ -50,7 +50,7 @@ public class PrintUtilities {
        System.out.println("Map{\n");
       for (Object e : map.keySet()) {
          try {
-           Object val = map.get(e).toString();
+           Object val = map.get(e);//.toString();
             if(val instanceof Tuple || val instanceof JsonObject )
             {
 

@@ -604,16 +604,17 @@ public class EnsembleCacheUtilsSingle {
 
   public void spillMetricData(){
     try {
+      System.out.println("spill for " +  localMC+"."+InfinispanClusterSingleton.getInstance().getManager().getMemberName().toString() + "."+this.toString());
       BasicCache cache = null;
       if(localMC != null && !localMC.equals("")){
         cache = (BasicCache) InfinispanClusterSingleton.getInstance().getManager().getPersisentCache("metrics");
       }else{
-        PrintUtilities.printAndLog(log,"EVEN THOUGH compute remote data no localMC was defined");
-        return;
+//        PrintUtilities.printAndLog(log,"EVEN THOUGH compute remote data no localMC was defined");
+//        return;
       }
       Long oldValue =null;
       String key = localMC+"."+InfinispanClusterSingleton.getInstance().getManager().getMemberName().toString() + "."+this.toString();
-      if(localBytes > 0) {
+//      if(localBytes > 0) {
 
         oldValue = (Long) cache.get(key + ".local");
         if (oldValue == null) {
@@ -623,8 +624,8 @@ public class EnsembleCacheUtilsSingle {
         }
         cache.put(key + ".local", oldValue);
         localBytes = 0;
-      }
-      if(remoteBytes > 0) {
+//      }
+//      if(remoteBytes > 0) {
         oldValue = (Long) cache.get(key + ".remote");
         if (oldValue == null) {
           oldValue = new Long(remoteBytes);
@@ -633,7 +634,7 @@ public class EnsembleCacheUtilsSingle {
         }
         cache.put(key + ".remote", oldValue);
         remoteBytes = 0;
-      }
+//      }
     }catch (Exception e){
       e.printStackTrace();
     }
