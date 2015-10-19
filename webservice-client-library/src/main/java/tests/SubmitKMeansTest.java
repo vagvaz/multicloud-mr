@@ -222,7 +222,7 @@ public class SubmitKMeansTest {
       Date start = new Date();
       String[] clusters = new String[k];
 
-      while (true) {
+//      while (true) {
         for (int i = 0; i < k; i++) {
           Map centroid = centroids[i];
           jsonObject.getObject("operator").getObject("configuration")
@@ -250,37 +250,37 @@ public class SubmitKMeansTest {
           }
         }
 
-        EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
-        EnsembleCache cache = ensembleCacheManager
-            .getCache(id, new ArrayList<>(ensembleCacheManager.sites()),
-                      EnsembleCacheManager.Consistency.DIST);
+//        EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
+//        EnsembleCache cache = ensembleCacheManager
+//            .getCache(id, new ArrayList<>(ensembleCacheManager.sites()),
+//                      EnsembleCacheManager.Consistency.DIST);
+//
+//        Map<String, Double>[] newCenters = new Map[k];
+//        for (int i = 0; i < k; i++) {
+//          //          Tuple t = (Tuple) cache.get(String.valueOf(i));
+//          Tuple t = (Tuple) getKeyFrom(cache, String.valueOf(i));
+//          norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
+//          clusters[i] = t.getAttribute("cluster" + i);
+//          BasicBSONObject values = (BasicBSONObject) t.getGenericAttribute("newCentroid");
+//          newCenters[i] = new HashMap<>();
+//          for (String key : values.keySet()) {
+//            newCenters[i].put(key, (Double) values.get(key));
+//          }
+//        }
+//
+//        if (!centersChanged(newCenters)) {
+//          System.out.println();
+//          break;
+//        }
+//        for (int i = 0; i < k; i++) {
+//          centroids[i] = newCenters[i];
+//        }
+//        System.out.println("\nRecalculating");
+//      }
 
-        Map<String, Double>[] newCenters = new Map[k];
-        for (int i = 0; i < k; i++) {
-          //          Tuple t = (Tuple) cache.get(String.valueOf(i));
-          Tuple t = (Tuple) getKeyFrom(cache, String.valueOf(i));
-          norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
-          clusters[i] = t.getAttribute("cluster" + i);
-          BasicBSONObject values = (BasicBSONObject) t.getGenericAttribute("newCentroid");
-          newCenters[i] = new HashMap<>();
-          for (String key : values.keySet()) {
-            newCenters[i].put(key, (Double) values.get(key));
-          }
-        }
-
-        if (!centersChanged(newCenters)) {
-          System.out.println();
-          break;
-        }
-        for (int i = 0; i < k; i++) {
-          centroids[i] = newCenters[i];
-        }
-        System.out.println("\nRecalculating");
-      }
-
-      for (int i = 0; i < centroids.length; i++) {
-        System.out.println("cluster" + i + ": " + clusters[i]);
-      }
+//      for (int i = 0; i < centroids.length; i++) {
+//        System.out.println("cluster" + i + ": " + clusters[i]);
+//      }
 
       //        printResults(id, 5);
       Date end = new Date();
