@@ -44,7 +44,7 @@ public class DataLoader {
   private boolean loadHistograms;
   private int putThreadsCount;
   private int linesPerTuple;
-  private int gigabytesToLoad;  // GB
+  private double gigabytesToLoad;  // GB
   private String dataDirectory;
   private String ensembleString;
   private String documentsCacheName;
@@ -67,7 +67,7 @@ public class DataLoader {
                                                                                   true);
     System.out.println("loadHistograms = " + loadHistograms);
 
-    gigabytesToLoad = LQPConfiguration.getInstance().getConfiguration().getInt("gb-to-load", 1);
+    gigabytesToLoad = LQPConfiguration.getInstance().getConfiguration().getDouble("gb-to-load", 1.0);
     System.out.println("gigabytesToLoad = " + gigabytesToLoad);
 
     dataDirectory = LQPConfiguration.getInstance().getConfiguration().getString("data-path", ".");
@@ -138,7 +138,7 @@ public class DataLoader {
     Vector<Thread> documentThreads = null;
     Vector<Thread> histogramThreads = null;
 
-    long bytesToLoad = gigabytesToLoad * 1024 * 1024 * 1024;
+    long bytesToLoad = (long) gigabytesToLoad * 1024 * 1024 * 1024;
     bytesToLoad /= putThreadsCount;
 
     if (loadDocuments) {
