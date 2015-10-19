@@ -44,6 +44,7 @@ public class DataLoader {
   private boolean loadHistograms;
   private int putThreadsCount;
   private int linesPerTuple;
+  private double gigabytesToLoad;  // GB
   private String dataDirectory;
   private String ensembleString;
   private String documentsCacheName;
@@ -65,6 +66,9 @@ public class DataLoader {
     loadHistograms = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-histograms",
                                                                                   true);
     System.out.println("loadHistograms = " + loadHistograms);
+
+    gigabytesToLoad = LQPConfiguration.getInstance().getConfiguration().getDouble("gb-to-load", 1.0);
+    System.out.println("gigabytesToLoad = " + gigabytesToLoad);
 
     dataDirectory = LQPConfiguration.getInstance().getConfiguration().getString("data-path", ".");
     System.out.println("dataDirectory = " + dataDirectory);
@@ -134,6 +138,9 @@ public class DataLoader {
     Vector<Thread> documentThreads = null;
     Vector<Thread> histogramThreads = null;
 
+    long bytesToLoad = (long) gigabytesToLoad * 1024 * 1024 * 1024;
+    bytesToLoad /= putThreadsCount;
+
     if (loadDocuments) {
       documentFiles = new Vector<>();
       for (File f : allFiles) {
@@ -141,7 +148,7 @@ public class DataLoader {
       }
       documentThreads = new Vector<>(putThreadsCount);
       for (int i = 0; i < putThreadsCount; i++) {
-        documentThreads.add(new Thread(new DocumentLoader(i)));
+        documentThreads.add(new Thread(new DocumentLoader(i, bytesToLoad)));
       }
     }
 
@@ -155,8 +162,9 @@ public class DataLoader {
       EnsembleCacheUtils.initialize(ensembleCacheManager, false);
 
       histogramThreads = new Vector<>(putThreadsCount);
+
       for (int i = 0; i < putThreadsCount; i++) {
-        histogramThreads.add(new Thread(new HistogramLoader(i, ensembleCacheManager)));
+        histogramThreads.add(new Thread(new HistogramLoader(i, ensembleCacheManager, bytesToLoad)));
       }
     }
 
@@ -206,10 +214,14 @@ public class DataLoader {
 
     String id;
     long putCount;
+    private long bytesToLoad;  // per threads bytes to load
+    private long bytesLoaded;
 
-    public DocumentLoader(int id) {
+    public DocumentLoader(int id, long bytesToLoad) {
       this.id = String.valueOf(id);
       putCount = 0;
+      this.bytesToLoad = bytesToLoad;
+      this.bytesLoaded = 0;
     }
 
     @Override
@@ -243,12 +255,21 @@ public class DataLoader {
 
           int lineCount = 0;
           while ((line = bufferedReader.readLine()) != null) {
+            bytesLoaded += line.length();
+
             data.putString(String.valueOf(lineCount++), line);
             if (lineCount % linesPerTuple == 0) {
+
               ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
               data = new JsonObject();
             }
+
+            if (bytesToLoad >= bytesLoaded) {
+              break;
+            }
+
           }
+
           if (lineCount % linesPerTuple != 0) {
             // put the remaining lines
             ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
@@ -272,11 +293,15 @@ public class DataLoader {
     int id;
     long putCount;
     private EnsembleCacheManager ensembleCacheManager;
+    private long bytesToLoad;  // per threads bytes to load
+    private long bytesLoaded;
 
-    public HistogramLoader(int id, EnsembleCacheManager ensembleCacheManager) {
+    public HistogramLoader(int id, EnsembleCacheManager ensembleCacheManager, long bytesToLoad) {
       this.id = id;
       putCount = 0;
       this.ensembleCacheManager = ensembleCacheManager;
+      this.bytesToLoad = bytesToLoad;
+      this.bytesLoaded = 0;
     }
 
     @Override
@@ -346,7 +371,12 @@ public class DataLoader {
               continue;
             }
 
+            if (bytesLoaded >= bytesToLoad) {
+              continue;
+            }
+
             String[] words = line.split(" ");
+            bytesLoaded += line.length();
 
             for (String word : words) {
               if (word.length() == 0) {
