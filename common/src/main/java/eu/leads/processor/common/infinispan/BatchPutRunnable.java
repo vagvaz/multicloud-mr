@@ -2,10 +2,8 @@ package eu.leads.processor.common.infinispan;
 
 import eu.leads.processor.common.utils.PrintUtilities;
 import org.infinispan.Cache;
-import org.infinispan.commons.util.concurrent.NotifyingFuture;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.ensemble.cache.EnsembleCache;
-import org.infinispan.remoting.transport.Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,8 +27,8 @@ public class BatchPutRunnable implements Runnable{
     this.retries=retries ;
   }
 
-  public BatchPutRunnable(int i, EnsembleCacheUtilsSingle ensembleCacheUtilsSingle) {
-    this.owner = ensembleCacheUtilsSingle;
+  public BatchPutRunnable(int i, EnsembleCacheUtilsSingle keyValueDataTransfer) {
+    this.owner = keyValueDataTransfer;
     this.retries = i;
   }
 

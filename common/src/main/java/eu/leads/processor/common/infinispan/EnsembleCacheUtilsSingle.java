@@ -22,7 +22,7 @@ import java.util.concurrent.*;
 /**
  * Created by vagvaz on 10/10/15.
  */
-public class EnsembleCacheUtilsSingle {
+public class EnsembleCacheUtilsSingle implements KeyValueDataTransfer {
 
   private static Logger log = LoggerFactory.getLogger(EnsembleCacheUtilsSingle.class);
   private  boolean useAsync;
@@ -99,7 +99,7 @@ public class EnsembleCacheUtilsSingle {
     //    }
   }
 
-  public  void clean() throws ExecutionException, InterruptedException {
+  @Override public  void clean() throws ExecutionException, InterruptedException {
     waitForAllPuts();
     localFutures.clear();
     for(Map.Entry<String,Map<String,TupleBuffer>> mc : microclouds.entrySet()) {
@@ -108,11 +108,11 @@ public class EnsembleCacheUtilsSingle {
     }
 
   }
-  public  void initialize(EnsembleCacheManager manager){
+  @Override public  void initialize(EnsembleCacheManager manager){
     initialize(manager, true);
   }
 
-  public  void initialize(EnsembleCacheManager manager, boolean isEmbedded) {
+  @Override public  void initialize(EnsembleCacheManager manager, boolean isEmbedded) {
     synchronized (mutex) {
       ensembleString = "";
       ArrayList<EnsembleCache> cachesList = new ArrayList<>();
@@ -180,7 +180,7 @@ public class EnsembleCacheUtilsSingle {
     }
     return result;
   }
-  public  SyncPutRunnable getRunnable(){
+   public  SyncPutRunnable getRunnable(){
     SyncPutRunnable result = null;
     //        System.err.println("GET aux run " + runnables.size());
 
@@ -256,7 +256,7 @@ public class EnsembleCacheUtilsSingle {
   }
 
 
-  public void waitForLocalPuts(){
+   public void waitForLocalPuts(){
     while(!localFutures.isEmpty()){
       removeCompleted();
       try {
@@ -267,7 +267,7 @@ public class EnsembleCacheUtilsSingle {
       Thread.yield();
     }
   }
-  public  void waitForAuxPuts() throws InterruptedException {
+  @Override public  void waitForAuxPuts() throws InterruptedException {
 //    System.err.println("WaitForAuxPuts");
 //    while(runnables.size() != 15*(threadBatch)) {
     while(auxExecutor.getActiveCount() > 1) {
@@ -283,7 +283,7 @@ public class EnsembleCacheUtilsSingle {
     }
 //    System.err.println("WaitForAuxPuts---end");
   }
-  public void waitForAllPuts() throws InterruptedException, ExecutionException {
+  @Override public void waitForAllPuts() throws InterruptedException, ExecutionException {
     System.err.println("wait for puts");
     for(Map.Entry<String,Map<String,TupleBuffer>> mc : microclouds.entrySet()) {
       for (Map.Entry<String, TupleBuffer> cache : mc.getValue().entrySet()) {
@@ -371,9 +371,6 @@ public class EnsembleCacheUtilsSingle {
 
   }
 
-  public void addLocalFuture(NotifyingFuture future){
-    localFutures.add(future);
-  }
 
   public void removeCompleted(){
     Iterator<NotifyingFuture> it = localFutures.iterator();
@@ -384,7 +381,7 @@ public class EnsembleCacheUtilsSingle {
       }
     }
   }
-  public  void putToCache(BasicCache cache, Object key, Object value) {
+  @Override public  void putToCache(BasicCache cache, Object key, Object value) {
     batchPutToCache(cache, key, value,true);
   }
 
@@ -475,7 +472,7 @@ public class EnsembleCacheUtilsSingle {
 
   }
 
-  public  void putToCacheDirect(BasicCache cache,Object key,Object value){
+  @Override public  void putToCacheDirect(BasicCache cache, Object key, Object value){
 
     if (useAsync) {
       putToCacheAsync(cache, key, value);
@@ -587,7 +584,7 @@ public class EnsembleCacheUtilsSingle {
     putToCache(cache, key, value);
   }
 
-  public  void removeCache(String cacheName) {
+   public  void removeCache(String cacheName) {
     synchronized (mutex) {
       for (Map.Entry<String, Map<String, TupleBuffer>> entry : microclouds.entrySet()) {
         Iterator iterator = entry.getValue().entrySet().iterator();
@@ -602,7 +599,7 @@ public class EnsembleCacheUtilsSingle {
     }
   }
 
-  public void spillMetricData(){
+  @Override public void spillMetricData(){
     try {
       System.out.println("spill for " +  localMC+"."+InfinispanClusterSingleton.getInstance().getManager().getMemberName().toString() + "."+this.toString());
       BasicCache cache = null;
@@ -665,11 +662,11 @@ public class EnsembleCacheUtilsSingle {
     System.err.println("Finalize ensmeblCacheUtilsSingle");
   }
 
-  public void submit(BatchPutRunnable bpr) {
+  @Override public void submit(BatchPutRunnable bpr) {
     batchPutExecutor.submit(bpr);
   }
 
-  public  void updateRemoteBytes(int length) {
+  @Override public  void updateRemoteBytes(int length) {
     remoteBytes+= length;
   }
 }

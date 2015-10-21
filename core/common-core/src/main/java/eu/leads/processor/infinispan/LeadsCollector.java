@@ -2,9 +2,8 @@ package eu.leads.processor.infinispan;
 
 import eu.leads.processor.common.infinispan.EnsembleCacheUtilsSingle;
 import eu.leads.processor.common.infinispan.InfinispanManager;
-import eu.leads.processor.common.utils.PrintUtilities;
+import eu.leads.processor.common.infinispan.KeyValueDataTransfer;
 import eu.leads.processor.conf.LQPConfiguration;
-import org.infinispan.Cache;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.distexec.mapreduce.Collector;
 import org.infinispan.ensemble.EnsembleCacheManager;
@@ -16,10 +15,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 
-import eu.leads.processor.common.infinispan.ClusterInfinispanManager;
-
 import org.infinispan.ensemble.Site;
-import org.infinispan.ensemble.cache.EnsembleCache;
 
 import java.util.*;
 
@@ -52,7 +48,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 //  private long localData;
 //  private long remoteData;
   protected Map<KOut, List<VOut>> combinedValues;
-  private EnsembleCacheUtilsSingle ensembleCacheUtilsSingle;
+  private KeyValueDataTransfer keyValueDataTransfer;
   private LocalCollector localCollector;
 
   public LeadsCollector(int maxCollectorSize, String collectorCacheName) {
@@ -225,8 +221,8 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     localCollector = new LocalCollector(0,"");
     maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
     percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent",75);
-    ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
-    ensembleCacheUtilsSingle.initialize(emanager);
+    keyValueDataTransfer = new EnsembleCacheUtilsSingle();
+    keyValueDataTransfer.initialize(emanager);
     this.imanager = imanager;
     log = LoggerFactory.getLogger(LeadsCollector.class);
     emitCount = 0;
@@ -281,7 +277,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 //      else{
 //        remoteData += key.toString().length() + value.toString().length();
 //      }
-      ensembleCacheUtilsSingle.putToCache(storeCache, key, value);
+      keyValueDataTransfer.putToCache(storeCache, key, value);
     }
   }
 
@@ -335,7 +331,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
         newKey =
         new ComplexIntermediateKey(baseIntermKey.getSite(), baseIntermKey.getNode(),
             key.toString(), baseIntermKey.getCache(), counter);
-    ensembleCacheUtilsSingle.putToCache(intermediateDataCache, newKey, value);
+    keyValueDataTransfer.putToCache(intermediateDataCache, newKey, value);
   }
 
   public void finalizeCollector() {
@@ -350,7 +346,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       e.printStackTrace();
   }
     try {
-      ensembleCacheUtilsSingle.waitForAllPuts();
+      keyValueDataTransfer.waitForAllPuts();
     } catch (InterruptedException e) {
       e.printStackTrace();
     } catch (ExecutionException e) {

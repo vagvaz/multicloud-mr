@@ -1,17 +1,13 @@
 package eu.leads.processor.common.infinispan;
 
-import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
-import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.ComplexIntermediateKey;
 import org.bson.BSONDecoder;
 import org.bson.BSONEncoder;
 import org.bson.BasicBSONDecoder;
 import org.bson.BasicBSONEncoder;
 import org.infinispan.Cache;
-import org.infinispan.commons.api.BasicCache;
 import org.infinispan.commons.util.concurrent.NotifyingFuture;
-import org.infinispan.context.Flag;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.cache.EnsembleCache;
@@ -22,8 +18,6 @@ import org.xerial.snappy.Snappy;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Created by vagvaz on 8/30/15.
@@ -43,7 +37,7 @@ public class TupleBuffer {
   private int batchThreshold = 10;
   private int size = 0;
   private Logger log = LoggerFactory.getLogger(TupleBuffer.class);
-  private transient EnsembleCacheUtilsSingle ensembleCacheUtilsSingle;
+  private transient KeyValueDataTransfer keyValueDataTransfer;
   private transient Address localAddress;
   private transient DistributionManager distributionManager;
 //  private transient Map<Address,Map<Object,Object>> nodeMaps;
@@ -79,7 +73,7 @@ public class TupleBuffer {
       inputStream = null;
       byteStream =null;
       //      ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
-      this.ensembleCacheUtilsSingle = ensembleCacheUtilsSingle;
+      this.keyValueDataTransfer = keyValueDataTransfer;
 //      localAddress = InfinispanClusterSingleton.getInstance().getManager().getMemberName();
     }catch (Exception e){
       e.printStackTrace();
@@ -121,8 +115,8 @@ public class TupleBuffer {
 //
 //  }
 
-  public TupleBuffer(int threshold, String cacheName, EnsembleCacheManager ensembleCacheManager,String mc,EnsembleCacheUtilsSingle ensembleCacheUtilsSingle) {
-    this.ensembleCacheUtilsSingle = ensembleCacheUtilsSingle;
+  public TupleBuffer(int threshold, String cacheName, EnsembleCacheManager ensembleCacheManager,String mc,KeyValueDataTransfer keyValueDataTransfer) {
+    this.keyValueDataTransfer = keyValueDataTransfer;
     //    ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
     this.threshold = threshold;
     buffer = new HashMap<>();
@@ -137,7 +131,7 @@ public class TupleBuffer {
         "node.ensemble.batchput.batchsize", batchThreshold);
   }
 
-  public TupleBuffer(int localBatchSize, Cache localCache, EnsembleCacheUtilsSingle ensembleCacheUtilsSingle) {
+  public TupleBuffer(int localBatchSize, Cache localCache, KeyValueDataTransfer keyValueDataTransfer) {
     this.localCache = localCache;
     this.localAddress = localCache.getCacheManager().getAddress();
     distributionManager = localCache.getAdvancedCache().getDistributionManager();
@@ -340,8 +334,8 @@ public class TupleBuffer {
         //        ensembleCacheUtilsSingle.putToCacheDirect(localCache,entry.getKey(),entry.getValue());
         //        a = distMan.getPrimaryLocation(entry.getKey());
         //        nodeMaps.get(a.toString()).put(entry.getKey(),entry.getValue());
-        if(ensembleCacheUtilsSingle !=null) {
-          ensembleCacheUtilsSingle.putToCacheDirect(localCache, entry.getKey(), entry.getValue());
+        if(keyValueDataTransfer !=null) {
+          keyValueDataTransfer.putToCacheDirect(localCache, entry.getKey(), entry.getValue());
         }else{
           EnsembleCacheUtils.putToCacheDirect(localCache, entry.getKey(), entry.getValue());
         }

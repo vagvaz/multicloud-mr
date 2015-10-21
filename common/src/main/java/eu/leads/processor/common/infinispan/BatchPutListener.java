@@ -4,13 +4,8 @@ import eu.leads.processor.common.LeadsListener;
 import eu.leads.processor.common.continuous.ConcurrentDiskQueue;
 import eu.leads.processor.common.continuous.EventTriplet;
 import eu.leads.processor.common.utils.PrintUtilities;
-import eu.leads.processor.conf.LQPConfiguration;
-import eu.leads.processor.core.Tuple;
-import eu.leads.processor.plugins.EventType;
 import org.infinispan.Cache;
-import org.infinispan.commons.util.concurrent.FutureListener;
 import org.infinispan.commons.util.concurrent.NotifyingFuture;
-import org.infinispan.context.Flag;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
@@ -20,11 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Future;
 
 /**
  * Created by vagvaz on 8/30/15.
@@ -37,7 +30,7 @@ public class BatchPutListener implements LeadsListener,Runnable {
     private transient Cache targetCache;
     private transient ConcurrentMap<NotifyingFuture<Void>,NotifyingFuture<Void>> futures;
     private transient Object mutex = null;
-    private transient  EnsembleCacheUtilsSingle ensembleCacheUtilsSingle;
+    private transient KeyValueDataTransfer keyValueDataTransfer;
     private transient Logger log = LoggerFactory.getLogger(BatchPutListener.class);
     private transient Thread thread;
     private transient ConcurrentDiskQueue queue;
@@ -67,7 +60,7 @@ public class BatchPutListener implements LeadsListener,Runnable {
         targetCache = (Cache) manager.getPersisentCache(targetCacheName);
         futures = new ConcurrentHashMap<>();
         System.err.println("init ensembleCacheUtilsSingle");
-        ensembleCacheUtilsSingle  = new EnsembleCacheUtilsSingle();
+        keyValueDataTransfer = new EnsembleCacheUtilsSingle();
 //        Thread thread = new Thread(this);
 //        queue = new ConcurrentDiskQueue(500);
 //        thread.start();
@@ -104,7 +97,7 @@ public class BatchPutListener implements LeadsListener,Runnable {
         TupleBuffer tupleBuffer = new TupleBuffer((byte[]) value);
         //            Map tmpb = new HashMap();
         for (Map.Entry<Object, Object> entry : tupleBuffer.getBuffer().entrySet()) {
-            ensembleCacheUtilsSingle.putToCacheDirect(targetCache,entry.getKey(),entry.getValue());
+            keyValueDataTransfer.putToCacheDirect(targetCache,entry.getKey(),entry.getValue());
             //                targetCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAll(tupleBuffer.getBuffer());//(entry.getKey(),entry.getValue());
         }
 
@@ -140,7 +133,7 @@ public class BatchPutListener implements LeadsListener,Runnable {
 //        while(!isok){
 //
             try {
-                ensembleCacheUtilsSingle.waitForAuxPuts();
+                keyValueDataTransfer.waitForAuxPuts();
 //            } catch (Exception e) {
 //                PrintUtilities.logStackTrace(log,e.getStackTrace());
 //            }
@@ -174,7 +167,7 @@ public class BatchPutListener implements LeadsListener,Runnable {
                 if(queue.isEmpty()){
                     if(flush){
                         try {
-                            ensembleCacheUtilsSingle.waitForAuxPuts();
+                            keyValueDataTransfer.waitForAuxPuts();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -200,7 +193,7 @@ public class BatchPutListener implements LeadsListener,Runnable {
             TupleBuffer tupleBuffer = new TupleBuffer((byte[]) triplet.getValue());
             //            Map tmpb = new HashMap();
             for (Map.Entry<Object, Object> entry : tupleBuffer.getBuffer().entrySet()) {
-                ensembleCacheUtilsSingle.putToCacheDirect(targetCache,entry.getKey(),entry.getValue());
+                keyValueDataTransfer.putToCacheDirect(targetCache,entry.getKey(),entry.getValue());
                 //                targetCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAll(tupleBuffer.getBuffer());//(entry.getKey(),entry.getValue());
             }
             //            tupleBuffer.flushToCache(targetCache);

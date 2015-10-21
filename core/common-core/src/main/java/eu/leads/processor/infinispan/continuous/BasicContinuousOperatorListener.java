@@ -1,20 +1,13 @@
 package eu.leads.processor.infinispan.continuous;
 
 import eu.leads.processor.common.continuous.BasicContinuousListener;
-import eu.leads.processor.common.continuous.EventTriplet;
 import eu.leads.processor.common.infinispan.EnsembleCacheUtilsSingle;
+import eu.leads.processor.common.infinispan.KeyValueDataTransfer;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
-import eu.leads.processor.plugins.EventType;
 import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.cache.EnsembleCache;
 import org.infinispan.notifications.Listener;
-import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
-import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
-import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
-import org.infinispan.notifications.cachelistener.event.CacheEntryCreatedEvent;
-import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
-import org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
@@ -38,13 +31,13 @@ import java.util.concurrent.Future;
   protected transient ArrayList<LeadsContinuousOperator> operators;
   protected transient ArrayList<LinkedList<Map.Entry>> inputEntry;
   protected transient Logger log;
-  protected transient EnsembleCacheUtilsSingle ensembleCacheUtilsSingle;
+  protected transient KeyValueDataTransfer keyValueDataTransfer;
   protected int parallelism = 1;
   protected transient Class<?> operatorClass = null;
 
   @Override protected void initializeContinuousListener(JsonObject conf) {
     log = LoggerFactory.getLogger(this.getClass());
-    ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
+    keyValueDataTransfer = new EnsembleCacheUtilsSingle();
     if (this.conf.containsField("ensembleHost")) {
       ensembleHost = this.conf.getString("ensembleHost");
     }
@@ -52,7 +45,7 @@ import java.util.concurrent.Future;
       log.error("EnsembleHost EXIST " + ensembleHost);
       System.err.println("EnsembleHost EXIST " + ensembleHost);
       ensembleCacheManager = new EnsembleCacheManager(ensembleHost);
-      ensembleCacheUtilsSingle.initialize(ensembleCacheManager);
+      keyValueDataTransfer.initialize(ensembleCacheManager);
       //      emanager.start();
       //      emanager = createRemoteCacheManager();
       //      ecache = emanager.getCache(output,new ArrayList<>(emanager.sites()),

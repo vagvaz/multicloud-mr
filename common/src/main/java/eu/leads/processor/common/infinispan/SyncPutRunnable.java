@@ -33,8 +33,8 @@ public class SyncPutRunnable implements Runnable {
         this.value = value;
     }
 
-    public SyncPutRunnable(EnsembleCacheUtilsSingle ensembleCacheUtilsSingle) {
-        this.owner = ensembleCacheUtilsSingle;
+    public SyncPutRunnable(EnsembleCacheUtilsSingle keyValueDataTransfer) {
+        this.owner = keyValueDataTransfer;
     }
 
     @Override public void run() {
