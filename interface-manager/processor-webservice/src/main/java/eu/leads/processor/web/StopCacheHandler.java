@@ -9,7 +9,6 @@ import eu.leads.processor.core.net.MessageUtils;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.imanager.IManagerConstants;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -36,8 +35,7 @@ public class StopCacheHandler implements Handler<HttpServerRequest> {
 
   }
 
-  @Override
-  public void handle(HttpServerRequest request) {
+  @Override public void handle(HttpServerRequest request) {
     request.response().setStatusCode(200);
     request.response().putHeader(WebStrings.CONTENT_TYPE, WebStrings.APP_JSON);
     //        log.info("Get Query Results Request");
@@ -80,8 +78,7 @@ public class StopCacheHandler implements Handler<HttpServerRequest> {
       this.requestId = requestId;
     }
 
-    @Override
-    public void handle(JsonObject message) {
+    @Override public void handle(JsonObject message) {
       if (message.containsField("error")) {
         log.error("and errror " + message.toString());
         replyForError(message);

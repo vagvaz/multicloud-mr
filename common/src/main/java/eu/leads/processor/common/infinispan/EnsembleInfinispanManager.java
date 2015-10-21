@@ -7,7 +7,6 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.ensemble.EnsembleCacheManager;
-import org.infinispan.ensemble.cache.EnsembleCache;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.remoting.transport.Address;
 import org.slf4j.Logger;
@@ -33,21 +32,21 @@ public class EnsembleInfinispanManager implements InfinispanManager {
   }
 
   @Override public void setConfigurationFile(String configurationFile) {
-    this.configurationFile  = configurationFile;
+    this.configurationFile = configurationFile;
   }
 
   @Override public void startManager(String configurationFile) {
 
     //manager = new EnsembleCacheManager()
-//    manager = new EnsembleCacheManager(connectionStrings);
+    //    manager = new EnsembleCacheManager(connectionStrings);
     manager = new EnsembleCacheManager(configurationFile);
     rmanager = createRemoteCacheManager();
     RemoteCache clustered = null;//rmanager.getCache("clustered");
     boolean started = false;
-    while(!started) {
+    while (!started) {
       try {
-//        manager = new EnsembleCacheManager(configurationFile);
-//        EnsembleCache clustered = manager.getCache("clustered");
+        //        manager = new EnsembleCacheManager(configurationFile);
+        //        EnsembleCache clustered = manager.getCache("clustered");
         rmanager = null;
         clustered = null;
         rmanager = createRemoteCacheManager();
@@ -61,16 +60,17 @@ public class EnsembleInfinispanManager implements InfinispanManager {
         try {
           Thread.sleep(2500);
         } catch (InterruptedException e1) {
-//          e1.printStackTrace();
+          //          e1.printStackTrace();
 
         }
       }
     }
-//    manager = new EnsembleCacheManager(configurationFile);
+    //    manager = new EnsembleCacheManager(configurationFile);
     rmanager = null;
     rmanager = createRemoteCacheManager();
   }
-  private  RemoteCacheManager createRemoteCacheManager() {
+
+  private RemoteCacheManager createRemoteCacheManager() {
     ConfigurationBuilder builder = new ConfigurationBuilder();
     builder.addServer().host(LQPConfiguration.getConf().getString("node.ip")).port(11222);
     return new RemoteCacheManager(builder.build());
@@ -81,7 +81,7 @@ public class EnsembleInfinispanManager implements InfinispanManager {
   }
 
   @Override public void stopManager() {
-//    manager.stop();
+    //    manager.stop();
   }
 
   @Override public ConcurrentMap getPersisentCache(String name) {
@@ -96,13 +96,11 @@ public class EnsembleInfinispanManager implements InfinispanManager {
     return rmanager.getCache(name);
   }
 
-  @Override
-  public ConcurrentMap getIndexedPersistentCache(String name) {
+  @Override public ConcurrentMap getIndexedPersistentCache(String name) {
     return null;
   }
 
-  @Override
-  public ConcurrentMap getIndexedPersistentCache(String name, Configuration configuration) {
+  @Override public ConcurrentMap getIndexedPersistentCache(String name, Configuration configuration) {
     return null;
   }
 
@@ -131,7 +129,7 @@ public class EnsembleInfinispanManager implements InfinispanManager {
   }
 
   @Override public Address getMemberName() {
-    return  null;
+    return null;
   }
 
   @Override public boolean isStarted() {

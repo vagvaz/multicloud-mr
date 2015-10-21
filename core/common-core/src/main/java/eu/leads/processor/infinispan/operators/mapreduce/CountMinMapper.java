@@ -2,7 +2,6 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsMapper;
-
 import org.infinispan.distexec.mapreduce.Collector;
 import org.vertx.java.core.json.JsonObject;
 
@@ -29,8 +28,7 @@ public class CountMinMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     JsonObject operatorConfiguration = new JsonObject(configuration);
   }
 
-  @Override
-  public void map(String key, Tuple value, Collector<String, Tuple> collector) {
+  @Override public void map(String key, Tuple value, Collector<String, Tuple> collector) {
 
     for (String attribute : value.getFieldNames()) {
       for (String word : value.getAttribute(attribute).split(" ")) {
@@ -47,16 +45,14 @@ public class CountMinMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     }
   }
 
-  @Override
-  public void initialize() {
+  @Override public void initialize() {
     super.initialize();
     w = conf.getInteger("w");
     d = conf.getInteger("d");
     random = new Random();
   }
 
-  @Override
-  protected void finalizeTask() {
+  @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
   }
 

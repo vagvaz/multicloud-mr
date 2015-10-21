@@ -11,31 +11,32 @@ import java.util.*;
  */
 public class WordCountCollator implements Collator<String, Integer, List<Map.Entry<String, Integer>>> {
 
-   private final int kthFrequentWord;
+  private final int kthFrequentWord;
 
-   public WordCountCollator() {
-      this.kthFrequentWord = 10;
-   }
+  public WordCountCollator() {
+    this.kthFrequentWord = 10;
+  }
 
-   public WordCountCollator(int kthFrequentWord) {
-      if (kthFrequentWord < 0)
-         throw new IllegalArgumentException("kth FrequentWord can not be less than 0");
-      this.kthFrequentWord = kthFrequentWord;
-   }
+  public WordCountCollator(int kthFrequentWord) {
+    if (kthFrequentWord < 0)
+      throw new IllegalArgumentException("kth FrequentWord can not be less than 0");
+    this.kthFrequentWord = kthFrequentWord;
+  }
 
-   public List<Map.Entry<String, Integer>> collate(Map<String, Integer> reducedResults) {
-      Set<Map.Entry<String, Integer>> entrySet = reducedResults.entrySet();
-      ArrayList<Map.Entry<String, Integer>> l = new ArrayList<Map.Entry<String, Integer>>(entrySet);
-      Collections.sort(l, new Comparator<Map.Entry<String, Integer>>() {
+  public List<Map.Entry<String, Integer>> collate(Map<String, Integer> reducedResults) {
+    Set<Map.Entry<String, Integer>> entrySet = reducedResults.entrySet();
+    ArrayList<Map.Entry<String, Integer>> l = new ArrayList<Map.Entry<String, Integer>>(entrySet);
+    Collections.sort(l, new Comparator<Map.Entry<String, Integer>>() {
 
-         public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
-            return o1.getValue() < o2.getValue() ? 1 : o1.getValue() > o2.getValue() ? -1 : 0;
-         }
-      });
+      public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+        return o1.getValue() < o2.getValue() ? 1 : o1.getValue() > o2.getValue() ? -1 : 0;
+      }
+    });
 
-      List<Map.Entry<String, Integer>> results = new LinkedList<Map.Entry<String, Integer>>();
-      for (int i=0; i<kthFrequentWord; i++) results.add(l.get(i));
+    List<Map.Entry<String, Integer>> results = new LinkedList<Map.Entry<String, Integer>>();
+    for (int i = 0; i < kthFrequentWord; i++)
+      results.add(l.get(i));
 
-      return results;
-   }
+    return results;
+  }
 }

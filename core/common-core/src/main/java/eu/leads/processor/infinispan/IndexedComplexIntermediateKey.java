@@ -1,16 +1,6 @@
 package eu.leads.processor.infinispan;
 
-import org.hibernate.search.annotations.Analyze;
-import org.hibernate.search.annotations.Field;
-import org.hibernate.search.annotations.Index;
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.Store;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 
 /**
  * Created by vagvaz on 3/7/15.
@@ -18,12 +8,12 @@ import java.io.Serializable;
 //@Indexed
 public class IndexedComplexIntermediateKey implements Comparable, Serializable {
 
-//  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES)
+  //  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES)
   private String site;
 
-//  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES)
+  //  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES)
   private String node;
-//  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES, name = "key")
+  //  @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES, name = "key")
   private String key;
 
 
@@ -51,8 +41,7 @@ public class IndexedComplexIntermediateKey implements Comparable, Serializable {
 
   }
 
-  private void readObject(ObjectInputStream in
-  ) throws ClassNotFoundException, IOException {
+  private void readObject(ObjectInputStream in) throws ClassNotFoundException, IOException {
     this.site = in.readUTF();
     this.node = in.readUTF();
     this.cache = in.readUTF();
@@ -110,8 +99,7 @@ public class IndexedComplexIntermediateKey implements Comparable, Serializable {
     this.key = key;
   }
 
-  @Override
-  public boolean equals(Object o) {
+  @Override public boolean equals(Object o) {
 
     if (o == null || getClass() != o.getClass()) {
       return false;
@@ -132,14 +120,12 @@ public class IndexedComplexIntermediateKey implements Comparable, Serializable {
 
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     int result = key.hashCode();
     return result;
   }
 
-  @Override
-  public int compareTo(Object o) {
+  @Override public int compareTo(Object o) {
     if (o == null || getClass() != o.getClass()) {
       return -1;
     }
@@ -181,8 +167,7 @@ public class IndexedComplexIntermediateKey implements Comparable, Serializable {
     return site + node + cache + key;
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return key.toString();
   }
 }

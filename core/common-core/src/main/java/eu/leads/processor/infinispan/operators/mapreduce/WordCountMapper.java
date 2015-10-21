@@ -11,6 +11,7 @@ import org.vertx.java.core.json.JsonObject;
 public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
   int w = 0;
+
   public WordCountMapper(JsonObject configuration) {
     super(configuration);
   }

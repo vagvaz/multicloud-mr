@@ -20,13 +20,12 @@ public class GetQueryStatusActionHandler implements ActionHandler {
   LogProxy log;
   InfinispanManager persistence;
   String id;
-  Cache <String,String> queriesCache;
+  Cache<String, String> queriesCache;
   String queryId;
   String queryJson;
   JsonObject query;
 
-  public GetQueryStatusActionHandler(Node com, LogProxy log, InfinispanManager persistence,
-      String id) {
+  public GetQueryStatusActionHandler(Node com, LogProxy log, InfinispanManager persistence, String id) {
     this.com = com;
     this.log = log;
     this.persistence = persistence;
@@ -34,8 +33,7 @@ public class GetQueryStatusActionHandler implements ActionHandler {
     queriesCache = (Cache) persistence.getPersisentCache(StringConstants.QUERIESCACHE);
   }
 
-  @Override
-  public Action process(Action action) {
+  @Override public Action process(Action action) {
     //      log.info("process get query status");
     Action result = action;
 
@@ -46,17 +44,16 @@ public class GetQueryStatusActionHandler implements ActionHandler {
       //         log.info("read query"); SELECT paeran     FROM Rankings  WHERE pagerank < 10  LIMIT 1;
       queryJson = queriesCache.get(queryId);
 
-      if(queryJson != null) {
+      if (queryJson != null) {
         query = new JsonObject(queryJson);
         result.setResult(query.getObject("status"));
         query = null;
-      }
-      else{
-        result.setResult( new QueryStatus(queryId, QueryState.PENDING,"NON-EXISTENT").asJsonObject());
+      } else {
+        result.setResult(new QueryStatus(queryId, QueryState.PENDING, "NON-EXISTENT").asJsonObject());
       }
       queryJson = null;
 
-    }catch(Exception e){
+    } catch (Exception e) {
       log.info("exception in read");
       e.printStackTrace();
       JsonObject actionResult = new JsonObject();

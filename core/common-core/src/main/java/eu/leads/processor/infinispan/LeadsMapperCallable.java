@@ -17,7 +17,7 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
    */
   private static final long serialVersionUID = 1242145345234214L;
 
-//  private LeadsCollector<kOut, vOut> collector = null;
+  //  private LeadsCollector<kOut, vOut> collector = null;
 
   private Set<K> keys;
   private LeadsMapper<K, V, kOut, vOut> mapper = null;
@@ -35,6 +35,7 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
     this.collector = collector;
     this.mapper = mapper;
   }
+
   public LeadsMapper<K, V, kOut, vOut> getMapper() {
     Class<?> mapperClass = mapper.getClass();
     Constructor<?> constructor = null;
@@ -79,7 +80,7 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
     collector.setManager(this.embeddedCacheManager);
     collector.setEmanager(emanager);
     collector.setSite(site);
-    collector.initializeCache(callableIndex+":"+inputCache.getName(), imanager);
+    collector.initializeCache(callableIndex + ":" + inputCache.getName(), imanager);
     if (combiner != null) {
       System.out.println("USE COMBINER");
       combiner.initialize();
@@ -98,10 +99,10 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
   @Override public void executeOn(K key, V value) {
     try {
       mapper.map(key, value, collector);
-    }catch (Exception e){
+    } catch (Exception e) {
       e.printStackTrace();
-      PrintUtilities.logStackTrace(profilerLog,e.getStackTrace());
-      PrintUtilities.printAndLog(profilerLog,"Exception in MApper: " + e.getMessage());
+      PrintUtilities.logStackTrace(profilerLog, e.getStackTrace());
+      PrintUtilities.printAndLog(profilerLog, "Exception in MApper: " + e.getMessage());
     }
   }
 
@@ -116,7 +117,7 @@ public class LeadsMapperCallable<K, V, kOut, vOut> extends LeadsBaseCallable<K, 
   }
 
   public LeadsCombiner<?, ?> getCombiner() {
-    if(combiner == null) {
+    if (combiner == null) {
       return null;
     }
     Class<?> combinerClass = combiner.getClass();

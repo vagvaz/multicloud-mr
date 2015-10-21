@@ -9,15 +9,13 @@ import eu.leads.processor.infinispan.operators.CountMinOperator;
 import eu.leads.processor.infinispan.operators.KMeansOperator;
 import eu.leads.processor.infinispan.operators.Operator;
 import eu.leads.processor.infinispan.operators.WordCountOperator;
-
 import org.vertx.java.core.json.JsonObject;
 
 /**
  * Created by Apostolos Nydriotis on 2015/06/23.
  */
 public class MapReduceOperatorFactory {
-  public static Operator createOperator(Node com, InfinispanManager persistence, LogProxy log,
-                                        Action action) {
+  public static Operator createOperator(Node com, InfinispanManager persistence, LogProxy log, Action action) {
     JsonObject object = action.getData();
     MapReduceJob job = new MapReduceJob(object);
     String name = job.getName();

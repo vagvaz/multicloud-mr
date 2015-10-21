@@ -6,16 +6,12 @@ import eu.leads.processor.core.ActionHandler;
 import eu.leads.processor.core.ActionStatus;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
-import eu.leads.processor.core.plan.QueryState;
-import eu.leads.processor.core.plan.QueryStatus;
 import eu.leads.processor.infinispan.operators.Operator;
 import eu.leads.processor.nqe.NQEConstants;
-
 import org.infinispan.Cache;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Created by vagvaz on 4/20/15.
@@ -33,24 +29,22 @@ public class DeployRemoteOpActionHandler implements ActionHandler {
   private transient Cache<?, List<?>> CollectorCache;
   private transient Cache<?, ?> OutCache;
 
-  public DeployRemoteOpActionHandler(Node com, LogProxy log, InfinispanManager persistence,
-                                     String id,
-                                     JsonObject globalConfig) {
+  public DeployRemoteOpActionHandler(Node com, LogProxy log, InfinispanManager persistence, String id,
+      JsonObject globalConfig) {
     this.com = com;
     this.log = log;
     this.persistence = persistence;
     this.id = id;
   }
 
-  @Override
-  public Action process(Action action) {
+  @Override public Action process(Action action) {
     Action result = new Action(action.getData().getObject("data"));
     result.setLabel(NQEConstants.DEPLOY_REMOTE_OPERATOR);
     result.getData().putString("owner", id);
-//    String jobId = UUID.randomUUID().toString();
-//    result.getData().getObject("operator").putString("id", jobId);
-//    jobsCache.put(jobId, queryStatus.toString());
-//    result.setResult(queryStatus.asJsonObject());
+    //    String jobId = UUID.randomUUID().toString();
+    //    result.getData().getObject("operator").putString("id", jobId);
+    //    jobsCache.put(jobId, queryStatus.toString());
+    //    result.setResult(queryStatus.asJsonObject());
     result.setStatus(ActionStatus.COMPLETED.toString());
 
     // Maybe use OperatorFactory (and encompass MapReduceOperatorFactory's functionality there.

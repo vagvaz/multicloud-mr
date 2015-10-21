@@ -1,10 +1,6 @@
 //package berkeleydb.gettingStarted;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Random;
 
 /**
@@ -24,8 +20,7 @@ public class Main {
 
     for (File file : files) {
 
-      BufferedReader bufferedReader =
-          new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+      BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
       String line = "";
       while ((line = bufferedReader.readLine()) != null) {
 

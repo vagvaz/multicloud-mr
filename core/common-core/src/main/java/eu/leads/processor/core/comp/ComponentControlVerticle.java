@@ -36,7 +36,7 @@ public class ComponentControlVerticle extends Verticle implements Component {
   protected String workQueueAddress; //WorkQueue Address, the address where processors register
   protected String logId; // log module deployment id, used for undeployment
   protected String logAddress; //prefix used for all id services
-  protected JsonObject logConfig; 
+  protected JsonObject logConfig;
   protected String persistenceId; //persistence module deployment id, used for undeployment
   //    protected String persistenceAddress;
   //The persistence address, that services can read/write state/data
@@ -82,7 +82,7 @@ public class ComponentControlVerticle extends Verticle implements Component {
   @Override public void start() {
     super.start();
     config = container.config();
-//    id = config.getString("id");
+    //    id = config.getString("id");
     id = UUID.randomUUID().toString();
     config.putString("id", id);
     group = config.getString("group");
@@ -220,15 +220,15 @@ public class ComponentControlVerticle extends Verticle implements Component {
     //deploy log module
     container.deployModule(StringConstants.LOG_MOD_NAME, logConfig, new Handler<AsyncResult<String>>() {
 
-          @Override public void handle(AsyncResult<String> asyncResult) {
-            if (asyncResult.succeeded()) {
-              container.logger().info("Log Module has been deployed ID " + asyncResult.result());
-              logId = asyncResult.result();
-            } else {
-              container.logger().fatal("Log Module failed to deploy");
-            }
-          }
-        });
+      @Override public void handle(AsyncResult<String> asyncResult) {
+        if (asyncResult.succeeded()) {
+          container.logger().info("Log Module has been deployed ID " + asyncResult.result());
+          logId = asyncResult.result();
+        } else {
+          container.logger().fatal("Log Module failed to deploy");
+        }
+      }
+    });
 
     //deploy persistence module
     //        container.deployModule(StringConstants.PERSIST_MOD_NAME, persistConfig, 1,
@@ -251,15 +251,15 @@ public class ComponentControlVerticle extends Verticle implements Component {
     //deploy workqueue module.
     container.deployModule(StringConstants.WORKQUEUE_MOD_NAME, workQueueConfig, 1, new Handler<AsyncResult<String>>() {
 
-          @Override public void handle(AsyncResult<String> asyncResult) {
-            if (asyncResult.succeeded()) {
-              container.logger().info("WorkerQueue Module has been deployed ID " + asyncResult.result());
-              workQueueId = asyncResult.result();
-            } else {
-              container.logger().fatal("WorkerQueue Module failed to deploy");
-            }
-          }
-        });
+      @Override public void handle(AsyncResult<String> asyncResult) {
+        if (asyncResult.succeeded()) {
+          container.logger().info("WorkerQueue Module has been deployed ID " + asyncResult.result());
+          workQueueId = asyncResult.result();
+        } else {
+          container.logger().fatal("WorkerQueue Module failed to deploy");
+        }
+      }
+    });
 
     //Deploy processors module.
     Iterator<String> processorIdIterator = processorAddresses.iterator();
@@ -324,16 +324,16 @@ public class ComponentControlVerticle extends Verticle implements Component {
           config.getString("groupId") + "~" + componentType + "-" + serviceType + "-mod~" + config.getString("version"),
           conf, 1, new Handler<AsyncResult<String>>() {
 
-        @Override public void handle(AsyncResult<String> asyncResult) {
-          if (asyncResult.succeeded()) {
-            container.logger().info(
-                componentType + " Service " + serviceType + " Module has been deployed ID " + asyncResult.result());
-            servicesIds.add(asyncResult.result());
-          } else {
-            container.logger().fatal(componentType + " Service " + serviceType + " Module failed to deploy");
-          }
-        }
-      });
+            @Override public void handle(AsyncResult<String> asyncResult) {
+              if (asyncResult.succeeded()) {
+                container.logger().info(
+                    componentType + " Service " + serviceType + " Module has been deployed ID " + asyncResult.result());
+                servicesIds.add(asyncResult.result());
+              } else {
+                container.logger().fatal(componentType + " Service " + serviceType + " Module failed to deploy");
+              }
+            }
+          });
 
     }
     //subscribe to componentType control

@@ -25,110 +25,107 @@ import java.util.UUID;
 public class ExecuteMRHandler implements Handler<HttpServerRequest> {
 
 
-   Node com;
-   Logger log;
-   Map<String, ExecuteMRHandlerBodyHandler> bodyHandlers;
-   Map<String, ExecuteMRHandlerReplyHandler> replyHandlers;
+  Node com;
+  Logger log;
+  Map<String, ExecuteMRHandlerBodyHandler> bodyHandlers;
+  Map<String, ExecuteMRHandlerReplyHandler> replyHandlers;
 
 
-   public ExecuteMRHandler(final Node com, Logger log) {
-      this.com = com;
-      this.log = log;
-      replyHandlers = new HashMap<>();
-      bodyHandlers = new HashMap<>();
-   }
+  public ExecuteMRHandler(final Node com, Logger log) {
+    this.com = com;
+    this.log = log;
+    replyHandlers = new HashMap<>();
+    bodyHandlers = new HashMap<>();
+  }
 
-   @Override
-   public void handle(HttpServerRequest request) {
-      request.response().setStatusCode(200);
-      request.response().putHeader(WebStrings.CONTENT_TYPE, WebStrings.APP_JSON);
-      log.info("Execute MR Handler");
-      System.err.println(("Execute MR Handler"));
-      String reqId = UUID.randomUUID().toString();
-      ExecuteMRHandlerReplyHandler replyHandler = new ExecuteMRHandlerReplyHandler(reqId, request);
-      ExecuteMRHandlerBodyHandler bodyHanlder = new ExecuteMRHandlerBodyHandler(reqId, replyHandler);
-      replyHandlers.put(reqId, replyHandler);
-      bodyHandlers.put(reqId, bodyHanlder);
-      request.bodyHandler(bodyHanlder);
-   }
+  @Override public void handle(HttpServerRequest request) {
+    request.response().setStatusCode(200);
+    request.response().putHeader(WebStrings.CONTENT_TYPE, WebStrings.APP_JSON);
+    log.info("Execute MR Handler");
+    System.err.println(("Execute MR Handler"));
+    String reqId = UUID.randomUUID().toString();
+    ExecuteMRHandlerReplyHandler replyHandler = new ExecuteMRHandlerReplyHandler(reqId, request);
+    ExecuteMRHandlerBodyHandler bodyHanlder = new ExecuteMRHandlerBodyHandler(reqId, replyHandler);
+    replyHandlers.put(reqId, replyHandler);
+    bodyHandlers.put(reqId, bodyHanlder);
+    request.bodyHandler(bodyHanlder);
+  }
 
-   public void cleanup(String id) {
-      ExecuteMRHandlerReplyHandler rh = replyHandlers.remove(id);
-      ExecuteMRHandlerBodyHandler bh = bodyHandlers.remove(id);
-      rh = null;
-      bh = null;
-   }
+  public void cleanup(String id) {
+    ExecuteMRHandlerReplyHandler rh = replyHandlers.remove(id);
+    ExecuteMRHandlerBodyHandler bh = bodyHandlers.remove(id);
+    rh = null;
+    bh = null;
+  }
 
 
-   private class ExecuteMRHandlerReplyHandler implements LeadsMessageHandler {
-      HttpServerRequest request;
-      String requestId;
+  private class ExecuteMRHandlerReplyHandler implements LeadsMessageHandler {
+    HttpServerRequest request;
+    String requestId;
 
-      public ExecuteMRHandlerReplyHandler(String requestId, HttpServerRequest request) {
-         this.request = request;
-         this.requestId = requestId;
+    public ExecuteMRHandlerReplyHandler(String requestId, HttpServerRequest request) {
+      this.request = request;
+      this.requestId = requestId;
+    }
+
+    @Override public void handle(JsonObject message) {
+      if (message.containsField("error")) {
+        replyForError(message);
+      }
+      message.removeField(MessageUtils.FROM);
+      message.removeField(MessageUtils.TO);
+      message.removeField(MessageUtils.COMTYPE);
+      message.removeField(MessageUtils.MSGID);
+      message.removeField(MessageUtils.MSGTYPE);
+      request.response().end(message.toString());
+      cleanup(requestId);
+    }
+
+    private void replyForError(JsonObject message) {
+      if (message != null) {
+        log.error(message.getString("message"));
+        request.response().end("{}");
+      } else {
+        log.error("Empty Request");
+        request.response().setStatusCode(400);
+      }
+      cleanup(requestId);
+    }
+  }
+
+
+  private class ExecuteMRHandlerBodyHandler implements Handler<Buffer> {
+
+
+    private final ExecuteMRHandlerReplyHandler replyHandler;
+    private final String requestId;
+
+    public ExecuteMRHandlerBodyHandler(String requestId, ExecuteMRHandlerReplyHandler replyHandler) {
+      this.replyHandler = replyHandler;
+      this.requestId = requestId;
+    }
+
+    @Override public void handle(Buffer body) {
+      String mrActionString = body.getString(0, body.length());
+      if (Strings.isNullOrEmpty(mrActionString) || mrActionString.equals("{}")) {
+        replyHandler.replyForError(null);
+        return;
       }
 
-      @Override
-      public void handle(JsonObject message) {
-         if (message.containsField("error")) {
-            replyForError(message);
-         }
-         message.removeField(MessageUtils.FROM);
-         message.removeField(MessageUtils.TO);
-         message.removeField(MessageUtils.COMTYPE);
-         message.removeField(MessageUtils.MSGID);
-         message.removeField(MessageUtils.MSGTYPE);
-         request.response().end(message.toString());
-         cleanup(requestId);
-      }
-
-      private void replyForError(JsonObject message) {
-         if (message != null) {
-            log.error(message.getString("message"));
-            request.response().end("{}");
-         } else {
-            log.error("Empty Request");
-            request.response().setStatusCode(400);
-         }
-         cleanup(requestId);
-      }
-   }
-
-
-   private class ExecuteMRHandlerBodyHandler implements Handler<Buffer> {
-
-
-      private final ExecuteMRHandlerReplyHandler replyHandler;
-      private final String requestId;
-
-      public ExecuteMRHandlerBodyHandler(String requestId, ExecuteMRHandlerReplyHandler replyHandler) {
-         this.replyHandler = replyHandler;
-         this.requestId = requestId;
-      }
-
-      @Override
-      public void handle(Buffer body) {
-         String mrActionString = body.getString(0, body.length());
-         if (Strings.isNullOrEmpty(mrActionString) || mrActionString.equals("{}")) {
-            replyHandler.replyForError(null);
-            return;
-         }
-
-         //         object.putString("req-id",requestId);
-         Action action = new Action();
-         action.setId(requestId);
-         action.setCategory(StringConstants.ACTION);
-         action.setLabel(IManagerConstants.EXECUTE_MAPREDUCE);
-         action.setOwnerId(com.getId());
-         action.setComponentType("webservice");
-         action.setTriggered("");
-         action.setTriggers(new JsonArray());
-         JsonObject object = new JsonObject(mrActionString);
-         action.setData(object);
-         action.setDestination(StringConstants.IMANAGERQUEUE);
-         action.setStatus(ActionStatus.PENDING.toString());
-         com.sendRequestTo(StringConstants.IMANAGERQUEUE, action.asJsonObject(), replyHandler);
-      }
-   }
+      //         object.putString("req-id",requestId);
+      Action action = new Action();
+      action.setId(requestId);
+      action.setCategory(StringConstants.ACTION);
+      action.setLabel(IManagerConstants.EXECUTE_MAPREDUCE);
+      action.setOwnerId(com.getId());
+      action.setComponentType("webservice");
+      action.setTriggered("");
+      action.setTriggers(new JsonArray());
+      JsonObject object = new JsonObject(mrActionString);
+      action.setData(object);
+      action.setDestination(StringConstants.IMANAGERQUEUE);
+      action.setStatus(ActionStatus.PENDING.toString());
+      com.sendRequestTo(StringConstants.IMANAGERQUEUE, action.asJsonObject(), replyHandler);
+    }
+  }
 }

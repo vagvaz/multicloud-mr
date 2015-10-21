@@ -4,23 +4,12 @@ import eu.leads.processor.common.infinispan.EnsembleCacheUtils;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
-
 import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.cache.EnsembleCache;
 import org.vertx.java.core.json.JsonObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.io.*;
+import java.util.*;
 
 /**
  * Created by Apostolos Nydriotis on 2015/10/17.
@@ -54,17 +43,15 @@ public class DataLoader {
     LQPConfiguration.getInstance().initialize();
     LQPConfiguration.getInstance().loadFile(propertiesFile);
 
-    histogramsCacheName = LQPConfiguration.getInstance().getConfiguration()
-        .getString("histograms.cache.name", "default.keywords");
+    histogramsCacheName =
+        LQPConfiguration.getInstance().getConfiguration().getString("histograms.cache.name", "default.keywords");
 
     System.out.println("histogramsCacheName = " + histogramsCacheName);
 
-    loadDocuments = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-documents",
-                                                                                 true);
+    loadDocuments = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-documents", true);
     System.out.println("loadDocuments = " + loadDocuments);
 
-    loadHistograms = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-histograms",
-                                                                                  true);
+    loadHistograms = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-histograms", true);
     System.out.println("loadHistograms = " + loadHistograms);
 
     gigabytesToLoad = LQPConfiguration.getInstance().getConfiguration().getDouble("gb-to-load", 1.0);
@@ -73,20 +60,17 @@ public class DataLoader {
     dataDirectory = LQPConfiguration.getInstance().getConfiguration().getString("data-path", ".");
     System.out.println("dataDirectory = " + dataDirectory);
 
-    putThreadsCount = LQPConfiguration.getInstance().getConfiguration().getInt("putter.threads",
-                                                                               100);
+    putThreadsCount = LQPConfiguration.getInstance().getConfiguration().getInt("putter.threads", 100);
     System.out.println("putThreadsCount = " + putThreadsCount);
 
-    linesPerTuple = LQPConfiguration.getInstance().getConfiguration()
-        .getInt("putter.lines.per.tuple");
+    linesPerTuple = LQPConfiguration.getInstance().getConfiguration().getInt("putter.lines.per.tuple");
     System.out.println("linesPerTuple = " + linesPerTuple);
 
-    documentsCacheName = LQPConfiguration.getInstance().getConfiguration()
-        .getString("documents.cache.name", "clustered");
+    documentsCacheName =
+        LQPConfiguration.getInstance().getConfiguration().getString("documents.cache.name", "clustered");
     System.out.println("documentsCacheName = " + documentsCacheName);
 
-    List<String> defaultMCs = new ArrayList<>(Arrays.asList("softnet", "dd1a", "dresden2",
-                                                            "hamm6"));
+    List<String> defaultMCs = new ArrayList<>(Arrays.asList("softnet", "dd1a", "dresden2", "hamm6"));
     List<String> activeMicroClouds =
         LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
     System.out.println("active mc ");
@@ -112,8 +96,7 @@ public class DataLoader {
     Map<String, String> activeIps = new HashMap<>();
     //read the ips from configuration or use the default
     for (String mc : activeMicroClouds) {
-      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration()
-          .getString(mc, microcloudAddresses.get(mc)));
+      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration().getString(mc, microcloudAddresses.get(mc)));
     }
     System.out.println("active ips");
     PrintUtilities.printMap(activeIps);
@@ -224,16 +207,14 @@ public class DataLoader {
       this.bytesLoaded = 0;
     }
 
-    @Override
-    public void run() {
+    @Override public void run() {
       File f;
 
       EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
 
-      EnsembleCache ensembleCache =
-          ensembleCacheManager.getCache(documentsCacheName,
-                                        new ArrayList<>(ensembleCacheManager.sites()),
-                                        EnsembleCacheManager.Consistency.DIST);
+      EnsembleCache ensembleCache = ensembleCacheManager
+          .getCache(documentsCacheName, new ArrayList<>(ensembleCacheManager.sites()),
+              EnsembleCacheManager.Consistency.DIST);
 
       while (true) {
         synchronized (documentFiles) {
@@ -247,8 +228,7 @@ public class DataLoader {
         System.out.println("[D]" + id + ": f.getName() = " + f.getName());
 
         try {
-          BufferedReader bufferedReader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+          BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           JsonObject data = new JsonObject();
           String line;
@@ -285,6 +265,7 @@ public class DataLoader {
     }
   }
 
+
   /**
    * Loads data for kMeans experiments
    */
@@ -304,14 +285,12 @@ public class DataLoader {
       this.bytesLoaded = 0;
     }
 
-    @Override
-    public void run() {
+    @Override public void run() {
       File f;
 
-      EnsembleCache ensembleCache =
-          ensembleCacheManager.getCache(histogramsCacheName,
-                                        new ArrayList<>(ensembleCacheManager.sites()),
-                                        EnsembleCacheManager.Consistency.DIST);
+      EnsembleCache ensembleCache = ensembleCacheManager
+          .getCache(histogramsCacheName, new ArrayList<>(ensembleCacheManager.sites()),
+              EnsembleCacheManager.Consistency.DIST);
       boolean documentStarted = false;
       boolean isWiki = false;
       int documentsCount = 0;  // documents added by this thread
@@ -332,8 +311,7 @@ public class DataLoader {
         }
 
         try {
-          BufferedReader bufferedReader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+          BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           String line;
           Map<String, Double> frequencies = null;
@@ -356,18 +334,15 @@ public class DataLoader {
             if (line.equals(" doc") && isWiki) {
               documentStarted = false;
               try {
-                frequencies.put("~", Double.valueOf(String.valueOf(id)
-                                                    + String.valueOf(documentsCount++)));
+                frequencies.put("~", Double.valueOf(String.valueOf(id) + String.valueOf(documentsCount++)));
               } catch (Exception e) {
                 e.printStackTrace();
               }
 
               Tuple data = new Tuple();
               data.asBsonObject().putAll(frequencies);
-              EnsembleCacheUtils.putToCache(ensembleCache, String.valueOf(id) + "-"
-                                                           + String.valueOf(putCount++), data);
-              System.out.println("putting WIKI document " + String.valueOf(id)
-                                 + String.valueOf(documentsCount));
+              EnsembleCacheUtils.putToCache(ensembleCache, String.valueOf(id) + "-" + String.valueOf(putCount++), data);
+              System.out.println("putting WIKI document " + String.valueOf(id) + String.valueOf(documentsCount));
               continue;
             }
 
@@ -393,18 +368,15 @@ public class DataLoader {
 
           if (!isWiki) {
             try {
-              frequencies.put("~", Double.valueOf(String.valueOf(id)
-                                                  + String.valueOf(documentsCount++)));
+              frequencies.put("~", Double.valueOf(String.valueOf(id) + String.valueOf(documentsCount++)));
             } catch (Exception e) {
               e.printStackTrace();
             }
 
             Tuple data = new Tuple();
             data.asBsonObject().putAll(frequencies);
-            EnsembleCacheUtils.putToCache(ensembleCache, String.valueOf(id) + "-"
-                                                         + String.valueOf(putCount++), data);
-            System.out.println("putting NON-WIKI document " + String.valueOf(id)
-                               + String.valueOf(documentsCount));
+            EnsembleCacheUtils.putToCache(ensembleCache, String.valueOf(id) + "-" + String.valueOf(putCount++), data);
+            System.out.println("putting NON-WIKI document " + String.valueOf(id) + String.valueOf(documentsCount));
           }
 
           bufferedReader.close();

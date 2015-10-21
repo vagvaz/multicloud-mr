@@ -217,7 +217,7 @@ public class Boot2 {
     }
     clusters = new JsonArray();
     IPsshmap = new HashMap<>();
-    IPPrvmap = new HashMap<String,String>();
+    IPPrvmap = new HashMap<String, String>();
     for (HierarchicalConfiguration c : cmplXadresses) {
       JsonArray nodesList = new JsonArray();
       ConfigurationNode node = c.getRoot();
@@ -410,10 +410,10 @@ public class Boot2 {
       for (String ip : instancesPerNode.keySet()) {
         int in = 0;
         do {
-          if(!ip.contains(":")) {
+          if (!ip.contains(":")) {
             ensembleString += ip + ":" + Integer.toString(11222 + in) + ";";
-          }else{
-            ensembleString += ip+";";
+          } else {
+            ensembleString += ip + ";";
           }
 
           in++;
@@ -453,23 +453,25 @@ public class Boot2 {
       //deploy at least one log one webservice modules to each microcloud
       for (int i = 0; i < pAddrs.size() && i < componentsInstances.get("log-sink"); i++) {
 
-        if(!IPsshmap.get(pAddrs.get(i).toString()).containsField("usePrivate")) {
+        if (!IPsshmap.get(pAddrs.get(i).toString()).containsField("usePrivate")) {
           System.out.println(" Deploying log-sink to: " + entry.getKey() + " Ip: " + pAddrs.get(i) + " ");
           deployComponent("log-sink-module", log_sinkJson, pAddrs.get(i).toString());
-        }
-        else {
-          System.out.println(" Deploying log-sink to: " + entry.getKey() + " Ip: " + IPsshmap.get(pAddrs.get(i).toString()).getString(
-              "privateIP") + " ");
-          deployComponent("log-sink-module", log_sinkJson, IPsshmap.get(pAddrs.get(i).toString()).getString("privateIP"));
+        } else {
+          System.out.println(
+              " Deploying log-sink to: " + entry.getKey() + " Ip: " + IPsshmap.get(pAddrs.get(i).toString())
+                  .getString("privateIP") + " ");
+          deployComponent("log-sink-module", log_sinkJson,
+              IPsshmap.get(pAddrs.get(i).toString()).getString("privateIP"));
         }
       }
       for (int i = 0; i < pAddrs.size() && i < componentsInstances.get("webservice"); i++) {
 
         System.out.println(" Deploying webservice to: " + entry.getKey() + " Ip: " + pAddrs.get(i) + " ");
-        if(!IPsshmap.get(pAddrs.get(i).toString()).containsField("usePrivate")) {
+        if (!IPsshmap.get(pAddrs.get(i).toString()).containsField("usePrivate")) {
           deployComponent("processor-webservice", webserviceJson, pAddrs.get(i).toString());
-        }else{
-          deployComponent("processor-webservice", webserviceJson, IPsshmap.get(pAddrs.get(i).toString()).getString("privateIP"));
+        } else {
+          deployComponent("processor-webservice", webserviceJson,
+              IPsshmap.get(pAddrs.get(i).toString()).getString("privateIP"));
         }
       }
       //TODO Check if successfull deployment ...
@@ -887,19 +889,19 @@ public class Boot2 {
 
   private static Session createSession(JSch jsch, String ipa) throws JSchException {
 
-//    ConfigRepository configRepository = null;
-//    try {
-//      configRepository = OpenSSHConfig.parseFile(System.getenv("HOME")+"/.ssh/config");
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
+    //    ConfigRepository configRepository = null;
+    //    try {
+    //      configRepository = OpenSSHConfig.parseFile(System.getenv("HOME")+"/.ssh/config");
+    //    } catch (IOException e) {
+    //      e.printStackTrace();
+    //    }
     //com.jcraft.jsch.OpenSSHConfig.parseFile("~/.ssh/config");
 
-//    jsch.setConfigRepository(configRepository);
+    //    jsch.setConfigRepository(configRepository);
 
     JsonObject sshconf = IPsshmap.get(ipa);
-    String ip  = ipa;
-    if(sshconf.containsField("usePrivate"))
+    String ip = ipa;
+    if (sshconf.containsField("usePrivate"))
       ip = sshconf.getString("privateIP");
     if (sshconf == null) {
       System.err.println("No ssh configuration for ip: " + ip);
@@ -907,10 +909,10 @@ public class Boot2 {
     }
     Session session = null;
 
-//    if(configRepository.getConfig(ip) == null){
+    //    if(configRepository.getConfig(ip) == null){
     String username = sshconf.getString("username");//getStringValue(conf, "ssh.username", null, true);
 
-      session = jsch.getSession(username, ip, 22);
+    session = jsch.getSession(username, ip, 22);
 
     if (sshconf.containsField("rsa")/*xmlConfiguration.containsKey("ssh.rsa")*/) {
       String privateKey = sshconf.getString("rsa"); //conf.getString("ssh.rsa");
@@ -922,14 +924,14 @@ public class Boot2 {
     else {
       logger.error("No ssh credentials, no password either key ");
       System.out.println("No ssh credentials, no password either key ");
-//      System.exit(-1);
+      //      System.exit(-1);
     }
     session.setConfig("StrictHostKeyChecking", "no");
     jsch.setKnownHosts("~/.ssh/known_hosts");
-//  }
-//    else{
-//      session = jsch.getSession(ip);
-//    }
+    //  }
+    //    else{
+    //      session = jsch.getSession(ip);
+    //    }
     session.connect();
     logger.info("Securely connected to " + ip);
     //System.out.println("Connected");

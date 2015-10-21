@@ -103,7 +103,7 @@ public class ComplexIntermediateKey implements Comparable, Serializable {
   }
 
   public void setCounter(Integer counter) {
-    this.counter =counter;
+    this.counter = counter;
   }
 
   @Override public int hashCode() {

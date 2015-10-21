@@ -3,7 +3,7 @@ package eu.leads.processor.infinispan;
 import eu.leads.processor.common.LeadsListener;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.core.EngineUtils;
-import eu.leads.processor.core.LevelDBIndex;
+import eu.leads.processor.core.IntermediateDataIndex;
 import org.infinispan.Cache;
 import org.infinispan.interceptors.locking.ClusteringDependentLogic;
 
@@ -23,7 +23,7 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
   //    private LeadsCollector collector;
   private String prefix;
   //    private transient LevelDBIndex index;
-  private transient LevelDBIndex index;
+  private transient IntermediateDataIndex index;
   private transient LeadsListener leadsListener;
   private transient Iterator<Map.Entry<String, Integer>> iterator;
 
@@ -81,9 +81,9 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
     try {
       Iterator<vOut> values = (Iterator<vOut>) value;//((List)value).iterator();
       reducer.reduce(key, values, collector);
-    }catch (Exception e){
+    } catch (Exception e) {
       e.printStackTrace();
-      PrintUtilities.logStackTrace(profilerLog,e.getStackTrace());
+      PrintUtilities.logStackTrace(profilerLog, e.getStackTrace());
       PrintUtilities.printAndLog(profilerLog, "Exception in Reducer: " + e.getMessage());
     }
   }
@@ -128,7 +128,7 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
     collector.setEmanager(emanager);
     collector.setCombiner(null);
     collector.setUseCombiner(false);
-    collector.initializeCache(callableIndex+":"+inputCache.getName(), imanager);
+    collector.initializeCache(callableIndex + ":" + inputCache.getName(), imanager);
 
     this.reducer.initialize();
 
@@ -190,16 +190,16 @@ public class LeadsReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOut, Ob
   @Override public void finalizeCallable() {
     System.err.println("reduce finalize reducer");
     reducer.finalizeTask();
-    if(index != null)
+    if (index != null)
       index.close();
     //        inputCache.removeListener(leadsListener);
-    if(leadsListener != null){
+    if (leadsListener != null) {
       leadsListener.close();
     }
 
-//    System.err.println("reducer finalizee collector");
+    //    System.err.println("reducer finalizee collector");
     //        collector.finalizeCollector();
-//    System.err.println("finalzie super");
+    //    System.err.println("finalzie super");
     collector.finalizeCollector();
     super.finalizeCallable();
 

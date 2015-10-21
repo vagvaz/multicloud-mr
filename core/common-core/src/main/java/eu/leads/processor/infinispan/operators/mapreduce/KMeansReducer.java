@@ -3,7 +3,6 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsCombiner;
-
 import org.bson.BasicBSONObject;
 import org.mapdb.DBMaker;
 import org.vertx.java.core.json.JsonObject;
@@ -33,8 +32,7 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
     super(configString);
   }
 
-  @Override
-  public void initialize() {
+  @Override public void initialize() {
     super.initialize();
     if (isComposable) {
       collectorInitialized = false;
@@ -42,8 +40,7 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
     }
   }
 
-  @Override
-  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
+  @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     int documentsCount = 0;
     Map<String, Double> dimensions = new HashMap<>();
 
@@ -122,8 +119,7 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
     }
   }
 
-  @Override
-  protected void finalizeTask() {
+  @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
     if (isComposable) {
       for (Map.Entry<String, Tuple> e : storage.entrySet()) {
@@ -131,8 +127,7 @@ public class KMeansReducer extends LeadsCombiner<String, Tuple> {
         Tuple storedTuple = e.getValue();
 
         int documentsCount = storedTuple.getNumberAttribute("documentsCount").intValue();
-        Tuple storedDimensionsTuple =
-            new Tuple((BasicBSONObject) storedTuple.getGenericAttribute("dimensions"));
+        Tuple storedDimensionsTuple = new Tuple((BasicBSONObject) storedTuple.getGenericAttribute("dimensions"));
 
         Map<String, Double> dimensions = new HashMap<>();
         for (String key : storedDimensionsTuple.getFieldNames()) {

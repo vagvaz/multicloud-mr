@@ -12,6 +12,8 @@ import eu.leads.processor.core.comp.LeadsMessageHandler;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.DefaultNode;
 import eu.leads.processor.core.net.Node;
+import eu.leads.processor.core.netty.IndexManager;
+import eu.leads.processor.core.netty.NettyDataTransport;
 import eu.leads.processor.core.plan.QueryState;
 import eu.leads.processor.core.plan.QueryStatus;
 import eu.leads.processor.imanager.IManagerConstants;
@@ -28,6 +30,7 @@ import org.vertx.java.platform.Verticle;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import static eu.leads.processor.core.ActionStatus.INPROCESS;
 import static eu.leads.processor.core.ActionStatus.valueOf;
@@ -95,9 +98,9 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
                 JsonObject o = new JsonObject(s);
                 QueryStatus queryStatus = new QueryStatus(o.getObject("status"));
                 queryStatus.setStatus(QueryState.COMPLETED);
-                o.putObject("status",queryStatus.asJsonObject());
-//                QueryStatus queryStatus = new QueryStatus(new JsonObject(s));
-//                queryStatus.setStatus(QueryState.COMPLETED);
+                o.putObject("status", queryStatus.asJsonObject());
+                //                QueryStatus queryStatus = new QueryStatus(new JsonObject(s));
+                //                queryStatus.setStatus(QueryState.COMPLETED);
                 jobsCache.put(id, o.toString());
               } else {
                 log.error("COMPLETED Action " + action.toString() + "Received by NQEProcessor but cannot be handled");
@@ -162,13 +165,21 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     com.initialize(id, gr, null, leadsHandler, leadsHandler, vertx);
     bus.registerHandler(id + ".process", this);
     LQPConfiguration.initialize();
-    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component", "nqe" );
+    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component", "nqe");
 
     String publicIP = ConfigurationUtilities
         .getPublicIPFromGlobal(LQPConfiguration.getInstance().getMicroClusterName(), globalConfig);
     LQPConfiguration.getInstance().getConfiguration().setProperty(StringConstants.PUBLIC_IP, publicIP);
     currentCluster = LQPConfiguration.getInstance().getMicroClusterName();
     persistence = InfinispanClusterSingleton.getInstance().getManager();
+    /**
+     * !!NETTY new code for the new
+     */
+    IndexManager.initialize(new Properties());
+    NettyDataTransport.initialize(globalConfig);
+    /**
+     * END OF CODE
+     */
     jobsCache = (Cache) persistence.getPersisentCache(StringConstants.QUERIESCACHE);
     JsonObject msg = new JsonObject();
     msg.putString("processor", id + ".process");

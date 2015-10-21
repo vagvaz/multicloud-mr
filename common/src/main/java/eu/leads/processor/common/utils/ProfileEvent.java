@@ -17,21 +17,26 @@ public class ProfileEvent implements Serializable {
     this.profileLogger = profileLogger;
   }
 
-  transient Logger profileLogger=null;
+  transient Logger profileLogger = null;
+
   public ProfileEvent(String logName, Logger logger) {
-    profileLogger= logger;
-    id = UUID.randomUUID().toString().substring(0,5);
+    profileLogger = logger;
+    id = UUID.randomUUID().toString().substring(0, 5);
     start(logName);
   }
-  public void start(String logName){
-    profileName= logName;
+
+  public void start(String logName) {
+    profileName = logName;
     start = System.nanoTime();
   }
-  public void end(){
-    profileLogger.info("#PROF"+id+" " + profileName + "\t"+ ((System.nanoTime()-start)/1000000.0f) + " ms");
+
+  public void end() {
+    profileLogger.info("#PROF" + id + " " + profileName + "\t" + ((System.nanoTime() - start) / 1000000.0f) + " ms");
   }
 
-  public void end(String endString){
-    profileLogger.info("#PROF"+id+" " + profileName + " -> "+endString+ " " +((System.nanoTime()-start)/1000000.0f) + " ms");
+  public void end(String endString) {
+    profileLogger.info(
+        "#PROF" + id + " " + profileName + " -> " + endString + " " + ((System.nanoTime() - start) / 1000000.0f)
+            + " ms");
   }
 }

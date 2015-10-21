@@ -1,31 +1,28 @@
 package eu.leads.processor.infinispan;
 
-import eu.leads.processor.common.infinispan.EnsembleCacheUtilsSingle;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.common.infinispan.KeyValueDataTransfer;
 import eu.leads.processor.conf.LQPConfiguration;
+import eu.leads.processor.core.netty.NettyKeyValueDataTransfer;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.distexec.mapreduce.Collector;
 import org.infinispan.ensemble.EnsembleCacheManager;
+import org.infinispan.ensemble.Site;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
-
-import org.infinispan.ensemble.Site;
-
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serializable {
 
   private static final long serialVersionUID = -602082107893975415L;
-  private  Integer emitCount;
-  private  int maxCollectorSize = 1000;
+  private Integer emitCount;
+  private int maxCollectorSize = 1000;
   private double percent = .75;
-  private LeadsCombiner<KOut,VOut> combiner;
+  private LeadsCombiner<KOut, VOut> combiner;
   protected transient BasicCache intermediateDataCache;
   private transient BasicCache storeCache;
   private transient InfinispanManager imanager;
@@ -33,11 +30,11 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   private transient EnsembleCacheManager emanager;
   private transient Logger log = null;
   private Integer counter = 0;
-  private transient Map<KOut,List<VOut>> buffer;
+  private transient Map<KOut, List<VOut>> buffer;
   private boolean onMap = true;
   private boolean isReduceLocal = false;
   private boolean useCombiner = false;
-  private int indexSite=-1;
+  private int indexSite = -1;
   private String localSite;
   private String site;
   private String node;
@@ -45,30 +42,30 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   private ComplexIntermediateKey baseIntermKey;
   private transient volatile Object mutex;
   private String ensembleHost;
-//  private long localData;
-//  private long remoteData;
+  //  private long localData;
+  //  private long remoteData;
   protected Map<KOut, List<VOut>> combinedValues;
   private KeyValueDataTransfer keyValueDataTransfer;
   private LocalCollector localCollector;
 
   public LeadsCollector(int maxCollectorSize, String collectorCacheName) {
     super();
-    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
-    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent",75);
-//    this.maxCollectorSize = maxCollectorSize;
+    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize", 10000);
+    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent", 75);
+    //    this.maxCollectorSize = maxCollectorSize;
     cacheName = collectorCacheName;
     emitCount = 0;
   }
 
   public LeadsCollector(int maxCollectorSize, String cacheName, InfinispanManager manager) {
-//    this.maxCollectorSize = maxCollectorSize;
-    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
-    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent",75);
+    //    this.maxCollectorSize = maxCollectorSize;
+    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize", 10000);
+    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent", 75);
     emitCount = 0;
     this.imanager = manager;
     this.cacheName = cacheName;
-    storeCache = (BasicCache) emanager.getCache(cacheName, new ArrayList<>(emanager.sites()),
-                                                EnsembleCacheManager.Consistency.DIST);
+    storeCache = (BasicCache) emanager
+        .getCache(cacheName, new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
   }
 
   public LeadsCollector(LeadsCollector other) {
@@ -99,8 +96,8 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   public void setCombiner(LeadsCombiner<KOut, VOut> combiner) {
     this.combiner = combiner;
-    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
-    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent",75);
+    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize", 10000);
+    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent", 75);
     percent /= 100;
   }
 
@@ -139,10 +136,10 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   public void setEmanager(EnsembleCacheManager emanager) {
     this.emanager = emanager;
-    if(localSite != null && !localSite.equals("")){
-      for(Site s : emanager.sites()){
+    if (localSite != null && !localSite.equals("")) {
+      for (Site s : emanager.sites()) {
         indexSite++;
-        if(s.getName().equals(localSite)){
+        if (s.getName().equals(localSite)) {
           break;
         }
       }
@@ -218,80 +215,85 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   }
 
   public void initializeCache(String inputCacheName, InfinispanManager imanager) {
-    localCollector = new LocalCollector(0,"");
-    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize",10000);
-    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent",75);
-    keyValueDataTransfer = new EnsembleCacheUtilsSingle();
+    localCollector = new LocalCollector(0, "");
+    maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize", 10000);
+    percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent", 75);
+
+    /**
+     * !!NETTY new code for the new
+     */
+    //    keyValueDataTransfer = new EnsembleCacheUtilsSingle();
+    keyValueDataTransfer = new NettyKeyValueDataTransfer();
+    /**
+     * END OF CODE
+     */
     keyValueDataTransfer.initialize(emanager);
     this.imanager = imanager;
     log = LoggerFactory.getLogger(LeadsCollector.class);
     emitCount = 0;
     buffer = new HashMap<>();
-//    storeCache = (Cache) imanager.getPersisentCache(cacheName);
+    //    storeCache = (Cache) imanager.getPersisentCache(cacheName);
     if (site == null) {
       LQPConfiguration.getInstance().getMicroClusterName();
     }
-    node =imanager.getMemberName().toString();
+    node = imanager.getMemberName().toString();
     site = LQPConfiguration.getInstance().getMicroClusterName();
     if (onMap) {
-      intermediateDataCache = (BasicCache) emanager.getCache(cacheName+ ".data",
-                                                             new ArrayList<>(emanager.sites()),
-                                                             EnsembleCacheManager.Consistency.DIST);
-      baseIntermKey = new ComplexIntermediateKey(site, manager.getAddress().toString(),
-                                                 inputCacheName);
+      intermediateDataCache = (BasicCache) emanager
+          .getCache(cacheName + ".data", new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
+      baseIntermKey = new ComplexIntermediateKey(site, manager.getAddress().toString(), inputCacheName);
       mutex = new Object();
-    }else{
-      storeCache = emanager.getCache(cacheName, new ArrayList<>(emanager.sites()),
-          EnsembleCacheManager.Consistency.DIST);
+    } else {
+      storeCache =
+          emanager.getCache(cacheName, new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
     }
   }
 
   public void emit(KOut key, VOut value) {
 
     if (onMap) {
-      if(isReduceLocal){
-        output(key,value);
-      }
-      else{
-        if(useCombiner){
+      if (isReduceLocal) {
+        output(key, value);
+      } else {
+        if (useCombiner) {
           List<VOut> values = buffer.get(key);
-          if(values == null) {
+          if (values == null) {
             values = new LinkedList<>();
             buffer.put(key, values);
           }
           values.add(value);
           emitCount++;
-          if(isOverflown()){
+          if (isOverflown()) {
             combine(false);
           }
-        }
-        else{
-          output(key,value);
+        } else {
+          output(key, value);
         }
       }
 
     } else {
-//      if(key.hashCode() % emanager.sites().size() == indexSite){
-//        localData += key.toString().length() + value.toString().length();
-//      }
-//      else{
-//        remoteData += key.toString().length() + value.toString().length();
-//      }
+      //      if(key.hashCode() % emanager.sites().size() == indexSite){
+      //        localData += key.toString().length() + value.toString().length();
+      //      }
+      //      else{
+      //        remoteData += key.toString().length() + value.toString().length();
+      //      }
       keyValueDataTransfer.putToCache(storeCache, key, value);
     }
   }
 
   private void combine(boolean force) { //force the output of values
-//    log.error("Run combine " + maxCollectorSize + " " + buffer.size());
-    localCollector = new LocalCollector(0,"");
+    //    log.error("Run combine " + maxCollectorSize + " " + buffer.size());
+    localCollector = new LocalCollector(0, "");
     int lastSize = emitCount;
-    for(Map.Entry<KOut,List<VOut>> entry : buffer.entrySet()){
-      combiner.reduce(entry.getKey(),entry.getValue().iterator(),localCollector);
+    for (Map.Entry<KOut, List<VOut>> entry : buffer.entrySet()) {
+      combiner.reduce(entry.getKey(), entry.getValue().iterator(), localCollector);
     }
 
-    Map<KOut,List<VOut>> combinedValues = localCollector.getCombinedValues();
-    if( force  || (combinedValues.size() >= maxCollectorSize*percent ) || (lastSize *percent <= combinedValues.size()) ) {
-//      PrintUtilities.printAndLog(log,"Flush " + combinedValues.size() + " " + lastSize);
+    Map<KOut, List<VOut>> combinedValues = localCollector.getCombinedValues();
+    if (force || (combinedValues.size() >= maxCollectorSize * percent) || (lastSize * percent <= combinedValues
+        .size())) {
+      //      PrintUtilities.printAndLog(log,"Flush " + combinedValues.size() + " " + lastSize);
       for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
         for (VOut v : entry.getValue()) {
           output(entry.getKey(), v);
@@ -299,38 +301,36 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       }
       buffer.clear();
       emitCount = 0; // the size is 0 since we have written everything
-    }
-    else{
+    } else {
       buffer.clear();
       buffer = combinedValues;
       emitCount = buffer.size(); // the size is only one per each key
     }
-    localCollector =null;
+    localCollector = null;
   }
 
   private void output(KOut key, VOut value) {
-//    if(key.hashCode() % emanager.sites().size() == indexSite){
-//      localData += key.toString().length() +
-//          site.length() +
-//          node.length() + 4;  //cost for complex Intermediate key
-//      localData += value.toString().length();
-//    }
-//    else{
-//      remoteData += key.toString().length() +
-//          site.length() +
-//          node.length() + 4;  //cost for complex Intermediate key
-//      remoteData += value.toString().length();
-//    }
+    //    if(key.hashCode() % emanager.sites().size() == indexSite){
+    //      localData += key.toString().length() +
+    //          site.length() +
+    //          node.length() + 4;  //cost for complex Intermediate key
+    //      localData += value.toString().length();
+    //    }
+    //    else{
+    //      remoteData += key.toString().length() +
+    //          site.length() +
+    //          node.length() + 4;  //cost for complex Intermediate key
+    //      remoteData += value.toString().length();
+    //    }
 
-    synchronized (mutex){
+    synchronized (mutex) {
       counter++;
     }
     baseIntermKey.setKey(key.toString());
     baseIntermKey.setCounter(counter);
-    ComplexIntermediateKey
-        newKey =
-        new ComplexIntermediateKey(baseIntermKey.getSite(), baseIntermKey.getNode(),
-            key.toString(), baseIntermKey.getCache(), counter);
+    ComplexIntermediateKey newKey =
+        new ComplexIntermediateKey(baseIntermKey.getSite(), baseIntermKey.getNode(), key.toString(),
+            baseIntermKey.getCache(), counter);
     keyValueDataTransfer.putToCache(intermediateDataCache, newKey, value);
   }
 
@@ -339,12 +339,12 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       if (useCombiner) {
         combine(true);
       }
-     if (combiner != null) {
-      combiner.finalizeTask();
-    }
-  }catch(Exception e) {
+      if (combiner != null) {
+        combiner.finalizeTask();
+      }
+    } catch (Exception e) {
       e.printStackTrace();
-  }
+    }
     try {
       keyValueDataTransfer.waitForAllPuts();
     } catch (InterruptedException e) {
@@ -355,22 +355,22 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       e.printStackTrace();
     }
   }
-//
-//  public void initializeCache(EmbeddedCacheManager manager) {
-//    imanager = new ClusterInfinispanManager(manager);
-//    storeCache = (Cache) imanager.getPersisentCache(cacheName);
-//  }
+  //
+  //  public void initializeCache(EmbeddedCacheManager manager) {
+  //    imanager = new ClusterInfinispanManager(manager);
+  //    storeCache = (Cache) imanager.getPersisentCache(cacheName);
+  //  }
 
 
   public void reset() {
-//    storeCache.clear();
+    //    storeCache.clear();
     emitCount = 0;
   }
 
 
 
   public boolean isOverflown() {
-    return emitCount.intValue() >=   maxCollectorSize;
+    return emitCount.intValue() >= maxCollectorSize;
   }
 
   public Map<KOut, List<VOut>> getCombinedValues() {

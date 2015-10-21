@@ -11,7 +11,6 @@ import eu.leads.processor.core.plan.QueryState;
 import eu.leads.processor.core.plan.QueryStatus;
 import eu.leads.processor.infinispan.operators.Operator;
 import eu.leads.processor.nqe.NQEConstants;
-
 import org.infinispan.Cache;
 import org.vertx.java.core.json.JsonObject;
 
@@ -28,8 +27,7 @@ public class ExecuteMapReduceJobActionHandler implements ActionHandler {
   private final String id;
   private Cache jobsCache;
 
-  public ExecuteMapReduceJobActionHandler(Node com, LogProxy log, InfinispanManager persistence,
-                                          String id) {
+  public ExecuteMapReduceJobActionHandler(Node com, LogProxy log, InfinispanManager persistence, String id) {
     this.com = com;
     this.log = log;
     this.persistence = persistence;
@@ -37,8 +35,7 @@ public class ExecuteMapReduceJobActionHandler implements ActionHandler {
     jobsCache = (Cache) persistence.getPersisentCache(StringConstants.QUERIESCACHE);
   }
 
-  @Override
-  public Action process(Action action) {
+  @Override public Action process(Action action) {
     Action result = new Action(action);
     result.setLabel(NQEConstants.EXECUTE_MAP_REDUCE_JOB);
     result.getData().putString("owner", id);
@@ -48,7 +45,7 @@ public class ExecuteMapReduceJobActionHandler implements ActionHandler {
     queryStatus.setId(jobId);
     queryStatus.setStatus(QueryState.PENDING);
     JsonObject wrapper = new JsonObject();
-    wrapper.putObject("status",queryStatus.asJsonObject());
+    wrapper.putObject("status", queryStatus.asJsonObject());
     jobsCache.put(jobId, wrapper.toString());
     result.setResult(queryStatus.asJsonObject());
     result.setStatus(ActionStatus.COMPLETED.toString());

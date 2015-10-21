@@ -1,6 +1,5 @@
 package eu.leads.processor.infinispan;
 
-import eu.leads.processor.common.continuous.ConcurrentDiskQueue;
 import eu.leads.processor.common.infinispan.BatchPutListener;
 import eu.leads.processor.common.infinispan.ClusterInfinispanManager;
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
@@ -10,19 +9,13 @@ import eu.leads.processor.common.utils.ProfileEvent;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.EngineUtils;
 import eu.leads.processor.core.Tuple;
-import eu.leads.processor.math.FilterOpType;
-import eu.leads.processor.math.FilterOperatorNode;
 import eu.leads.processor.math.FilterOperatorTree;
-import eu.leads.processor.math.MathUtils;
 import org.infinispan.Cache;
 import org.infinispan.commons.marshall.Marshaller;
-import org.infinispan.commons.util.CloseableIterable;
-import org.infinispan.context.Flag;
 import org.infinispan.distexec.DistributedCallable;
 import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.cache.EnsembleCache;
 import org.infinispan.factories.ComponentRegistry;
-import org.infinispan.filter.KeyValueFilter;
 import org.infinispan.interceptors.locking.ClusteringDependentLogic;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.marshall.core.MarshalledEntryImpl;
@@ -30,10 +23,6 @@ import org.infinispan.persistence.leveldb.LevelDBStore;
 import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.persistence.manager.PersistenceManagerImpl;
 import org.infinispan.persistence.spi.InitializationContext;
-import org.infinispan.query.SearchManager;
-import org.infinispan.query.dsl.FilterConditionContext;
-import org.infinispan.query.dsl.FilterConditionEndContext;
-import org.infinispan.query.dsl.QueryFactory;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
@@ -45,8 +34,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by vagvaz on 2/18/15.
@@ -120,9 +107,9 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
         LeadsMapperCallable thisCallable = (LeadsMapperCallable) this;
         mapperCallable.setSite(thisCallable.getSite());
         LeadsCombiner thisCombiner = thisCallable.getCombiner();
-        if ( thisCombiner != null) {
+        if (thisCombiner != null) {
           mapperCallable.setCombiner(thisCombiner);
-//          thisCallable.getCollector().setUseCombiner(true);
+          //          thisCallable.getCollector().setUseCombiner(true);
         }
         mapperCallable.setMapper(thisCallable.getMapper());
       } else if (result instanceof LeadsLocalReducerCallable) {
@@ -176,7 +163,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 
   public void setContinueRunning(boolean continueRunning) {
     this.continueRunning = continueRunning;
-    synchronized (input){
+    synchronized (input) {
       input.notify();
     }
 
@@ -184,11 +171,9 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 
   @Override public void setEnvironment(Cache<K, V> cache, Set<K> inputKeys) {
     profilerLog = LoggerFactory.getLogger("###PROF###" + this.getClass().toString());
-    listSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size",500);
-    sleepTimeMilis =
-        LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.milis", 0);
-    sleepTimeNanos =
-        LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.nanos", 10000);
+    listSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size", 500);
+    sleepTimeMilis = LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.milis", 0);
+    sleepTimeNanos = LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.nanos", 10000);
     EngineUtils.initialize();
     PrintUtilities.printAndLog(profilerLog,
         InfinispanClusterSingleton.getInstance().getManager().getMemberName().toString() + ": setupEnvironment");
@@ -292,11 +277,11 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
       }
     }
     int count = 0;
-      System.err.println("Iterate Over Local Data");
-  Object filter = new LocalDataFilter<K, V>(cdl);
-//
-//      CloseableIterable iterable = inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL)
-//          .filterEntries((KeyValueFilter<? super K, ? super V>) filter);
+    System.err.println("Iterate Over Local Data");
+    Object filter = new LocalDataFilter<K, V>(cdl);
+    //
+    //      CloseableIterable iterable = inputCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL)
+    //          .filterEntries((KeyValueFilter<? super K, ? super V>) filter);
     ComponentRegistry registry = inputCache.getAdvancedCache().getComponentRegistry();
     PersistenceManagerImpl persistenceManager =
         (PersistenceManagerImpl) registry.getComponent(PersistenceManager.class);
@@ -321,34 +306,34 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
         while (iterable.hasNext()) {
 
           buffer.clear();
-          boolean tocontinue =true;
-          for(; tocontinue && buffer.size() < callableParallelism*listSize;){
+          boolean tocontinue = true;
+          for (; tocontinue && buffer.size() < callableParallelism * listSize; ) {
 
             Map.Entry<byte[], byte[]> entryIspn = iterable.next();
             String key = (String) m.objectFromByteBuffer(entryIspn.getKey());
             org.infinispan.marshall.core.MarshalledEntryImpl value =
                 (MarshalledEntryImpl) m.objectFromByteBuffer(entryIspn.getValue());
 
-          Tuple tuple = (Tuple) m.objectFromByteBuffer(value.getValueBytes().getBuf());
-          //        profExecute.end();
-          readCounter++;
-          if (readCounter > readThreshold) {
-            profilerLog.error(callableIndex+" Read: " + readCounter );
-            readThreshold *= 1.3;
-          }
-          Map.Entry<K, V> bufferentry = new AbstractMap.SimpleEntry(key, tuple);
-              buffer.add(bufferentry);
-            if(buffer.size() != listSize){
+            Tuple tuple = (Tuple) m.objectFromByteBuffer(value.getValueBytes().getBuf());
+            //        profExecute.end();
+            readCounter++;
+            if (readCounter > readThreshold) {
+              profilerLog.error(callableIndex + " Read: " + readCounter);
+              readThreshold *= 1.3;
+            }
+            Map.Entry<K, V> bufferentry = new AbstractMap.SimpleEntry(key, tuple);
+            buffer.add(bufferentry);
+            if (buffer.size() != listSize) {
               tocontinue = iterable.hasNext();
-            }else{
+            } else {
               tocontinue = false;
             }
           }
-//          profilerLog.error("Read Buffer " + buffer.size());
-//          for (int j = 0; j < callableParallelism; j++) {
-//            profilerLog.error(j+": " + j + callables.get(j).getInput().size());
-//          }
-          for(Map.Entry entry : buffer ) {
+          //          profilerLog.error("Read Buffer " + buffer.size());
+          //          for (int j = 0; j < callableParallelism; j++) {
+          //            profilerLog.error(j+": " + j + callables.get(j).getInput().size());
+          //          }
+          for (Map.Entry entry : buffer) {
             int roundRobinWithoutAddition = 0;
             if (entry.getValue() != null) {
               while (true) {
@@ -362,9 +347,10 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
                 i = (i + 1) % callableParallelism;
                 roundRobinWithoutAddition++;
                 if (roundRobinWithoutAddition % callableParallelism == 0) {
-//                  PrintUtilities.printAndLog(profilerLog, "Sleeping because everyting full " + roundRobinWithoutAddition);
-                  Thread.sleep((roundRobinWithoutAddition/callableParallelism)*sleepTimeMilis, (roundRobinWithoutAddition/callableParallelism)*sleepTimeNanos);
-//                  roundRobinWithoutAddition = 0;
+                  //                  PrintUtilities.printAndLog(profilerLog, "Sleeping because everyting full " + roundRobinWithoutAddition);
+                  Thread.sleep((roundRobinWithoutAddition / callableParallelism) * sleepTimeMilis,
+                      (roundRobinWithoutAddition / callableParallelism) * sleepTimeNanos);
+                  //                  roundRobinWithoutAddition = 0;
                 }
                 //              i = (i+1)%callableParallelism;
               }
@@ -404,57 +390,57 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     }
     callables.clear();
     executeRunnables.clear();
-    PrintUtilities.printAndLog(profilerLog,"LAST LINE OF " + this.getClass().toString() + " " + embeddedCacheManager.getAddress().toString()
-        + " ----------- END");
+    PrintUtilities.printAndLog(profilerLog,
+        "LAST LINE OF " + this.getClass().toString() + " " + embeddedCacheManager.getAddress().toString()
+            + " ----------- END");
 
     return embeddedCacheManager.getAddress().toString();
   }
 
   private void addToInput(Map.Entry<K, V> entry) {
     //    synchronized (input){
-    synchronized (input){
-    input.add(entry);
-//    while (input.size() >= listSize) {
-//      try {
-//        Thread.sleep(0,10000);
-//      } catch (InterruptedException e) {
-//        e.printStackTrace();
-//      }
-//            Thread.yield();
-//    }
-//        }
+    synchronized (input) {
+      input.add(entry);
+      //    while (input.size() >= listSize) {
+      //      try {
+      //        Thread.sleep(0,10000);
+      //      } catch (InterruptedException e) {
+      //        e.printStackTrace();
+      //      }
+      //            Thread.yield();
+      //    }
+      //        }
 
-        input.notify();
-//=======
-//    int listSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size", 500);
-//    int sleepTimeMilis =
-//        LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.milis", 0);
-//    int sleepTimeNanos =
-//        LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.nanos", 10000);
-//    //    synchronized (input){
-//    input.add(entry);
-//    while (input.size() >= listSize) {
-//      try {
-//        Thread.sleep(sleepTimeMilis, sleepTimeNanos);
-//      } catch (InterruptedException e) {
-//        e.printStackTrace();
-//>>>>>>> 639dbb647e138d20d76d0e88b841dc15a15a159c
-      }
+      input.notify();
+      //=======
+      //    int listSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size", 500);
+      //    int sleepTimeMilis =
+      //        LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.milis", 0);
+      //    int sleepTimeNanos =
+      //        LQPConfiguration.getInstance().getConfiguration().getInt("node.sleep.time.nanos", 10000);
+      //    //    synchronized (input){
+      //    input.add(entry);
+      //    while (input.size() >= listSize) {
+      //      try {
+      //        Thread.sleep(sleepTimeMilis, sleepTimeNanos);
+      //      } catch (InterruptedException e) {
+      //        e.printStackTrace();
+      //>>>>>>> 639dbb647e138d20d76d0e88b841dc15a15a159c
+    }
   }
 
   public Map.Entry poll() {
-//    profilerLog.error(callableIndex+": POLL CALLED ");
+    //    profilerLog.error(callableIndex+": POLL CALLED ");
     Map.Entry result = null;
-        synchronized (input){
-    result = (Map.Entry) input.poll();
-        }
+    synchronized (input) {
+      result = (Map.Entry) input.poll();
+    }
 
-    if(result != null)
-    {
-//      profilerLog.error(callableIndex+": POLL CALLED  PROCESSED " + processed);
+    if (result != null) {
+      //      profilerLog.error(callableIndex+": POLL CALLED  PROCESSED " + processed);
       processed++;
     }
-    if(processed > processThreshold ){
+    if (processed > processThreshold) {
       profilerLog.error(callableIndex + " processed " + processed);
       processThreshold *= 1.3;
     }
@@ -471,7 +457,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
 
   @Override public void finalizeCallable() {
     try {
-//      profCallable.start("finalizeBaseCallable");
+      //      profCallable.start("finalizeBaseCallable");
       //      EngineUtils.waitForAllExecute();
       //      if(collector != null) {
       //        collector.finalizeCollector();
@@ -486,7 +472,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
       profilerLog.error(("LEADS Base callable " + e.getClass().toString() + " " + e.getMessage() + " cause "));
       PrintUtilities.logStackTrace(profilerLog, e.getStackTrace());
     }
-//    profCallable.end("finalizeBaseCallable");
+    //    profCallable.end("finalizeBaseCallable");
     end = System.currentTimeMillis();
     profilerLog.error("LBDISTEXEC: " + this.getClass().toString() + " run for " + (end - start) + " ms");
   }

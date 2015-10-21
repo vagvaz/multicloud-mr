@@ -57,6 +57,7 @@ public abstract class MapReduceOperator extends BasicOperator {
   public void setFederationReducer(LeadsReducer<?, ?> federationReducer) {
     this.federationReducer = federationReducer;
   }
+
   public void setReducer(LeadsReducer<?, ?> federationReducer) {
     this.federationReducer = federationReducer;
   }
@@ -118,6 +119,7 @@ public abstract class MapReduceOperator extends BasicOperator {
       //      keysCache.stop();
     }
   }
+
   @Override public boolean isSingleStage() {
     return false;
   }
@@ -129,29 +131,29 @@ public abstract class MapReduceOperator extends BasicOperator {
         createCache(mc, getOutput(), "batchputListener");
         //      createCache(mc, intermediateCacheName);
         //create Intermediate cache name for data on the same Sites as outputCache
-//        if (!conf.containsField("skipMap")) {
-          //          if(!conf.getBoolean("skipMap")){
-          if (!isRecCompReduce) {
-            createCache(mc, intermediateCacheName + ".data", "localIndexListener:batchputListener");
-          } else {
-            createCache(mc, intermediateCacheName + ".data", "batchputListener");
-          }
-          if (reduceLocal) {
-            System.out.println("REDUCE LOCAL DETECTED CREATING CACHE");
-            if (!isRecCompReduceLocal) {
-              createCache(mc, intermediateLocalCacheName + ".data", "localIndexListener:batchputListener");
-            } else {
-              createCache(mc, intermediateLocalCacheName + ".data", "batchputListener");
-            }
-          } else {
-            System.out.println("NO REDUCE LOCAL");
-          }
+        //        if (!conf.containsField("skipMap")) {
+        //          if(!conf.getBoolean("skipMap")){
+        if (!isRecCompReduce) {
+          createCache(mc, intermediateCacheName + ".data", "localIndexListener:batchputListener");
+        } else {
+          createCache(mc, intermediateCacheName + ".data", "batchputListener");
         }
-        //create Intermediate  keys cache name for data on the same Sites as outputCache;
-        //      createCache(mc,intermediateCacheName+".keys");
-        //createIndexCache for getting all the nodes that contain values with the same key! in a mc
-        //      createCache(mc,intermediateCacheName+".indexed");
-        //    indexSiteCache = (BasicCache)manager.getIndexedPersistentCache(intermediateCacheName+".indexed");
+        if (reduceLocal) {
+          System.out.println("REDUCE LOCAL DETECTED CREATING CACHE");
+          if (!isRecCompReduceLocal) {
+            createCache(mc, intermediateLocalCacheName + ".data", "localIndexListener:batchputListener");
+          } else {
+            createCache(mc, intermediateLocalCacheName + ".data", "batchputListener");
+          }
+        } else {
+          System.out.println("NO REDUCE LOCAL");
+        }
+      }
+      //create Intermediate  keys cache name for data on the same Sites as outputCache;
+      //      createCache(mc,intermediateCacheName+".keys");
+      //createIndexCache for getting all the nodes that contain values with the same key! in a mc
+      //      createCache(mc,intermediateCacheName+".indexed");
+      //    indexSiteCache = (BasicCache)manager.getIndexedPersistentCache(intermediateCacheName+".indexed");
 
 
     }
@@ -163,7 +165,7 @@ public abstract class MapReduceOperator extends BasicOperator {
 
     if (reduceLocal) {
       collector = new LeadsCollector(1000, intermediateLocalCacheName);
-      if(!isRemote) {
+      if (!isRemote) {
         if (isRecCompReduceLocal) {
           JsonObject reduceLocalConf = getContinuousReduceLocal();
           String ensembleString = computeEnsembleHost(false);
@@ -232,7 +234,7 @@ public abstract class MapReduceOperator extends BasicOperator {
   @Override public void setupReduceLocalCallable() {
     // TODO(ap0n): conf.putString("output", getOutput());
     intermediateLocalDataCache = (BasicCache) manager.getPersisentCache(intermediateLocalCacheName + ".data");
-//    log.error("ReducerIntermediateLocalData " + intermediateLocalDataCache.size());
+    //    log.error("ReducerIntermediateLocalData " + intermediateLocalDataCache.size());
     //    outputCache = (BasicCache) manager.getPersisentCache(intermediateCacheName);
     reduceLocalInputCache = (Cache) intermediateLocalDataCache;
 
@@ -248,6 +250,7 @@ public abstract class MapReduceOperator extends BasicOperator {
             .toString();
     ((LeadsLocalReducerCallable) reducerLocalCallable).setLocalSite(localSite + ":11222");
   }
+
   public LeadsCombiner<?, ?> getCombiner() {
     return combiner;
   }

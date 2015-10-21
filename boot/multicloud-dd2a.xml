@@ -1,108 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <leads-processor-bootstrap>
-	<baseDir>/home/vagvaz/tmp/b/</baseDir> <!-- here are all the conf files of the available modules-->
-	<remoteDir>/tmp/</remoteDir>
-	<hdfs>
-		<uri>hdfs://snf-618466.vm.okeanos.grnet.gr:8020</uri>
-		<user>vagvaz</user>
-		<prefix>/user/vagvaz/</prefix>
-	</hdfs>
-	<scheduler>http://localhost:5001</scheduler>
-	<deploymentType>multicloud</deploymentType>
-	<adresses>
-<!-- 		<MC name='softnet' credentials="softnet">
-			<node name='clu25' privateIp='10.130.0.16'>clu25.softnet.tuc.gr</node>
-			<node name='clu24' privateIp='10.130.0.104'>clu24.softnet.tuc.gr</node>
-			<node name='clu20' privateIp='10.130.0.104'>clu20cd.softnet.tuc.gr</node>
-			<node name='clu19' privateIp='10.130.0.104'>clu19.softnet.tuc.gr</node>
-			<node name='clu18' privateIp='10.130.0.104'>clu18.softnet.tuc.gr</node>
-			<node name='clu17' privateIp='10.130.0.104'>clu17.softnet.tuc.gr</node>
-		</MC> -->
-		<!--<MC name='dd1a' credentials="cloudandheat">-->
-			<!--<node name='leads-qe8' privateIp='10.130.0.16'>80.156.222.4</node>-->
-			<!--<node name='leads-qe14' privateIp='10.130.0.104'>80.156.222.23</node>-->
-			<!-- <node name='leads-qe15' privateIp='10.130.0.122'>80.156.222.21</node> -->
-			<!-- <node name='leads-qe22' privateIp='10.130.0.128'>80.156.222.31</node> -->
-			<!-- <node name='leads-qe23' privateIp='10.130.0.16'>80.156.222.32</node> -->
-			<!--<node name='leads-qe24' privateIp='10.130.0.104'>80.156.222.26</node>-->
-			<!-- <node name='leads-qe25' privateIp='10.130.0.122'>80.156.222.28</node>-->
-			<!--<node name='leads-qe26' privateIp='10.130.0.128'>80.156.222.29</node>-->
-			<!--<node name='leads-qe27' privateIp='10.130.0.16'>80.156.222.30</node>-->
-			<!--<node name='leads-qe9' privateIp='10.130.0.104'>80.156.222.18</node> -->
-		<!--</MC>-->
+    <baseDir>/home/vagvaz/tmp/b/</baseDir>
+    <!-- here are all the conf files of the available modules-->
+    <remoteDir>/tmp/</remoteDir>
+    <hdfs>
+        <uri>hdfs://snf-618466.vm.okeanos.grnet.gr:8020</uri>
+        <user>vagvaz</user>
+        <prefix>/user/vagvaz/</prefix>
+    </hdfs>
+    <scheduler>http://localhost:5001</scheduler>
+    <deploymentType>multicloud</deploymentType>
+    <adresses>
+        <!-- 		<MC name='softnet' credentials="softnet">
+                    <node name='clu25' privateIp='10.130.0.16'>clu25.softnet.tuc.gr</node>
+                    <node name='clu24' privateIp='10.130.0.104'>clu24.softnet.tuc.gr</node>
+                    <node name='clu20' privateIp='10.130.0.104'>clu20cd.softnet.tuc.gr</node>
+                    <node name='clu19' privateIp='10.130.0.104'>clu19.softnet.tuc.gr</node>
+                    <node name='clu18' privateIp='10.130.0.104'>clu18.softnet.tuc.gr</node>
+                    <node name='clu17' privateIp='10.130.0.104'>clu17.softnet.tuc.gr</node>
+                </MC> -->
+        <!--<MC name='dd1a' credentials="cloudandheat">-->
+        <!--<node name='leads-qe8' privateIp='10.130.0.16'>80.156.222.4</node>-->
+        <!--<node name='leads-qe14' privateIp='10.130.0.104'>80.156.222.23</node>-->
+        <!-- <node name='leads-qe15' privateIp='10.130.0.122'>80.156.222.21</node> -->
+        <!-- <node name='leads-qe22' privateIp='10.130.0.128'>80.156.222.31</node> -->
+        <!-- <node name='leads-qe23' privateIp='10.130.0.16'>80.156.222.32</node> -->
+        <!--<node name='leads-qe24' privateIp='10.130.0.104'>80.156.222.26</node>-->
+        <!-- <node name='leads-qe25' privateIp='10.130.0.122'>80.156.222.28</node>-->
+        <!--<node name='leads-qe26' privateIp='10.130.0.128'>80.156.222.29</node>-->
+        <!--<node name='leads-qe27' privateIp='10.130.0.16'>80.156.222.30</node>-->
+        <!--<node name='leads-qe9' privateIp='10.130.0.104'>80.156.222.18</node> -->
+        <!--</MC>-->
 
-		<!--<MC name='unine' credentials="unine">-->
-			<!--<node name='172.16.0.221' privateIp="'172.16.0.221'"/>-->
+        <!--<MC name='unine' credentials="unine">-->
+        <!--<node name='172.16.0.221' privateIp="'172.16.0.221'"/>-->
 
-		<!--</MC>-->
-		<!-- <MC name='dd2c' credentials="cloudandheat">
-			<node name='leads-qe28' privateIp='10.134.1.129'>87.190.239.18</node>
-			<node name='leads-qe37' privateIp='10.134.1.132'>87.190.239.31</node>
-			<node name='leads-qe29' privateIp='10.134.1.130'>87.190.239.19</node>
-			<node name='leads-qe33' privateIp='10.134.1.131'>87.190.239.30</node>
-			<node name='leads-qe30' privateIp='10.134.1.129'>87.190.239.14</node>
-			<node name='leads-qe34' privateIp='10.134.1.132'>87.190.239.17</node>
-			<node name='leads-qe32' privateIp='10.134.1.130'>87.190.239.12</node>
-			<node name='leads-qe36' privateIp='10.134.1.131'>87.190.239.15</node>
-			<node name='leads-qe35' privateIp='10.134.1.129'>87.190.239.16</node>
-			<node name='leads-qe31' privateIp='10.134.1.132'>87.190.239.13</node>
-		</MC> -->
-		<MC name='dd2a' credentials="cloudandheat">
-			 <node name='leads-qe47' privateIp='10.134.1.129'>87.190.238.119</node>
-			<node name='leads-qe43' privateIp='10.134.1.132'>87.190.238.125</node>
-			 <node name='leads-qe42' privateIp='10.134.1.130'>87.190.238.124</node> 
-			<node name='leads-qe41' privateIp='10.134.1.131'>87.190.238.123</node>
-			<node name='leads-qe40' privateIp='10.134.1.129'>87.190.238.122</node>
-			<node name='leads-qe45' privateIp='10.134.1.132'>87.190.238.121</node>
-			<node name='leads-qe44' privateIp='10.134.1.130'>87.190.238.120</node>
-			<node name='leads-qe39' privateIp='10.134.1.131'>87.190.238.116</node>
-			<node name='leads-qe46' privateIp='10.134.1.129'>87.190.238.118</node>
-			<node name='leads-qe38' privateIp='10.134.1.132'>87.190.238.117</node>
-		</MC>
-	</adresses> <!-- localhost, 5.147.254.198-->
-	<startUpDelay>2</startUpDelay> <!--delay between modules startup (seconds) -->
-	<processor>
-		<version>1.0-SNAPSHOT</version>
-		<groupId>gr.tuc.softnet</groupId>
-		<vertxArg>cluster</vertxArg>
-		<component>
-			<name>log-sink</name>
-			<configurationFile>log-sink.xml</configurationFile>
-			<numberOfProcessors>1</numberOfProcessors>
-			<instances>1</instances>
-			<modName>log-sink-module</modName>
-		</component>
-		<component>
-		    <name>nqe</name>
-		    <configurationFile>nqe.xml</configurationFile>
-		    <numberOfProcessors>1</numberOfProcessors>
-		    <instances>2</instances>
-		</component>
-		<component>
-		    <name>webservice</name>
-		    <configurationFile>webservice.xml</configurationFile>
-		    <numberOfProcessors>1</numberOfProcessors>
-		    <instances>1</instances>
-		    <modName>processor-webservice</modName>
-		</component>	
-	</processor>
-	<ssh>
-		<credentials>
-			<id>cloudandheat</id>
-			<username>ubuntu</username>
-			<!--<password>testpass</password> -->
-			<rsa>/home/vagvaz/.ssh/leads_cluster</rsa> <!-- a filename -->
-		</credentials>
-		<credentials>
-			<id>softnet</id>
-			<username>aangelidakis</username>
-			<password>kalamarakia</password>
-			<!--    <rsa>/home/ubuntu/key.rsa</rsa>  a filename -->
-		</credentials>
-		<credentials>
-			<id>unine</id>
-			<username>root</username>
-			<rsa>/home/aangelidakis/.ssh/unine.rsa</rsa>
-		</credentials>
-	</ssh>
+        <!--</MC>-->
+        <!-- <MC name='dd2c' credentials="cloudandheat">
+            <node name='leads-qe28' privateIp='10.134.1.129'>87.190.239.18</node>
+            <node name='leads-qe37' privateIp='10.134.1.132'>87.190.239.31</node>
+            <node name='leads-qe29' privateIp='10.134.1.130'>87.190.239.19</node>
+            <node name='leads-qe33' privateIp='10.134.1.131'>87.190.239.30</node>
+            <node name='leads-qe30' privateIp='10.134.1.129'>87.190.239.14</node>
+            <node name='leads-qe34' privateIp='10.134.1.132'>87.190.239.17</node>
+            <node name='leads-qe32' privateIp='10.134.1.130'>87.190.239.12</node>
+            <node name='leads-qe36' privateIp='10.134.1.131'>87.190.239.15</node>
+            <node name='leads-qe35' privateIp='10.134.1.129'>87.190.239.16</node>
+            <node name='leads-qe31' privateIp='10.134.1.132'>87.190.239.13</node>
+        </MC> -->
+        <MC name='dd2a' credentials="cloudandheat">
+            <node name='leads-qe47' privateIp='10.134.1.129'>87.190.238.119</node>
+            <node name='leads-qe43' privateIp='10.134.1.132'>87.190.238.125</node>
+            <node name='leads-qe42' privateIp='10.134.1.130'>87.190.238.124</node>
+            <node name='leads-qe41' privateIp='10.134.1.131'>87.190.238.123</node>
+            <node name='leads-qe40' privateIp='10.134.1.129'>87.190.238.122</node>
+            <node name='leads-qe45' privateIp='10.134.1.132'>87.190.238.121</node>
+            <node name='leads-qe44' privateIp='10.134.1.130'>87.190.238.120</node>
+            <node name='leads-qe39' privateIp='10.134.1.131'>87.190.238.116</node>
+            <node name='leads-qe46' privateIp='10.134.1.129'>87.190.238.118</node>
+            <node name='leads-qe38' privateIp='10.134.1.132'>87.190.238.117</node>
+        </MC>
+    </adresses>
+    <!-- localhost, 5.147.254.198-->
+    <startUpDelay>2</startUpDelay>
+    <!--delay between modules startup (seconds) -->
+    <processor>
+        <version>1.0-SNAPSHOT</version>
+        <groupId>gr.tuc.softnet</groupId>
+        <vertxArg>cluster</vertxArg>
+        <component>
+            <name>log-sink</name>
+            <configurationFile>log-sink.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+            <modName>log-sink-module</modName>
+        </component>
+        <component>
+            <name>nqe</name>
+            <configurationFile>nqe.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>2</instances>
+        </component>
+        <component>
+            <name>webservice</name>
+            <configurationFile>webservice.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+            <modName>processor-webservice</modName>
+        </component>
+    </processor>
+    <ssh>
+        <credentials>
+            <id>cloudandheat</id>
+            <username>ubuntu</username>
+            <!--<password>testpass</password> -->
+            <rsa>/home/vagvaz/.ssh/leads_cluster</rsa>
+            <!-- a filename -->
+        </credentials>
+        <credentials>
+            <id>softnet</id>
+            <username>aangelidakis</username>
+            <password>kalamarakia</password>
+            <!--    <rsa>/home/ubuntu/key.rsa</rsa>  a filename -->
+        </credentials>
+        <credentials>
+            <id>unine</id>
+            <username>root</username>
+            <rsa>/home/aangelidakis/.ssh/unine.rsa</rsa>
+        </credentials>
+    </ssh>
 </leads-processor-bootstrap>

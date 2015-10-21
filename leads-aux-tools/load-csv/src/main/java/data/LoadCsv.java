@@ -285,8 +285,8 @@ public class LoadCsv {
 
           if (convertedrows % 100 == 0) {
             System.out.print("Converted " + convertedrows + " Mean process time: " + DurationFormatUtils.formatDuration(
-                    (long) ((System.currentTimeMillis() - filestartTime) / (float) (convertedrows - alreadyconvertedrows
-                        + 1)), "HH:mm:ss,SSS"));
+                (long) ((System.currentTimeMillis() - filestartTime) / (float) (convertedrows - alreadyconvertedrows
+                    + 1)), "HH:mm:ss,SSS"));
             //System.out.println(" bad: " + errorenousline.size() + " charout: " + cutoffchars + " "+((float)cutoffchars/allchars)*100+ "%");
             System.out.print("\n");
             System.out.flush();

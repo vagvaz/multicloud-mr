@@ -36,8 +36,7 @@ public class UploadDataHandler implements Handler<HttpServerRequest> {
     bodyHandlers = new HashMap<>();
   }
 
-  @Override
-  public void handle(HttpServerRequest request) {
+  @Override public void handle(HttpServerRequest request) {
     request.response().setStatusCode(200);
     request.response().putHeader(WebStrings.CONTENT_TYPE, WebStrings.APP_JSON);
     log.info("Upload data Request");
@@ -66,8 +65,7 @@ public class UploadDataHandler implements Handler<HttpServerRequest> {
       this.requestId = requestId;
     }
 
-    @Override
-    public void handle(JsonObject message) {
+    @Override public void handle(JsonObject message) {
       if (message.containsField("error")) {
         replyForError(message);
       }
@@ -99,13 +97,12 @@ public class UploadDataHandler implements Handler<HttpServerRequest> {
     private final UploadDataReplyHandler replyHandler;
     private final String requestId;
 
-    public UploadDataBodyHandler(String requestId,UploadDataReplyHandler replyHandler) {
+    public UploadDataBodyHandler(String requestId, UploadDataReplyHandler replyHandler) {
       this.replyHandler = replyHandler;
       this.requestId = requestId;
     }
 
-    @Override
-    public void handle(Buffer body) {
+    @Override public void handle(Buffer body) {
       String pluginInfo = body.getString(0, body.length());
       if (Strings.isNullOrEmpty(pluginInfo) || pluginInfo.equals("{}")) {
         replyHandler.replyForError(null);

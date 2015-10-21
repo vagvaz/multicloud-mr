@@ -3,12 +3,9 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsCombiner;
-
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Created by Apostolos Nydriotis on 2015/07/03.
@@ -29,13 +26,11 @@ public class CountMinLocalReducer extends LeadsCombiner<String, Tuple> {
     super(configuration);
   }
 
-  @Override
-  public void initialize() {
+  @Override public void initialize() {
     super.initialize();
   }
 
-  @Override
-  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
+  @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
 
     int sum = 0;
     while (iter.hasNext()) {
@@ -49,8 +44,7 @@ public class CountMinLocalReducer extends LeadsCombiner<String, Tuple> {
     collector.emit(row, output);
   }
 
-  @Override
-  protected void finalizeTask() {
+  @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
   }
 }

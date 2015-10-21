@@ -5,7 +5,6 @@ import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
-import org.bson.BasicBSONObject;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
@@ -45,9 +44,8 @@ public class SubmitKMeansTest {
   private static int k;
 
   /**
-   *
-   * @param   dataDirectory
-   * @param   loadData if false only the centroids will be loaded
+   * @param dataDirectory
+   * @param loadData      if false only the centroids will be loaded
    */
   private static void putData(String dataDirectory, boolean loadData) {
 
@@ -110,30 +108,26 @@ public class SubmitKMeansTest {
 
     LQPConfiguration.getInstance().initialize();
     LQPConfiguration.getInstance().loadFile(propertiesFile);
-    host = LQPConfiguration.getInstance().getConfiguration().getString("webservice-address",
-                                                                       "http://" + DD1A_IP);
+    host = LQPConfiguration.getInstance().getConfiguration().getString("webservice-address", "http://" + DD1A_IP);
     System.out.println("webservice host: " + host);
     port = 8080;
     String dataPath = LQPConfiguration.getInstance().getConfiguration().getString("data-path", ".");
     System.out.println("data path " + dataPath);
-    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data",
-                                                                                    false);
+    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data", false);
     System.out.println("load data " + loadData);
 
-    boolean reduceLocal = LQPConfiguration.getInstance().getConfiguration()
-        .getBoolean("use-reduce-local", false);
+    boolean reduceLocal = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-reduce-local", false);
     System.out.println("use reduce local " + reduceLocal);
 
-    boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine",
-                                                                                   true);
+    boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine", true);
     System.out.println("use combine " + combine);
 
-    boolean recComposableReduce = LQPConfiguration.getInstance().getConfiguration()
-        .getBoolean("recComposableReduce", false);
+    boolean recComposableReduce =
+        LQPConfiguration.getInstance().getConfiguration().getBoolean("recComposableReduce", false);
     System.out.println("isRecComposableReduce " + recComposableReduce);
 
-    boolean recComposableLocalReduce = LQPConfiguration.getInstance().getConfiguration()
-        .getBoolean("recComposableLocalReduce", false);
+    boolean recComposableLocalReduce =
+        LQPConfiguration.getInstance().getConfiguration().getBoolean("recComposableLocalReduce", false);
     System.out.println("isRecComposableLocalReduce " + recComposableLocalReduce);
 
     k = LQPConfiguration.getInstance().getConfiguration().getInt("k", 2);
@@ -144,8 +138,7 @@ public class SubmitKMeansTest {
     //set the default microclouds
     List<String> defaultMCs = new ArrayList<>(Arrays.asList("dd1a", "dd2a", "dresden2"));
     //read the microcloud to run the job
-    activeMicroClouds = LQPConfiguration.getInstance().getConfiguration()
-        .getList("active-microclouds", defaultMCs);
+    activeMicroClouds = LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
     System.out.println("active mc ");
     PrintUtilities.printList(activeMicroClouds);
     //initialize default values
@@ -161,8 +154,7 @@ public class SubmitKMeansTest {
     activeIps = new HashMap<>();
     //read the ips from configuration or use the default
     for (String mc : activeMicroClouds) {
-      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration()
-          .getString(mc, microcloudAddresses.get(mc)));
+      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration().getString(mc, microcloudAddresses.get(mc)));
     }
     System.out.println("active ips");
     PrintUtilities.printMap(activeIps);
@@ -187,13 +179,12 @@ public class SubmitKMeansTest {
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
     jsonObject.getObject("operator").putObject("scheduling", scheduling);
 
-    if(recComposableReduce) {
+    if (recComposableReduce) {
       jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
     }
 
-    if(recComposableLocalReduce) {
-      jsonObject.getObject("operator").putString("recComposableLocalReduce",
-                                                 "recComposableLocalReduce");
+    if (recComposableLocalReduce) {
+      jsonObject.getObject("operator").putString("recComposableLocalReduce", "recComposableLocalReduce");
     }
 
     if (combine) {
@@ -222,70 +213,69 @@ public class SubmitKMeansTest {
       Date start = new Date();
       String[] clusters = new String[k];
 
-//      while (true) {
-        for (int i = 0; i < k; i++) {
-          Map centroid = centroids[i];
-          jsonObject.getObject("operator").getObject("configuration")
-              .putObject("centroid" + String.valueOf(i), new JsonObject(centroid))
-              .putNumber("norm" + String.valueOf(i), norms[i]);
+      //      while (true) {
+      for (int i = 0; i < k; i++) {
+        Map centroid = centroids[i];
+        jsonObject.getObject("operator").getObject("configuration")
+            .putObject("centroid" + String.valueOf(i), new JsonObject(centroid))
+            .putNumber("norm" + String.valueOf(i), norms[i]);
+      }
+
+      QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
+      String id = res.getId();
+      System.out.println("Submitted job. id: " + id);
+      System.out.println("Executing...");
+
+      int secs = 0;
+
+      while (true) {
+        QueryStatus status = WebServiceClient.getQueryStatus(id);
+        if (status.getStatus().equals("COMPLETED")) {
+          break;
+        } else if (status.getErrorMessage() != null && status.getErrorMessage().length() > 0) {
+          System.out.println(status.getErrorMessage());
+          break;
+        } else {
+          System.out.print("\r" + secs++);
+          Thread.sleep(1000);
         }
+      }
 
-        QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
-        String id = res.getId();
-        System.out.println("Submitted job. id: " + id);
-        System.out.println("Executing...");
+      //        EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
+      //        EnsembleCache cache = ensembleCacheManager
+      //            .getCache(id, new ArrayList<>(ensembleCacheManager.sites()),
+      //                      EnsembleCacheManager.Consistency.DIST);
+      //
+      //        Map<String, Double>[] newCenters = new Map[k];
+      //        for (int i = 0; i < k; i++) {
+      //          //          Tuple t = (Tuple) cache.get(String.valueOf(i));
+      //          Tuple t = (Tuple) getKeyFrom(cache, String.valueOf(i));
+      //          norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
+      //          clusters[i] = t.getAttribute("cluster" + i);
+      //          BasicBSONObject values = (BasicBSONObject) t.getGenericAttribute("newCentroid");
+      //          newCenters[i] = new HashMap<>();
+      //          for (String key : values.keySet()) {
+      //            newCenters[i].put(key, (Double) values.get(key));
+      //          }
+      //        }
+      //
+      //        if (!centersChanged(newCenters)) {
+      //          System.out.println();
+      //          break;
+      //        }
+      //        for (int i = 0; i < k; i++) {
+      //          centroids[i] = newCenters[i];
+      //        }
+      //        System.out.println("\nRecalculating");
+      //      }
 
-        int secs = 0;
-
-        while (true) {
-          QueryStatus status = WebServiceClient.getQueryStatus(id);
-          if (status.getStatus().equals("COMPLETED")) {
-            break;
-          } else if (status.getErrorMessage() != null && status.getErrorMessage().length() > 0) {
-            System.out.println(status.getErrorMessage());
-            break;
-          } else {
-            System.out.print("\r" + secs++);
-            Thread.sleep(1000);
-          }
-        }
-
-//        EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
-//        EnsembleCache cache = ensembleCacheManager
-//            .getCache(id, new ArrayList<>(ensembleCacheManager.sites()),
-//                      EnsembleCacheManager.Consistency.DIST);
-//
-//        Map<String, Double>[] newCenters = new Map[k];
-//        for (int i = 0; i < k; i++) {
-//          //          Tuple t = (Tuple) cache.get(String.valueOf(i));
-//          Tuple t = (Tuple) getKeyFrom(cache, String.valueOf(i));
-//          norms[i] = t.getNumberAttribute("norm" + String.valueOf(i)).doubleValue();
-//          clusters[i] = t.getAttribute("cluster" + i);
-//          BasicBSONObject values = (BasicBSONObject) t.getGenericAttribute("newCentroid");
-//          newCenters[i] = new HashMap<>();
-//          for (String key : values.keySet()) {
-//            newCenters[i].put(key, (Double) values.get(key));
-//          }
-//        }
-//
-//        if (!centersChanged(newCenters)) {
-//          System.out.println();
-//          break;
-//        }
-//        for (int i = 0; i < k; i++) {
-//          centroids[i] = newCenters[i];
-//        }
-//        System.out.println("\nRecalculating");
-//      }
-
-//      for (int i = 0; i < centroids.length; i++) {
-//        System.out.println("cluster" + i + ": " + clusters[i]);
-//      }
+      //      for (int i = 0; i < centroids.length; i++) {
+      //        System.out.println("cluster" + i + ": " + clusters[i]);
+      //      }
 
       //        printResults(id, 5);
       Date end = new Date();
-      System.out.println("\nDONE IN: " + ((double) (end.getTime() - start.getTime()) / 1000.0)
-                         + " sec");
+      System.out.println("\nDONE IN: " + ((double) (end.getTime() - start.getTime()) / 1000.0) + " sec");
 
       flushToFile("metrics");
       clearCache("metrics");
@@ -298,17 +288,17 @@ public class SubmitKMeansTest {
   private static void flushToFile(String id) throws FileNotFoundException {
     String name = SubmitKMeansTest.class.getSimpleName();
     Date date = new Date();
-    String filename = name+"-"+date.toString()+".txt";
-    flushToFile(id,filename);
+    String filename = name + "-" + date.toString() + ".txt";
+    flushToFile(id, filename);
   }
 
   private static void flushToFile(String id, String filename) throws FileNotFoundException {
-    RandomAccessFile ram = new RandomAccessFile(filename,"rw");
+    RandomAccessFile ram = new RandomAccessFile(filename, "rw");
     for (String mc : activeMicroClouds) {
       System.out.println(mc);
       RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
       RemoteCache results = remoteCacheManager.getCache(id);
-      PrintUtilities.saveMapToFile(results,filename);
+      PrintUtilities.saveMapToFile(results, filename);
     }
   }
 
@@ -317,7 +307,7 @@ public class SubmitKMeansTest {
       System.out.println(mc);
       RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
       RemoteCache results = remoteCacheManager.getCache(id);
-     results.clear();
+      results.clear();
     }
   }
 
@@ -339,8 +329,7 @@ public class SubmitKMeansTest {
     return false;
   }
 
-  private static JsonObject getScheduling(List<String> activeMicroClouds,
-                                          Map<String, String> activeIps) {
+  private static JsonObject getScheduling(List<String> activeMicroClouds, Map<String, String> activeIps) {
     JsonObject result = new JsonObject();
     for (String mc : activeMicroClouds) {
       result.putArray(mc, new JsonArray().add(activeIps.get(mc)));
@@ -351,8 +340,7 @@ public class SubmitKMeansTest {
   private static void verifyResults(String id, String[] resultWords, String ensembleString) {
     EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
     EnsembleCache cache = ensembleCacheManager
-        .getCache(id, new ArrayList<>(ensembleCacheManager.sites()),
-                  EnsembleCacheManager.Consistency.DIST);
+        .getCache(id, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
     for (String word : resultWords) {
       Object result = cache.get(word);
       if (result != null) {
@@ -382,7 +370,7 @@ public class SubmitKMeansTest {
   }
 
   private static void printResults(String id) {
-    printResults(id,-1);
+    printResults(id, -1);
   }
 
   private static void printResults(String id, int numOfItems) {
@@ -400,8 +388,7 @@ public class SubmitKMeansTest {
 
   private static void PrintUsage() {
     System.out
-        .println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>"
-                 + " <LOAD_DATA> <REDUCE_LOCAL>");
+        .println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>" + " <LOAD_DATA> <REDUCE_LOCAL>");
     System.out.println("Defaults:");
     System.out.println("java -cp tests.SubmitWordCountTest http://80.156.222.4 8080 . false false");
   }
@@ -430,9 +417,8 @@ public class SubmitKMeansTest {
 
       if (loadData) {
         ensembleCacheManager = new EnsembleCacheManager((ensembleString));
-        ensembleCache = ensembleCacheManager.getCache(CACHE_NAME,
-                                                      new ArrayList<>(ensembleCacheManager.sites()),
-                                                      EnsembleCacheManager.Consistency.DIST);
+        ensembleCache = ensembleCacheManager
+            .getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
       }
 
       while (true) {
@@ -448,8 +434,7 @@ public class SubmitKMeansTest {
         System.out.println(id + ": files.get(0).getAbsolutePath() = " + f.getAbsolutePath());
 
         try {
-          BufferedReader bufferedReader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+          BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           String line;
           Map<String, Double> frequencies = new HashMap<>();

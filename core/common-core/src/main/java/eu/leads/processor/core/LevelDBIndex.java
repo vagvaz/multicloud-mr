@@ -17,7 +17,7 @@ import static org.fusesource.leveldbjni.JniDBFactory.bytes;
 /**
  * Created by vagvaz on 8/17/15.
  */
-public class LevelDBIndex {
+public class LevelDBIndex implements IntermediateDataIndex {
   private static final String JNI_DB_FACTORY_CLASS_NAME = "org.fusesource.leveldbjni.JniDBFactory";
   private static final String JAVA_DB_FACTORY_CLASS_NAME = "org.iq80.leveldb.impl.Iq80DBFactory";
   private static Tuple t;
@@ -93,12 +93,12 @@ public class LevelDBIndex {
     System.out.println("values-------------\n");
   }
 
-  public Iterable<Map.Entry<String, Integer>> getKeysIterator() {
+  @Override public Iterable<Map.Entry<String, Integer>> getKeysIterator() {
     keyIterator = new LevelDBIterator(keysDB);
     return keyIterator;
   }
 
-  public Iterator<Object> getKeyIterator(String key, Integer counter) {
+  @Override public Iterator<Object> getKeyIterator(String key, Integer counter) {
     //        if(valuesIterator != null){
     //            valuesIterator.close();
     //        }
@@ -182,7 +182,7 @@ public class LevelDBIndex {
 
   //    80.156.73.113:11222;80.156.73.116:11222;80.156.73.123:11222;80.156.73.128:11222
   //    ;
-  public synchronized void flush() {
+  @Override public synchronized void flush() {
     try {
       if (dataDB != null) {
         if (batch != null) {
@@ -238,7 +238,7 @@ public class LevelDBIndex {
     return t;
   }
 
-  public synchronized void put(Object key, Object value) {
+  @Override public synchronized void put(Object key, Object value) {
     add(key, value);
   }
 
@@ -288,9 +288,9 @@ public class LevelDBIndex {
 
   //
 
-  public synchronized void close() {
+  @Override public synchronized void close() {
 
-    if(isclosed)
+    if (isclosed)
       return;
     isclosed = true;
     if (keyIterator != null) {

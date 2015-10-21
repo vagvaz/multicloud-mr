@@ -23,86 +23,82 @@ import java.util.Set;
  */
 public class LogSink extends Verticle implements LeadsMessageHandler {
 
-    String id;
-    Set<String> groups;
-    String configuration;
-    Node com;
-    Logger logger = LoggerFactory.getLogger(LogSink.class.getName());
+  String id;
+  Set<String> groups;
+  String configuration;
+  Node com;
+  Logger logger = LoggerFactory.getLogger(LogSink.class.getName());
 
-    @Override
-    public void start() {
-        super.start();
-        JsonObject config = container.config();
-        id = config.getString("id");
-        JsonArray logGroups = config.getArray("groups");
-        Iterator<Object> iterator = logGroups.iterator();
-        groups = new HashSet<String>();
-        while (iterator.hasNext()) {
-            String g = (String) iterator.next();
-            groups.add(g);
-        }
-        configuration = config.getString("configuration");
-        LQPConfiguration.initialize(true);
-        //      LQPConfiguration.parseFile(configuration);
-        com = new DefaultNode();
-        com.initialize(id, "leads.log.sink", groups, this, this, vertx);
-        EventBus bus = vertx.eventBus();
+  @Override public void start() {
+    super.start();
+    JsonObject config = container.config();
+    id = config.getString("id");
+    JsonArray logGroups = config.getArray("groups");
+    Iterator<Object> iterator = logGroups.iterator();
+    groups = new HashSet<String>();
+    while (iterator.hasNext()) {
+      String g = (String) iterator.next();
+      groups.add(g);
+    }
+    configuration = config.getString("configuration");
+    LQPConfiguration.initialize(true);
+    //      LQPConfiguration.parseFile(configuration);
+    com = new DefaultNode();
+    com.initialize(id, "leads.log.sink", groups, this, this, vertx);
+    EventBus bus = vertx.eventBus();
 
-        bus.registerHandler("leads.processor.control", new Handler<Message>() {
-            @Override
-            public void handle(Message message) {
-                System.err.println("  " + message.toString());
+    bus.registerHandler("leads.processor.control", new Handler<Message>() {
+      @Override public void handle(Message message) {
+        System.err.println("  " + message.toString());
 
-                JsonObject body = (JsonObject) message.body();
-                if (body.containsField("type")) {
-                    if (body.getString("type").equals("action")) {
-                        Action action = new Action(body);
-                        if (!action.getLabel().equals(IManagerConstants.QUIT)) {
+        JsonObject body = (JsonObject) message.body();
+        if (body.containsField("type")) {
+          if (body.getString("type").equals("action")) {
+            Action action = new Action(body);
+            if (!action.getLabel().equals(IManagerConstants.QUIT)) {
 
-                            System.err.println("Continue");
-                        } else {
-                            System.err.println("LogSink");
+              System.err.println("Continue");
+            } else {
+              System.err.println("LogSink");
 
-                            vertx.setTimer(1000, new Handler<Long>() {
-                                @Override
-                                public void handle(Long aLong) {
-                                    System.out.println(" LogSink Exiting ");
-                                    System.exit(0);
-                                }
-                            });
-                            stop();
-                        }
-                    }
-
+              vertx.setTimer(1000, new Handler<Long>() {
+                @Override public void handle(Long aLong) {
+                  System.out.println(" LogSink Exiting ");
+                  System.exit(0);
                 }
+              });
+              stop();
             }
-        });
-        System.out.println("LogSink Started");
-    }
+          }
 
-    @Override
-    public void handle(JsonObject msg) {
-        String type = msg.getString("type");
-        String message = msg.getString("message");
-        String component = msg.getString("component");
-        if (type.equals("info")) {
-//            logger.info(component + ": " + message);
-
-
-        } else if (type.equals("warn")) {
-//            logger.warn(component + ": " + message);
-            //         bus.sendToAllGroup("eu.leads.processor.log.warn", msg);
-        } else if (type.equals("error")) {
-//            logger.error(component + ": " + message);
-
-            //         bus.sendToAllGroup("eu.leads.processor.log.error", msg);
-        } else if (type.equals("fatal")) {
-//            logger.error(component + ": FATAL " + message);
-            //         bus.sendToAllGroup("eu.leads.processor.log.fatal", msg);
-        } else {
-//            logger.debug(component + ": " + message);
-
-            //         bus.sendToAllGroup("eu.leads.processor.log.debug", msg);
         }
+      }
+    });
+    System.out.println("LogSink Started");
+  }
+
+  @Override public void handle(JsonObject msg) {
+    String type = msg.getString("type");
+    String message = msg.getString("message");
+    String component = msg.getString("component");
+    if (type.equals("info")) {
+      //            logger.info(component + ": " + message);
+
+
+    } else if (type.equals("warn")) {
+      //            logger.warn(component + ": " + message);
+      //         bus.sendToAllGroup("eu.leads.processor.log.warn", msg);
+    } else if (type.equals("error")) {
+      //            logger.error(component + ": " + message);
+
+      //         bus.sendToAllGroup("eu.leads.processor.log.error", msg);
+    } else if (type.equals("fatal")) {
+      //            logger.error(component + ": FATAL " + message);
+      //         bus.sendToAllGroup("eu.leads.processor.log.fatal", msg);
+    } else {
+      //            logger.debug(component + ": " + message);
+
+      //         bus.sendToAllGroup("eu.leads.processor.log.debug", msg);
     }
+  }
 }

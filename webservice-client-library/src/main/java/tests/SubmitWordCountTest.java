@@ -33,7 +33,7 @@ public class SubmitWordCountTest {
   private static final String UNINE_IP = "192.42.43.31";
   private static final String LOCAL = "127.0.0.1";
   private static final String CACHE_NAME = "clustered";
-  private static  int PUT_THREADS_COUNT = 100;
+  private static int PUT_THREADS_COUNT = 100;
   private static Map<String, String> microcloudAddresses;
   private static Map<String, String> activeIps;
   private static List<String> activeMicroClouds;
@@ -56,16 +56,14 @@ public class SubmitWordCountTest {
 
     @Override public void run() {
       LQPConfiguration.initialize();
-      linesPerTuple = LQPConfiguration.getInstance().getConfiguration()
-          .getInt("putter.lines.per.tuple",linesPerTuple);
+      linesPerTuple = LQPConfiguration.getInstance().getConfiguration().getInt("putter.lines.per.tuple", linesPerTuple);
 
       File f;
 
       EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
 
-      EnsembleCache ensembleCache =
-          ensembleCacheManager.getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()),
-              EnsembleCacheManager.Consistency.DIST);
+      EnsembleCache ensembleCache = ensembleCacheManager
+          .getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
 
       while (true) {
         synchronized (files) {
@@ -80,8 +78,7 @@ public class SubmitWordCountTest {
         System.out.println(id + ": files.get(0).getAbsolutePath() = " + f.getAbsolutePath());
 
         try {
-          BufferedReader bufferedReader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+          BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           JsonObject data = new JsonObject();
           String line;
@@ -111,8 +108,7 @@ public class SubmitWordCountTest {
 
   private static void putData(String dataDirectory) {
 
-    PUT_THREADS_COUNT = LQPConfiguration.getInstance().getConfiguration().getInt("putter.threads",
-                                                                                 PUT_THREADS_COUNT);
+    PUT_THREADS_COUNT = LQPConfiguration.getInstance().getConfiguration().getInt("putter.threads", PUT_THREADS_COUNT);
     File datasetDirectory = new File(dataDirectory);
     File[] allFiles = datasetDirectory.listFiles();
     files = new Vector<File>();
@@ -154,36 +150,30 @@ public class SubmitWordCountTest {
     }
     LQPConfiguration.getInstance().initialize();
     LQPConfiguration.getInstance().loadFile(propertiesFile);
-    host = LQPConfiguration.getInstance().getConfiguration()
-        .getString("webservice-address", "http://" + DD1A_IP);
+    host = LQPConfiguration.getInstance().getConfiguration().getString("webservice-address", "http://" + DD1A_IP);
     System.out.println("webservice host: " + host);
     port = 8080;
     String dataPath = LQPConfiguration.getInstance().getConfiguration()
         .getString("data-path", ".");  // "/home/ap0n/Desktop/tmp-dataset"
     System.out.println("data path " + dataPath);
-    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data",
-                                                                                    false);
+    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data", false);
     System.out.println("load data " + loadData);
-    boolean reduceLocal = LQPConfiguration.getInstance().getConfiguration()
-        .getBoolean("use-reduce-local", false);
+    boolean reduceLocal = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-reduce-local", false);
     System.out.println("use reduce local " + reduceLocal);
-    boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine",
-                                                                                   true);
-    boolean recComposableReduce = LQPConfiguration.getInstance().getConfiguration()
-        .getBoolean("recComposableReduce", false);
+    boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine", true);
+    boolean recComposableReduce =
+        LQPConfiguration.getInstance().getConfiguration().getBoolean("recComposableReduce", false);
     System.out.println("isRecComposableReduce " + recComposableReduce);
 
-    boolean recComposableLocalReduce = LQPConfiguration.getInstance().getConfiguration()
-        .getBoolean("recComposableLocalReduce", false);
+    boolean recComposableLocalReduce =
+        LQPConfiguration.getInstance().getConfiguration().getBoolean("recComposableLocalReduce", false);
     System.out.println("isRecComposableLocalReduce " + recComposableLocalReduce);
 
     System.out.println("use combine " + combine);
     //set the default microclouds
-    List<String> defaultMCs = new ArrayList<>(Arrays.asList("softnet", "dd1a", "dresden2",
-                                                            "hamm6"));
+    List<String> defaultMCs = new ArrayList<>(Arrays.asList("softnet", "dd1a", "dresden2", "hamm6"));
     //read the microcloud to run the job
-    activeMicroClouds = LQPConfiguration.getInstance().getConfiguration()
-        .getList("active-microclouds", defaultMCs);
+    activeMicroClouds = LQPConfiguration.getInstance().getConfiguration().getList("active-microclouds", defaultMCs);
     System.out.println("active mc ");
     PrintUtilities.printList(activeMicroClouds);
     //initialize default values
@@ -193,14 +183,13 @@ public class SubmitWordCountTest {
     microcloudAddresses.put("hamm6", HAMM6_IP);
     microcloudAddresses.put("hamm5", HAMM5_IP);
     microcloudAddresses.put("softnet", SOFTNET_IP);
-    microcloudAddresses.put("localcluster",LOCAL);
+    microcloudAddresses.put("localcluster", LOCAL);
 
 
     activeIps = new HashMap<>();
     //read the ips from configuration or use the default
     for (String mc : activeMicroClouds) {
-      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration()
-          .getString(mc, microcloudAddresses.get(mc)));
+      activeIps.put(mc, LQPConfiguration.getInstance().getConfiguration().getString(mc, microcloudAddresses.get(mc)));
     }
     System.out.println("active ips");
     PrintUtilities.printMap(activeIps);
@@ -228,7 +217,7 @@ public class SubmitWordCountTest {
     JsonObject scheduling = getScheduling(activeMicroClouds, activeIps);
     jsonObject.getObject("operator").putObject("scheduling", scheduling);
 
-    if(recComposableReduce) {
+    if (recComposableReduce) {
       jsonObject.getObject("operator").putString("recComposableReduce", "recComposableReduce");
     }
 
@@ -239,9 +228,8 @@ public class SubmitWordCountTest {
     }
     if (reduceLocal) {
       jsonObject.getObject("operator").putString("reduceLocal", "true");
-      if(recComposableLocalReduce) {
-        jsonObject.getObject("operator").putString("recComposableLocalReduce",
-                                                   "recComposableLocalReduce");
+      if (recComposableLocalReduce) {
+        jsonObject.getObject("operator").putString("recComposableLocalReduce", "recComposableLocalReduce");
       }
     }
 
@@ -287,7 +275,7 @@ public class SubmitWordCountTest {
       flushToFile("metrics");
       clearCache("metrics");
 
-      System.out.println("\nDONE IN: " + ((end-start)/1000f) + " sec");
+      System.out.println("\nDONE IN: " + ((end - start) / 1000f) + " sec");
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -297,22 +285,21 @@ public class SubmitWordCountTest {
   private static void flushToFile(String id) throws FileNotFoundException {
     String name = SubmitWordCountTest.class.getSimpleName();
     Date date = new Date();
-    String filename = name+"-"+date.toString()+".txt";
-    flushToFile(id,filename);
+    String filename = name + "-" + date.toString() + ".txt";
+    flushToFile(id, filename);
   }
 
   private static void flushToFile(String id, String filename) throws FileNotFoundException {
-    RandomAccessFile ram = new RandomAccessFile(filename,"rw");
+    RandomAccessFile ram = new RandomAccessFile(filename, "rw");
     for (String mc : activeMicroClouds) {
       System.out.println(mc);
       RemoteCacheManager remoteCacheManager = createRemoteCacheManager(activeIps.get(mc));
       RemoteCache results = remoteCacheManager.getCache(id);
-      PrintUtilities.saveMapToFile(results,filename);
+      PrintUtilities.saveMapToFile(results, filename);
     }
   }
 
-  private static JsonObject getScheduling(List<String> activeMicroClouds,
-                                          Map<String, String> activeIps) {
+  private static JsonObject getScheduling(List<String> activeMicroClouds, Map<String, String> activeIps) {
     JsonObject result = new JsonObject();
     for (String mc : activeMicroClouds) {
       result.putArray(mc, new JsonArray().add(activeIps.get(mc)));
@@ -335,10 +322,9 @@ public class SubmitWordCountTest {
   private static void verifyResults(String id, String[] resultWords, String ensembleString) {
     EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
     EnsembleCache cache = ensembleCacheManager
-        .getCache(id, new ArrayList<>(ensembleCacheManager.sites()),
-                  EnsembleCacheManager.Consistency.DIST);
+        .getCache(id, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
     for (String word : resultWords) {
-      Object result = getKeyFrom(cache,word);
+      Object result = getKeyFrom(cache, word);
       if (result != null) {
         System.out.println(word + "--->" + result.toString());
       } else {
@@ -382,6 +368,7 @@ public class SubmitWordCountTest {
     }
 
   }
+
   private static void clearCache(String id) {
     for (String mc : activeMicroClouds) {
       System.out.println(mc);
@@ -390,10 +377,10 @@ public class SubmitWordCountTest {
       results.clear();
     }
   }
+
   private static void PrintUsage() {
     System.out
-        .println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>"
-                 + " <LOAD_DATA> <REDUCE_LOCAL>");
+        .println("java -cp tests.SubmitWordCountTest http://<IP> <PORT> <DATA_DIR>" + " <LOAD_DATA> <REDUCE_LOCAL>");
     System.out.println("Defaults:");
     System.out.println("java -cp tests.SubmitWordCountTest http://80.156.222.4 8080 . false false");
   }

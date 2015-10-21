@@ -74,23 +74,23 @@ import java.util.concurrent.Future;
 
     if (operatorClassName.equals(WordCountContinuousOperator.class.getCanonicalName().toString())) {
       operator = new WordCountContinuousOperator();
-    }else if(operatorClassName.equals(CountMinOperatorContinuous.class.getCanonicalName().toString())){
+    } else if (operatorClassName.equals(CountMinOperatorContinuous.class.getCanonicalName().toString())) {
       operator = new CountMinOperatorContinuous();
-    }else if(operatorClassName.equals(KMeansOperatorContinuous.class.getCanonicalName().toString())){
+    } else if (operatorClassName.equals(KMeansOperatorContinuous.class.getCanonicalName().toString())) {
       operator = new KMeansOperatorContinuous();
-    }else{
-      PrintUtilities.printAndLog(log,"SERIOIS ERROR Continuous class is not KNOWND " + operatorClassName);
+    } else {
+      PrintUtilities.printAndLog(log, "SERIOIS ERROR Continuous class is not KNOWND " + operatorClassName);
     }
     operator.setInputCache(inputCache);
     operator.initializeContinuousOperator(operatorConf);
     return operator;
   }
 
-  @Override protected  void processBuffer() {
+  @Override protected void processBuffer() {
     try {
-//      System.out.println("Processing buffer BasicContinuousOperatorListner");
+      //      System.out.println("Processing buffer BasicContinuousOperatorListner");
       Map map = buffer.getMapAndReset();
-      if(map.size() == 0){
+      if (map.size() == 0) {
         return;
       }
       Iterator iterator = map.entrySet().iterator();
@@ -100,7 +100,7 @@ import java.util.concurrent.Future;
         int index = (Math.abs(entry.getKey().hashCode()) % parallelism);
         inputEntry.get(index).add(entry);
       }
-//      map.clear();
+      //      map.clear();
       ArrayList<Future> futures = new ArrayList<>();
       for (int i = 0; i < parallelism; i++) {
         operators.get(i).setInput(inputEntry.get(i).iterator());
@@ -138,64 +138,64 @@ import java.util.concurrent.Future;
   }
 
 
-//  @CacheEntryCreated @Override public void entryCreated(CacheEntryCreatedEvent event) {
-//    try {
-//      if (event.isPre()) {
-//        return;
-//      }
-//      if (event.isCommandRetried())
-//        return;
-//      if (!event.isOriginLocal())
-//        return;
-//      //      log.error("process key " + event.getKey().toString());
-//      //      System.out.println("process key " + event.getKey().toString());
-//
-//      EventTriplet triplet = new EventTriplet(EventType.CREATED, event.getKey(), event.getValue());
-//      synchronized (queueMutex) {
-//        eventQueue.add(triplet);
-//        queueMutex.notify();
-//      }
-//    } catch (Exception e) {
-//      e.printStackTrace();
-//    }
-//  }
-//
-//  @CacheEntryModified @Override public void entryModified(CacheEntryModifiedEvent event) {
-//    try {
-//      //      log.error("process key " + event.getKey().toString());
-//      if (event.isPre()) {
-//        return;
-//      }
-//      if (event.isCreated())
-//        return;
-//      if (event.isCommandRetried())
-//        return;
-//      EventTriplet triplet = new EventTriplet(EventType.MODIFIED, event.getKey(), event.getValue());
-//      synchronized (queueMutex) {
-//        eventQueue.add(triplet);
-//        queueMutex.notify();
-//      }
-//    } catch (Exception e) {
-//      e.printStackTrace();
-//    }
-//  }
-//
-//  @CacheEntryRemoved @Override public void entryModified(CacheEntryRemovedEvent event) {
-//    try {
-//      if (event.isCommandRetried())
-//        return;
-//      //      System.out.println("process key " + event.getKey().toString());
-//      //      log.error("process key " + event.getKey().toString());
-//      if (event.isPre()) {
-//        return;
-//      }
-//      EventTriplet triplet = new EventTriplet(EventType.REMOVED, event.getKey(), event.getOldValue());
-//      synchronized (queueMutex) {
-//        eventQueue.add(triplet);
-//        queueMutex.notify();
-//      }
-//    } catch (Exception e) {
-//      e.printStackTrace();
-//    }
-//  }
+  //  @CacheEntryCreated @Override public void entryCreated(CacheEntryCreatedEvent event) {
+  //    try {
+  //      if (event.isPre()) {
+  //        return;
+  //      }
+  //      if (event.isCommandRetried())
+  //        return;
+  //      if (!event.isOriginLocal())
+  //        return;
+  //      //      log.error("process key " + event.getKey().toString());
+  //      //      System.out.println("process key " + event.getKey().toString());
+  //
+  //      EventTriplet triplet = new EventTriplet(EventType.CREATED, event.getKey(), event.getValue());
+  //      synchronized (queueMutex) {
+  //        eventQueue.add(triplet);
+  //        queueMutex.notify();
+  //      }
+  //    } catch (Exception e) {
+  //      e.printStackTrace();
+  //    }
+  //  }
+  //
+  //  @CacheEntryModified @Override public void entryModified(CacheEntryModifiedEvent event) {
+  //    try {
+  //      //      log.error("process key " + event.getKey().toString());
+  //      if (event.isPre()) {
+  //        return;
+  //      }
+  //      if (event.isCreated())
+  //        return;
+  //      if (event.isCommandRetried())
+  //        return;
+  //      EventTriplet triplet = new EventTriplet(EventType.MODIFIED, event.getKey(), event.getValue());
+  //      synchronized (queueMutex) {
+  //        eventQueue.add(triplet);
+  //        queueMutex.notify();
+  //      }
+  //    } catch (Exception e) {
+  //      e.printStackTrace();
+  //    }
+  //  }
+  //
+  //  @CacheEntryRemoved @Override public void entryModified(CacheEntryRemovedEvent event) {
+  //    try {
+  //      if (event.isCommandRetried())
+  //        return;
+  //      //      System.out.println("process key " + event.getKey().toString());
+  //      //      log.error("process key " + event.getKey().toString());
+  //      if (event.isPre()) {
+  //        return;
+  //      }
+  //      EventTriplet triplet = new EventTriplet(EventType.REMOVED, event.getKey(), event.getOldValue());
+  //      synchronized (queueMutex) {
+  //        eventQueue.add(triplet);
+  //        queueMutex.notify();
+  //      }
+  //    } catch (Exception e) {
+  //      e.printStackTrace();
+  //    }
+  //  }
 }

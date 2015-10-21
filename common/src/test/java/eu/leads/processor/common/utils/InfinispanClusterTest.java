@@ -5,7 +5,6 @@ import eu.leads.processor.common.infinispan.CacheManagerFactory;
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.conf.LQPConfiguration;
-
 import junit.framework.TestCase;
 
 import java.io.IOException;
@@ -15,24 +14,22 @@ public class InfinispanClusterTest extends TestCase {
 
   public static void main(String[] args) throws IOException {
     LQPConfiguration.initialize();
-    LQPConfiguration.getInstance().getConfiguration()
-        .setProperty("node.current.component", "catalog-worker");
+    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component", "catalog-worker");
     InfinispanManager manager = InfinispanClusterSingleton.getInstance().getManager();
     Map<String, String> map = manager.getPersisentCache(StringConstants.QUERIESCACHE);
     Map<String, String> map2 = manager.getPersisentCache("default.webpages");
-//               map2.put("1","11");
-//               map2.put("1","11");
-//               map.put("1","11");
-//               map.put("22", "222");
-    LQPConfiguration.getInstance().getConfiguration()
-        .setProperty("node.current.component", "planner");
+    //               map2.put("1","11");
+    //               map2.put("1","11");
+    //               map.put("1","11");
+    //               map.put("22", "222");
+    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component", "planner");
     InfinispanManager manager2 = CacheManagerFactory.createCacheManager();
     map2 = manager2.getPersisentCache("default.webpages");
     map = manager2.getPersisentCache(StringConstants.QUERIESCACHE);
-//
-//               map2.put("2333","223");
-//               map.put("d2","22");
-//               map.put("2f", "22");
+    //
+    //               map2.put("2333","223");
+    //               map.put("d2","22");
+    //               map.put("2f", "22");
     PrintUtilities.printMap(map);
     PrintUtilities.printMap(map2);
     System.in.read();
@@ -40,11 +37,9 @@ public class InfinispanClusterTest extends TestCase {
     manager.stopManager();
 
     System.out.println("Restarting....");
-    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component",
-                                                                  "catalog-worker");
+    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component", "catalog-worker");
     manager.startManager("conf/infinispan-clustered.xml");
-    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component",
-                                                                  "planner");
+    LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component", "planner");
 
     manager2.startManager("conf/infinispan-clustered.xml");
     map2 = manager.getPersisentCache("default.webpages");

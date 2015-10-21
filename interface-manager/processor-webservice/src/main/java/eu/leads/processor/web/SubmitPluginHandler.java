@@ -37,8 +37,7 @@ public class SubmitPluginHandler implements Handler<HttpServerRequest> {
     bodyHandlers = new HashMap<>();
   }
 
-  @Override
-  public void handle(HttpServerRequest request) {
+  @Override public void handle(HttpServerRequest request) {
     request.response().setStatusCode(200);
     request.response().putHeader(WebStrings.CONTENT_TYPE, WebStrings.APP_JSON);
     log.info("Submit Plugin Request");
@@ -67,8 +66,7 @@ public class SubmitPluginHandler implements Handler<HttpServerRequest> {
       this.requestId = requestId;
     }
 
-    @Override
-    public void handle(JsonObject message) {
+    @Override public void handle(JsonObject message) {
       if (message.containsField("error")) {
         replyForError(message);
       }
@@ -100,13 +98,12 @@ public class SubmitPluginHandler implements Handler<HttpServerRequest> {
     private final SubmitPluginReplyHandler replyHandler;
     private final String requestId;
 
-    public SubmitPluginBodyHandler(String requestId,SubmitPluginReplyHandler replyHandler) {
+    public SubmitPluginBodyHandler(String requestId, SubmitPluginReplyHandler replyHandler) {
       this.replyHandler = replyHandler;
       this.requestId = requestId;
     }
 
-    @Override
-    public void handle(Buffer body) {
+    @Override public void handle(Buffer body) {
       String pluginInfo = body.getString(0, body.length());
       if (Strings.isNullOrEmpty(pluginInfo) || pluginInfo.equals("{}")) {
         replyHandler.replyForError(null);

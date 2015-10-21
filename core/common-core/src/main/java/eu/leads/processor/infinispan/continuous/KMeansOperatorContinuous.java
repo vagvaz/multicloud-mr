@@ -5,7 +5,6 @@ import eu.leads.processor.infinispan.LeadsReducer;
 import eu.leads.processor.infinispan.operators.mapreduce.KMeansCombiner;
 import eu.leads.processor.infinispan.operators.mapreduce.KMeansMapper;
 import eu.leads.processor.infinispan.operators.mapreduce.KMeansReducer;
-
 import org.vertx.java.core.json.JsonObject;
 
 /**

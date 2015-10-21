@@ -1,7 +1,6 @@
 package eu.leads.processor.common.infinispan;
 
 import org.infinispan.commons.api.BasicCache;
-import org.infinispan.commons.util.concurrent.NotifyingFuture;
 import org.infinispan.ensemble.EnsembleCacheManager;
 
 import java.util.concurrent.ExecutionException;

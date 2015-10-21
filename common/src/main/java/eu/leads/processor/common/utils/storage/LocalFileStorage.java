@@ -16,22 +16,22 @@ import java.util.Properties;
 public class LocalFileStorage implements LeadsStorage {
   private String basePath = null;
   private Properties storageConfiguration;
-  private Logger log  = LoggerFactory.getLogger(LocalFileStorage.class);
+  private Logger log = LoggerFactory.getLogger(LocalFileStorage.class);
+
   @Override public boolean initialize(Properties configuration) {
     basePath = configuration.getProperty("prefix");
     setConfiguration(configuration);
-    if(basePath == null){
+    if (basePath == null) {
       basePath = StringConstants.TMPPREFIX;
     }
-    if(!basePath.endsWith("/"))
+    if (!basePath.endsWith("/"))
       basePath += "/";
     File file = new File(basePath);
-    if(file.exists() && file.isFile()){
+    if (file.exists() && file.isFile()) {
       file.delete();
       file.mkdirs();
-    }
-    else{
-      if(!file.exists()){
+    } else {
+      if (!file.exists()) {
         file.mkdirs();
       }
     }
@@ -43,15 +43,14 @@ public class LocalFileStorage implements LeadsStorage {
   }
 
   @Override public void setConfiguration(Properties configuration) {
-    this.storageConfiguration  = configuration;
+    this.storageConfiguration = configuration;
   }
 
   @Override public String getStorageType() {
     return LeadsStorageFactory.LOCAL;
   }
 
-  @Override
-  public boolean delete(String s) {
+  @Override public boolean delete(String s) {
     return false;
   }
 
@@ -61,17 +60,15 @@ public class LocalFileStorage implements LeadsStorage {
 
   @Override public byte[] read(String uri) {
     try {
-      BufferedInputStream input = new BufferedInputStream(new FileInputStream(basePath+"/"+uri));
+      BufferedInputStream input = new BufferedInputStream(new FileInputStream(basePath + "/" + uri));
       ByteArrayOutputStream array = new ByteArrayOutputStream();
       byte[] buffer = null;
       int size = input.available();
-      while( size > 0){
+      while (size > 0) {
 
-        if(size > 1024*1024*20)
-        {
-          buffer = new byte[1024*1024*20];
-        }
-        else{
+        if (size > 1024 * 1024 * 20) {
+          buffer = new byte[1024 * 1024 * 20];
+        } else {
           buffer = new byte[size];
         }
         input.read(buffer);
@@ -84,12 +81,12 @@ public class LocalFileStorage implements LeadsStorage {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    return  new byte[0];
+    return new byte[0];
   }
 
   @Override public List<byte[]> batchRead(List<String> uris) {
     List<byte[]> result = new ArrayList<>(uris.size());
-    for(String uri : uris){
+    for (String uri : uris) {
       result.add(read(uri));
     }
     return result;
@@ -97,7 +94,7 @@ public class LocalFileStorage implements LeadsStorage {
 
   @Override public byte[] batcheReadMerge(List<String> uris) {
     ByteArrayOutputStream resultStream = new ByteArrayOutputStream();
-    for(String uri : uris){
+    for (String uri : uris) {
       try {
         resultStream.write(read(uri));
       } catch (IOException e) {
@@ -109,31 +106,29 @@ public class LocalFileStorage implements LeadsStorage {
   }
 
   @Override public long size(String path) {
-    File file = new File(basePath  + path);
+    File file = new File(basePath + path);
 
     return file.length();
   }
 
   @Override public String[] parts(String uri) {
     String[] results;
-    File file = new File(basePath  + uri);
-    if(file.isDirectory()){
-        File[] parts = file.listFiles();
-        results = new String[parts.length];
-        for (int index = 0; index < parts.length; index++) {
-//          results[index] = parts[index].getPath().toString().replaceFirst(basePath,"");
-          results[index] = uri+"/"+index;//parts[index].getPath().toString().replaceFirst(basePath,"");
-        }
+    File file = new File(basePath + uri);
+    if (file.isDirectory()) {
+      File[] parts = file.listFiles();
+      results = new String[parts.length];
+      for (int index = 0; index < parts.length; index++) {
+        //          results[index] = parts[index].getPath().toString().replaceFirst(basePath,"");
+        results[index] = uri + "/" + index;//parts[index].getPath().toString().replaceFirst(basePath,"");
       }
-      else{
-        if(file.exists()) {
-          results = new String[1];
-          results[0] = uri;
-        }
-      else{
-          results = new String[0];
-        }
+    } else {
+      if (file.exists()) {
+        results = new String[1];
+        results[0] = uri;
+      } else {
+        results = new String[0];
       }
+    }
     return results;
   }
 
@@ -141,22 +136,22 @@ public class LocalFileStorage implements LeadsStorage {
     File file = new File(basePath + path);
     return file.exists();
   }
+
   @Override public long download(String source, String destination) {
     long readBytes = 0;
     try {
       File file = new File(destination);
-      if(!file.exists()){
+      if (!file.exists()) {
         File parent = file.getParentFile();
         parent.mkdirs();
         file.createNewFile();
-      }
-      else{
+      } else {
         file.delete();
         file.createNewFile();
       }
       FileOutputStream fos = new FileOutputStream(destination);
       String[] pieces = parts(source);
-      for(String piece : pieces){
+      for (String piece : pieces) {
         byte[] pieceBytes = read(piece);
         fos.write(pieceBytes);
         readBytes += pieceBytes.length;
@@ -188,17 +183,16 @@ public class LocalFileStorage implements LeadsStorage {
 
   @Override public boolean writeData(String uri, byte[] data) {
     try {
-      File file = new File(basePath+uri);
-      if(file.exists()){
+      File file = new File(basePath + uri);
+      if (file.exists()) {
         log.error("Attempting to writed data to an existing file " + file.getPath());
       }
       File parent = file.getParentFile();
-      if(!parent.exists())
-      {
+      if (!parent.exists()) {
         parent.mkdirs();
       }
 
-      FileOutputStream fos = new FileOutputStream(basePath+uri,false);
+      FileOutputStream fos = new FileOutputStream(basePath + uri, false);
 
       fos.write(data);
       fos.close();
@@ -214,7 +208,7 @@ public class LocalFileStorage implements LeadsStorage {
 
   @Override public boolean writeData(Map<String, byte[]> data) {
     boolean result = true;
-    for(Map.Entry<String,byte[]> entry : data.entrySet()){
+    for (Map.Entry<String, byte[]> entry : data.entrySet()) {
       result &= writeData(entry.getKey(), entry.getValue());
     }
     return result;
@@ -222,10 +216,10 @@ public class LocalFileStorage implements LeadsStorage {
 
   @Override public boolean writeData(String uri, List<byte[]> data) {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    for(byte[] datum : data){
+    for (byte[] datum : data) {
       try {
         outputStream.write(datum);
-        writeData(uri,outputStream.toByteArray());
+        writeData(uri, outputStream.toByteArray());
         return true;
       } catch (IOException e) {
         e.printStackTrace();

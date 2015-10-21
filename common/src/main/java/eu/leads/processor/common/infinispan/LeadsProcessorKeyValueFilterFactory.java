@@ -10,28 +10,29 @@ import org.vertx.java.core.json.JsonObject;
 //import org.infinispan.filter.KeyValueFilterFactory;
 //import org.infinispan.filter.NamedFactory;
 
+
 /**
  * Created by vagvaz on 9/29/14.
  */
 
 
 public class LeadsProcessorKeyValueFilterFactory implements CacheEventFilterFactory {
-//public class LeadsProcessorKeyValueFilterFactory {
+  //public class LeadsProcessorKeyValueFilterFactory {
   Logger log = LoggerFactory.getLogger(LeadsProcessorKeyValueFilterFactory.class);
   private final EmbeddedCacheManager manager;
 
-    public LeadsProcessorKeyValueFilterFactory(EmbeddedCacheManager cacheManager){
-        this.manager = cacheManager;
-    }
+  public LeadsProcessorKeyValueFilterFactory(EmbeddedCacheManager cacheManager) {
+    this.manager = cacheManager;
+  }
 
   @Override public <K, V> CacheEventFilter<K, V> getFilter(Object[] params) {
     log.error("GetFilter called");
-    if(params.length != 1){
+    if (params.length != 1) {
       throw new IllegalArgumentException();
     }
-    JsonObject conf = new JsonObject((String)params[0]);
+    JsonObject conf = new JsonObject((String) params[0]);
     log.error("Json conf parametrized");
-//    PluginRunnerFilter result = new PluginRunnerFilter(manager,conf.toString());
+    //    PluginRunnerFilter result = new PluginRunnerFilter(manager,conf.toString());
     log.error("Filter init");
     return null;
   }

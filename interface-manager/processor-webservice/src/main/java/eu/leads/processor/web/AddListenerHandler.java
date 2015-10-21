@@ -15,7 +15,6 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -42,8 +41,7 @@ public class AddListenerHandler implements Handler<HttpServerRequest> {
     bodyHandlers = new HashMap<>();
   }
 
-  @Override
-  public void handle(HttpServerRequest request) {
+  @Override public void handle(HttpServerRequest request) {
     request.response().setStatusCode(200);
     request.response().putHeader(WebStrings.CONTENT_TYPE, WebStrings.APP_JSON);
 
@@ -75,8 +73,7 @@ public class AddListenerHandler implements Handler<HttpServerRequest> {
       this.requestId = requestId;
     }
 
-    @Override
-    public void handle(JsonObject message) {
+    @Override public void handle(JsonObject message) {
       if (message.containsField("error")) {
         replyForError(message);
         return;
@@ -115,8 +112,7 @@ public class AddListenerHandler implements Handler<HttpServerRequest> {
       this.requestId = requestId;
     }
 
-    @Override
-    public void handle(Buffer body) {
+    @Override public void handle(Buffer body) {
       String query = body.getString(0, body.length());
       if (Strings.isNullOrEmpty(query) || query.equals("{}")) {
         replyHandler.replyForError(null);
@@ -143,12 +139,12 @@ public class AddListenerHandler implements Handler<HttpServerRequest> {
       action.setTriggers(new JsonArray());
       action.setStatus(ActionStatus.PENDING.toString());
       JsonObject queryRequest = new JsonObject(query);
-//      queryRequest.putString("cache", cache);
-//      queryRequest.putString("listener", listener);
-//      queryRequest.putObject("conf",queryJ);
+      //      queryRequest.putString("cache", cache);
+      //      queryRequest.putString("listener", listener);
+      //      queryRequest.putObject("conf",queryJ);
       System.err.println(query.toString());
       action.setData(queryRequest);
-      com.sendRequestToGroup(IMANAGERQUEUE,action.asJsonObject(),replyHandler);
+      com.sendRequestToGroup(IMANAGERQUEUE, action.asJsonObject(), replyHandler);
     }
   }
 }

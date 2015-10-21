@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <leads-processor-bootstrap>
-    <baseDir>/home/ubuntu/boot-conf/</baseDir> <!-- here are all the conf files of the available modules-->
+    <baseDir>/home/ubuntu/boot-conf/</baseDir>
+    <!-- here are all the conf files of the available modules-->
     <remoteDir>/tmp/</remoteDir>
     <hdfs>
         <uri>hdfs://snf-618466.vm.okeanos.grnet.gr:8020</uri>
@@ -19,16 +20,16 @@
         <!--<node name='clu17' privateIp='10.130.0.104'>clu17.softnet.tuc.gr</node>-->
         <!--</MC>-->
         <!--<MC name='dd1a' credentials="cloudandheat">-->
-            <!--<node name='leads-qe8' privateIp='10.130.0.16'>80.156.222.4</node>-->
-            <!--<node name='leads-qe14' privateIp='10.130.0.104'>80.156.222.23</node>-->
-            <!--&lt;!&ndash;<node name='leads-qe15' privateIp='10.130.0.122'>80.156.222.21</node>&ndash;&gt;-->
-            <!--<node name='leads-qe22' privateIp='10.130.0.128'>80.156.222.31</node>-->
-            <!--&lt;!&ndash;<node name='leads-qe23' privateIp='10.130.0.16'>80.156.222.32</node>&ndash;&gt;-->
-            <!--<node name='leads-qe24' privateIp='10.130.0.104'>80.156.222.26</node>-->
-            <!--<node name='leads-qe25' privateIp='10.130.0.122'>80.156.222.28</node>-->
-            <!--&lt;!&ndash;<node name='leads-qe26' privateIp='10.130.0.128'>80.156.222.29</node>&ndash;&gt;-->
-            <!--<node name='leads-qe27' privateIp='10.130.0.16'>80.156.222.30</node>-->
-            <!--&lt;!&ndash;<node name='leads-qe9' privateIp='10.130.0.104'>80.156.222.18</node>&ndash;&gt;-->
+        <!--<node name='leads-qe8' privateIp='10.130.0.16'>80.156.222.4</node>-->
+        <!--<node name='leads-qe14' privateIp='10.130.0.104'>80.156.222.23</node>-->
+        <!--&lt;!&ndash;<node name='leads-qe15' privateIp='10.130.0.122'>80.156.222.21</node>&ndash;&gt;-->
+        <!--<node name='leads-qe22' privateIp='10.130.0.128'>80.156.222.31</node>-->
+        <!--&lt;!&ndash;<node name='leads-qe23' privateIp='10.130.0.16'>80.156.222.32</node>&ndash;&gt;-->
+        <!--<node name='leads-qe24' privateIp='10.130.0.104'>80.156.222.26</node>-->
+        <!--<node name='leads-qe25' privateIp='10.130.0.122'>80.156.222.28</node>-->
+        <!--&lt;!&ndash;<node name='leads-qe26' privateIp='10.130.0.128'>80.156.222.29</node>&ndash;&gt;-->
+        <!--<node name='leads-qe27' privateIp='10.130.0.16'>80.156.222.30</node>-->
+        <!--&lt;!&ndash;<node name='leads-qe9' privateIp='10.130.0.104'>80.156.222.18</node>&ndash;&gt;-->
         <!--</MC>-->
 
         <MC name='dd2c' credentials="cloudandheat">
@@ -57,22 +58,24 @@
         </MC>
 
         <MC name='unine' credentials="unine">
-        <node name='172.16.0.221' usePrivate='true' privateIp='172.16.0.221'>192.42.43.31:11222</node>
-        <node name='172.16.0.222' usePrivate='true' privateIp='172.16.0.222'>192.42.43.31:11223</node>
-        <node name='172.16.0.223' usePrivate='true' privateIp='172.16.0.223'>192.42.43.31:11224</node>
-        <node name='172.16.0.224' usePrivate='true' privateIp='172.16.0.224'>192.42.43.31:11225</node>
-        <node name='172.16.0.225' usePrivate='true' privateIp='172.16.0.225'>192.42.43.31:11226</node>
-        <node name='172.16.0.226' usePrivate='true' privateIp='172.16.0.226'>192.42.43.31:11227</node>
-        <!--<node name='172.16.0.227' usePrivate='true' privateIp='172.16.0.227'>192.42.43.31:11228</node>-->
-        <!--<node name='172.16.0.228' usePrivate='true' privateIp='172.16.0.228'>192.42.43.31:11229</node>-->
-        <!--<node name='172.16.0.228' usePrivate='true' privateIp='172.16.0.229'>192.42.43.31:11230</node>-->
-        <!-- <node name='leads-qe44' privateIp='10.134.1.130'>87.190.238.120</node> -->
-        <!-- <node name='leads-qe39' privateIp='10.134.1.131'>87.190.238.116</node> -->
-        <!-- <node name='leads-qe46' privateIp='10.134.1.129'>87.190.238.118</node> -->
-        <!-- <node name='leads-qe38' privateIp='10.134.1.132'>87.190.238.117</node> -->
+            <node name='172.16.0.221' usePrivate='true' privateIp='172.16.0.221'>192.42.43.31:11222</node>
+            <node name='172.16.0.222' usePrivate='true' privateIp='172.16.0.222'>192.42.43.31:11223</node>
+            <node name='172.16.0.223' usePrivate='true' privateIp='172.16.0.223'>192.42.43.31:11224</node>
+            <node name='172.16.0.224' usePrivate='true' privateIp='172.16.0.224'>192.42.43.31:11225</node>
+            <node name='172.16.0.225' usePrivate='true' privateIp='172.16.0.225'>192.42.43.31:11226</node>
+            <node name='172.16.0.226' usePrivate='true' privateIp='172.16.0.226'>192.42.43.31:11227</node>
+            <!--<node name='172.16.0.227' usePrivate='true' privateIp='172.16.0.227'>192.42.43.31:11228</node>-->
+            <!--<node name='172.16.0.228' usePrivate='true' privateIp='172.16.0.228'>192.42.43.31:11229</node>-->
+            <!--<node name='172.16.0.228' usePrivate='true' privateIp='172.16.0.229'>192.42.43.31:11230</node>-->
+            <!-- <node name='leads-qe44' privateIp='10.134.1.130'>87.190.238.120</node> -->
+            <!-- <node name='leads-qe39' privateIp='10.134.1.131'>87.190.238.116</node> -->
+            <!-- <node name='leads-qe46' privateIp='10.134.1.129'>87.190.238.118</node> -->
+            <!-- <node name='leads-qe38' privateIp='10.134.1.132'>87.190.238.117</node> -->
         </MC>
-    </adresses> <!-- localhost, 5.147.254.198-->
-    <startUpDelay>2</startUpDelay> <!--delay between modules startup (seconds) -->
+    </adresses>
+    <!-- localhost, 5.147.254.198-->
+    <startUpDelay>2</startUpDelay>
+    <!--delay between modules startup (seconds) -->
     <processor>
         <version>1.0-SNAPSHOT</version>
         <groupId>gr.tuc.softnet</groupId>
@@ -103,7 +106,8 @@
             <id>cloudandheat</id>
             <username>ubuntu</username>
             <!--<password>testpass</password> -->
-            <rsa>/home/ubuntu/.ssh/leads_cluster</rsa> <!-- a filename -->
+            <rsa>/home/ubuntu/.ssh/leads_cluster</rsa>
+            <!-- a filename -->
         </credentials>
         <credentials>
             <id>softnet</id>

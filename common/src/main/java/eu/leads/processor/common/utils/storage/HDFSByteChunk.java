@@ -13,15 +13,17 @@ import java.util.Arrays;
 public class HDFSByteChunk implements Writable {
   byte[] data;
   String fileName;
-  public HDFSByteChunk(){
+
+  public HDFSByteChunk() {
     data = null;
   }
 
-  public HDFSByteChunk(byte[] bytes){
-    data = Arrays.copyOf(bytes,bytes.length);
+  public HDFSByteChunk(byte[] bytes) {
+    data = Arrays.copyOf(bytes, bytes.length);
   }
-  public HDFSByteChunk(byte[] bytes,String fileName){
-    data = Arrays.copyOf(bytes,bytes.length);
+
+  public HDFSByteChunk(byte[] bytes, String fileName) {
+    data = Arrays.copyOf(bytes, bytes.length);
     this.fileName = fileName;
   }
 

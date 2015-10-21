@@ -15,38 +15,37 @@ import org.slf4j.LoggerFactory;
  */
 public class InfinispanCluster {
 
-    private static volatile boolean isStarted = false;
-    private Logger log = LoggerFactory.getLogger(this.getClass());
-    private InfinispanManager manager;
+  private static volatile boolean isStarted = false;
+  private Logger log = LoggerFactory.getLogger(this.getClass());
+  private InfinispanManager manager;
 
-    public InfinispanCluster(InfinispanManager manager) {
-        this.manager = manager;
+  public InfinispanCluster(InfinispanManager manager) {
+    this.manager = manager;
 
+  }
+
+  public void initialize() {
+    if (!manager.isStarted()) {
+      manager.startManager("conf/" + LQPConfiguration.getConf().getString("processor.infinispan.file"));
+      this.isStarted = true;
     }
+  }
 
-    public void initialize() {
-        if (!manager.isStarted()) {
-            manager.startManager("conf/" + LQPConfiguration.getConf()
-                                               .getString("processor.infinispan.file"));
-            this.isStarted = true;
-        }
-    }
+  /**
+   * Getter for property 'manager'.
+   *
+   * @return Value for property 'manager'.
+   */
+  public InfinispanManager getManager() {
+    return manager;
+  }
 
-    /**
-     * Getter for property 'manager'.
-     *
-     * @return Value for property 'manager'.
-     */
-    public InfinispanManager getManager() {
-        return manager;
+  public void shutdown() {
+    if (manager.isStarted()) {
+      manager.stopManager();
     }
-
-    public void shutdown() {
-        if (manager.isStarted()) {
-            manager.stopManager();
-        }
-        manager = null;
-    }
+    manager = null;
+  }
 
 
 }

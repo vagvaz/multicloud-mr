@@ -12,15 +12,13 @@ import java.io.Serializable;
  * Created by vagvaz on 9/29/14.
  */
 @ClientListener(
-                   converterFactoryName = "leads-processor-converter-factory",
-                   filterFactoryName = "leads-processor-filter-factory"
-)
-public class PluginHandlerListener implements Serializable{
+    converterFactoryName = "leads-processor-converter-factory",
+    filterFactoryName = "leads-processor-filter-factory") public class PluginHandlerListener implements Serializable {
 
-    @ClientCacheEntryCreated
-    @ClientCacheEntryModified
-    @ClientCacheEntryRemoved
-    public void handleProcessorEntry(ClientCacheEntryCustomEvent<ProcessorEntry> entry){
-        System.err.println("Plugin probably Failed on " + entry.getType() + " " + entry.getEventData().getKey() + " ---> " + entry.getEventData().getValue());
-    }
+  @ClientCacheEntryCreated @ClientCacheEntryModified @ClientCacheEntryRemoved
+  public void handleProcessorEntry(ClientCacheEntryCustomEvent<ProcessorEntry> entry) {
+    System.err.println(
+        "Plugin probably Failed on " + entry.getType() + " " + entry.getEventData().getKey() + " ---> " + entry
+            .getEventData().getValue());
+  }
 }

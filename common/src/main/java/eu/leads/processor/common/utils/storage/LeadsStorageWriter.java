@@ -11,11 +11,17 @@ import java.util.Properties;
  */
 public interface LeadsStorageWriter {
   boolean initializeWriter(Properties configuration);
+
   boolean write(String uri, InputStream stream);
-  boolean write(Map<String,InputStream> stream);
-  boolean write(String uri,List<InputStream> streams);
+
+  boolean write(Map<String, InputStream> stream);
+
+  boolean write(String uri, List<InputStream> streams);
+
   boolean writeData(String uri, byte[] data);
-  boolean writeData(Map<String,byte[]> data);
+
+  boolean writeData(Map<String, byte[]> data);
+
   boolean writeData(String uri, List<byte[]> data);
 
 }

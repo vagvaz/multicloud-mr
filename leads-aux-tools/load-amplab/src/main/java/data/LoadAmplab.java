@@ -279,8 +279,8 @@ public class LoadAmplab {
 
           if (convertedrows % 100 == 0) {
             System.out.print("Converted " + convertedrows + " Mean process time: " + DurationFormatUtils.formatDuration(
-                    (long) ((System.currentTimeMillis() - filestartTime) / (float) (convertedrows - alreadyconvertedrows
-                        + 1)), "HH:mm:ss,SSS"));
+                (long) ((System.currentTimeMillis() - filestartTime) / (float) (convertedrows - alreadyconvertedrows
+                    + 1)), "HH:mm:ss,SSS"));
             System.out.print("\n");
             System.out.flush();
             writer.flush();

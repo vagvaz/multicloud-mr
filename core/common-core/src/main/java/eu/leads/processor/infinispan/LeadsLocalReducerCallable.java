@@ -4,7 +4,7 @@ import eu.leads.processor.common.LeadsListener;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.EngineUtils;
-import eu.leads.processor.core.LevelDBIndex;
+import eu.leads.processor.core.IntermediateDataIndex;
 import org.infinispan.Cache;
 import org.infinispan.interceptors.locking.ClusteringDependentLogic;
 
@@ -24,7 +24,7 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
   private LeadsReducer<kOut, vOut> reducer = null;
   //    private LeadsCollector collector;
   private String prefix;
-  private transient LevelDBIndex index;
+  private transient IntermediateDataIndex index;
   private transient LeadsListener leadsListener;
   private transient Iterator<Map.Entry<String, Integer>> iterator;
 
@@ -81,13 +81,13 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
     //    LeadsIntermediateIterator<vOut> values = new LeadsIntermediateIterator<>((String) key, prefix,
     //                                                                             imanager);
     //    Iterator<vOut> values = ((List)value).iterator();
-    try{
-    Iterator<vOut> values = (Iterator<vOut>) value;
-    reducer.reduce(key, values, collector);
-    }catch (Exception e){
+    try {
+      Iterator<vOut> values = (Iterator<vOut>) value;
+      reducer.reduce(key, values, collector);
+    } catch (Exception e) {
       e.printStackTrace();
       PrintUtilities.logStackTrace(profilerLog, e.getStackTrace());
-      PrintUtilities.printAndLog(profilerLog,"Exception in MApper: " + e.getMessage());
+      PrintUtilities.printAndLog(profilerLog, "Exception in MApper: " + e.getMessage());
     }
   }
 
@@ -132,7 +132,7 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
     collector.setCombiner(null);
     collector.setUseCombiner(false);
     collector.setSite(LQPConfiguration.getInstance().getMicroClusterName());
-    collector.initializeCache(callableIndex+":"+inputCache.getName(), imanager);
+    collector.initializeCache(callableIndex + ":" + inputCache.getName(), imanager);
     this.reducer.initialize();
     Cache dataCache = inputCache.getCacheManager().getCache(prefix + ".data");
 
@@ -167,7 +167,7 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
       continueRunning = false;
       return null;
     }
-//    System.out.println(" POLL NEXT");
+    //    System.out.println(" POLL NEXT");
     Map.Entry result = null;
     if (iterator.hasNext()) {
       Map.Entry<String, Integer> entry = iterator.next();
@@ -187,10 +187,10 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
   @Override public void finalizeCallable() {
     System.err.println("finalize collector in reduce callable");
     System.err.println("finalize reducelocalabe task");
-    if(leadsListener != null){
+    if (leadsListener != null) {
       leadsListener.close();
     }
-    if(index != null)
+    if (index != null)
       index.close();
     reducer.finalizeTask();
     collector.finalizeCollector();

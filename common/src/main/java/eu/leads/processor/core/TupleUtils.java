@@ -28,43 +28,43 @@ public class TupleUtils {
   }
 
   public static BSONDecoder getDecoder() {
-//    while (decoders.isEmpty()) {
-//      synchronized (decCV) {
-//        try {
-//          decCV.wait();
-//        } catch (InterruptedException e) {
-//          e.printStackTrace();
-//        }
-//      }
-//    }
+    //    while (decoders.isEmpty()) {
+    //      synchronized (decCV) {
+    //        try {
+    //          decCV.wait();
+    //        } catch (InterruptedException e) {
+    //          e.printStackTrace();
+    //        }
+    //      }
+    //    }
     return decoders.poll();
   }
 
   public static BSONEncoder getEncoder() {
-//    while (encoders.isEmpty()) {
-//      synchronized (encCV) {
-//        try {
-//          encCV.wait();
-//        } catch (InterruptedException e) {
-//          e.printStackTrace();
-//        }
-//      }
-//    }
+    //    while (encoders.isEmpty()) {
+    //      synchronized (encCV) {
+    //        try {
+    //          encCV.wait();
+    //        } catch (InterruptedException e) {
+    //          e.printStackTrace();
+    //        }
+    //      }
+    //    }
     return encoders.poll();
   }
 
   public static void addDecoder(BSONDecoder decoder) {
     decoders.add(decoder);
-//    synchronized (decCV) {
-//      decCV.notify();
-//    }
+    //    synchronized (decCV) {
+    //      decCV.notify();
+    //    }
   }
 
   public static void addEncoder(BSONEncoder encoder) {
     encoders.add(encoder);
-//    synchronized (encCV) {
-//      encCV.notify();
-//    }
+    //    synchronized (encCV) {
+    //      encCV.notify();
+    //    }
   }
 
   public static int compareValues(Object o1, Object o2, String type) {

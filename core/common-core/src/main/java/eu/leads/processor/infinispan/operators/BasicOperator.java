@@ -656,7 +656,7 @@ public abstract class BasicOperator extends Thread implements Operator {
         }
       });
       try {
-        if (!registered[0]){
+        if (!registered[0]) {
           rmcMutex.wait();
         }
       } catch (InterruptedException e) {
@@ -741,7 +741,7 @@ public abstract class BasicOperator extends Thread implements Operator {
                 e.getClass().toString());
         profilerLog.error(e.getMessage());
         System.err.println("Exception in Map Excuettion " + "map " + mapperCallable.getClass().toString() + "\n" +
-                e.getClass().toString());
+            e.getClass().toString());
         System.err.println(e.getMessage());
         failed = true;
         profilerLog.error(e.getStackTrace().toString());
@@ -762,7 +762,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       }
     }
     long end = System.currentTimeMillis();
-    PrintUtilities.printAndLog(log,"TIME FOR MAP = " + (end - start) / 1000f);
+    PrintUtilities.printAndLog(log, "TIME FOR MAP = " + (end - start) / 1000f);
     if (reduceLocal) {
       setupReduceLocalCallable();
       executeReduceLocal();
@@ -776,7 +776,7 @@ public abstract class BasicOperator extends Thread implements Operator {
 
   public void setReducerCallableEnsembleHost() {
 
-    reducerCallable.setEnsembleHost(computeEnsembleHost(false,true));
+    reducerCallable.setEnsembleHost(computeEnsembleHost(false, true));
   }
 
   public void setReducerLocaleEnsembleHost() {
@@ -811,7 +811,7 @@ public abstract class BasicOperator extends Thread implements Operator {
     return result;
   }
 
-  public String computeEnsembleHost(boolean isMap,boolean islocal) {
+  public String computeEnsembleHost(boolean isMap, boolean islocal) {
     String result = "";
     JsonObject targetEndpoints = action.getData().getObject("operator").getObject("targetEndpoints");
     List<String> sites = new ArrayList<>();
@@ -871,12 +871,13 @@ public abstract class BasicOperator extends Thread implements Operator {
         //        LeadsMapperCallable lm = (LeadsMapperCallable) mapperCallable;
         MapReduceOperator mr = (MapReduceOperator) this;
         System.err.println(
-            "EXECUTE REDUCER" + mr.federationReducer.getClass().toString() + " ON " + currentCluster + Thread.currentThread()
-                .toString());
+            "EXECUTE REDUCER" + mr.federationReducer.getClass().toString() + " ON " + currentCluster + Thread
+                .currentThread().toString());
         profilerLog.error(
-            "EXECUTE REDCUER" + mr.federationReducer.getClass().toString() + " ON " + currentCluster + Thread.currentThread()
-                .toString());
-        profilerLog.error("LEM: " + mr.federationReducer.getClass().toString() + " " + reducerCallable.getEnsembleHost());
+            "EXECUTE REDCUER" + mr.federationReducer.getClass().toString() + " ON " + currentCluster + Thread
+                .currentThread().toString());
+        profilerLog
+            .error("LEM: " + mr.federationReducer.getClass().toString() + " " + reducerCallable.getEnsembleHost());
       } else {
         System.err.println(
             "EXECUTE " + reducerCallable.getClass().toString() + " ON " + currentCluster + Thread.currentThread()
@@ -1155,7 +1156,7 @@ public abstract class BasicOperator extends Thread implements Operator {
       }
     }
     long end = System.currentTimeMillis();
-    PrintUtilities.printAndLog(log,"TIME FOR REDUCELOCAL = " + (end - start) / 1000f);
+    PrintUtilities.printAndLog(log, "TIME FOR REDUCELOCAL = " + (end - start) / 1000f);
     //    replyForSuccessfulExecution(action);
   }
 

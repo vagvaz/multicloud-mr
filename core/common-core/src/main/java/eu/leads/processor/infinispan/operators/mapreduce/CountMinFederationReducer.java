@@ -3,7 +3,6 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsReducer;
-
 import org.mapdb.DBMaker;
 import org.vertx.java.core.json.JsonObject;
 
@@ -35,8 +34,7 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
     super(configString);
   }
 
-  @Override
-  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
+  @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
 
     int[] singleRow = new int[w];
     int element = 0;
@@ -101,8 +99,7 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
     }
   }
 
-  @Override
-  public void initialize() {
+  @Override public void initialize() {
     super.initialize();
     w = conf.getInteger("w");
     collectorInitialized = false;
@@ -112,8 +109,7 @@ public class CountMinFederationReducer extends LeadsReducer<String, Tuple> {
     }
   }
 
-  @Override
-  protected void finalizeTask() {
+  @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
 
     if (isComposable) {

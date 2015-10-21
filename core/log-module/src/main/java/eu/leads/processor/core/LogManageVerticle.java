@@ -29,19 +29,19 @@ public class LogManageVerticle extends ManageVerticle {
       logVertcileId = "";
       container.deployVerticle("eu.leads.processor.core.LogVerticle", logConfig, new Handler<AsyncResult<String>>() {
 
-            @Override public void handle(AsyncResult<String> asyncResult) {
-              if (asyncResult.succeeded()) {
-                container.logger().info("Log Vertice has been deployed ID " + asyncResult.result());
-                logVertcileId = asyncResult.result();
-                com.sendTo(parent,
-                    MessageUtils.createServiceStatusMessage(ServiceStatus.RUNNING, id + ".manage", serviceType));
+        @Override public void handle(AsyncResult<String> asyncResult) {
+          if (asyncResult.succeeded()) {
+            container.logger().info("Log Vertice has been deployed ID " + asyncResult.result());
+            logVertcileId = asyncResult.result();
+            com.sendTo(parent,
+                MessageUtils.createServiceStatusMessage(ServiceStatus.RUNNING, id + ".manage", serviceType));
 
-              } else {
-                container.logger().fatal("Log Verticle failed to deploy");
-                fail("Log Verticle failed to deploy");
-              }
-            }
-          });
+          } else {
+            container.logger().fatal("Log Verticle failed to deploy");
+            fail("Log Verticle failed to deploy");
+          }
+        }
+      });
 
     }
   }

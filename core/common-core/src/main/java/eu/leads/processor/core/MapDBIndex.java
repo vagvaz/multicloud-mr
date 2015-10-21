@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * Created by vagvaz on 10/11/15.
  */
-public class MapDBIndex {
+public class MapDBIndex implements IntermediateDataIndex {
   private static Tuple t;
   private DB theDb;
 
@@ -78,12 +78,12 @@ public class MapDBIndex {
     System.out.println("values-------------\n");
   }
 
-  public Iterable<Map.Entry<String, Integer>> getKeysIterator() {
+  @Override public Iterable<Map.Entry<String, Integer>> getKeysIterator() {
     keyIterator = keysDB.descendingMap().entrySet();
     return keyIterator;
   }
 
-  public Iterator<Object> getKeyIterator(String key, Integer counter) {
+  @Override public Iterator<Object> getKeyIterator(String key, Integer counter) {
     //        if(valuesIterator != null){
     //            valuesIterator.close();
     //        }
@@ -167,7 +167,7 @@ public class MapDBIndex {
 
   //    80.156.73.113:11222;80.156.73.116:11222;80.156.73.123:11222;80.156.73.128:11222
   //    ;
-  public synchronized void flush() {
+  @Override public synchronized void flush() {
     //    try {
 
     //      dataDB.write(batch);
@@ -220,7 +220,7 @@ public class MapDBIndex {
     return t;
   }
 
-  public  void put(Object key, Object value) {
+  @Override public void put(Object key, Object value) {
     add(key, value);
   }
 
@@ -257,7 +257,7 @@ public class MapDBIndex {
 
   //
 
-  public void close() {
+  @Override public void close() {
     if (keyIterator != null) {
       //      keyIterator.close();
 

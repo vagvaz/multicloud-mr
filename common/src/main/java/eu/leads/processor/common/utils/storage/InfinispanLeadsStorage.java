@@ -88,8 +88,7 @@ public class InfinispanLeadsStorage implements LeadsStorage {
     return null;
   }
 
-  @Override
-  public boolean delete(String s) {
+  @Override public boolean delete(String s) {
     return false;
   }
 }

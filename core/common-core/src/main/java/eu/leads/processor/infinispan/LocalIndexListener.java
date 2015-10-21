@@ -8,8 +8,8 @@ import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.common.utils.ProfileEvent;
 import eu.leads.processor.conf.LQPConfiguration;
+import eu.leads.processor.core.IntermediateDataIndex;
 import eu.leads.processor.core.LevelDBIndex;
-import eu.leads.processor.plugins.EventType;
 import org.infinispan.Cache;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
@@ -20,13 +20,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
 
 /**
  * Created by vagvaz on 16/07/15.
  */
-@Listener(sync = true, primaryOnly = true, clustered = false) public class LocalIndexListener implements LeadsListener,Runnable {
+@Listener(sync = true, primaryOnly = true, clustered = false) public class LocalIndexListener
+    implements LeadsListener, Runnable {
   private String confString;
   transient private volatile Object mutex;
   String cacheName;
@@ -34,7 +36,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
   //    transient List<LevelDBIndex> indexes;
   transient Queue queue;
   transient Thread thread;
-  transient List<LevelDBIndex> indexes;
+  transient List<IntermediateDataIndex> indexes;
   transient Cache targetCache;
   transient Cache keysCache;
   transient Cache dataCache;
@@ -45,6 +47,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
   private boolean flush = false;
   private boolean isClosed = false;
   private boolean isFlushed = false;
+
   public LocalIndexListener(InfinispanManager manager, String cacheName) {
     this.cacheName = cacheName;
   }
@@ -62,7 +65,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
   //        return indexes.get(i);
   //    }
 
-  public LevelDBIndex getIndex(int i) {
+  public IntermediateDataIndex getIndex(int i) {
     isDirty = true;
     return indexes.get(i);
   }
@@ -71,7 +74,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
   //    public void setIndex(LevelDBIndex index,int i) {
   //        this.indexes.set(i,index);
   //    }
-  public List<LevelDBIndex> getIndexes() {
+  public List<IntermediateDataIndex> getIndexes() {
     return indexes;
   }
 
@@ -96,13 +99,13 @@ import java.util.concurrent.ConcurrentLinkedDeque;
       System.err.println("DIRTY === ");
       System.exit(-1);
     }
-    if (event.isPre() || event.isCommandRetried() ) {
+    if (event.isPre() || event.isCommandRetried()) {
       return;
     }
 
     //        if(event.getKey() instanceof ComplexIntermediateKey) {
     //        pevent.start("IndexPut");
-    processEvent(event.getKey(),event.getValue());
+    processEvent(event.getKey(), event.getValue());
     //        pevent.end();
     //        targetCache.removeAsync(event.getKey());
     //            synchronized (mutex){
@@ -112,12 +115,12 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
   }
 
-  private void processEvent(Object key,Object value) {
-//    EventTriplet e = new EventTriplet(EventType.CREATED,key,value);
-//    queue.add(e);
-//    synchronized (mutex) {
-//      mutex.notify();
-//    }
+  private void processEvent(Object key, Object value) {
+    //    EventTriplet e = new EventTriplet(EventType.CREATED,key,value);
+    //    queue.add(e);
+    //    synchronized (mutex) {
+    //      mutex.notify();
+    //    }
     int indx = Math.abs(key.hashCode()) % parallelism;
     indexes.get(indx).put(key, value);
 
@@ -128,11 +131,11 @@ import java.util.concurrent.ConcurrentLinkedDeque;
       System.err.println("DIRTY ++++++=== ");
       System.exit(-1);
     }
-    if (event.isPre() || event.isCommandRetried() ) {
+    if (event.isPre() || event.isCommandRetried()) {
       return;
     }
 
-    processEvent(event.getKey(),event.getValue());
+    processEvent(event.getKey(), event.getValue());
   }
 
   @Override public InfinispanManager getManager() {
@@ -151,11 +154,12 @@ import java.util.concurrent.ConcurrentLinkedDeque;
     //        this.dataCache = manager.getLocalCache(cacheName+".index.data");
     //        this.index = new IntermediateKeyIndex(keysCache,dataCache);
 
-//    queue = new ConcurrentDiskQueue(500);
-//    queue = new ArrayDeque();
+    //    queue = new ConcurrentDiskQueue(500);
+    //    queue = new ArrayDeque();
     Thread thread = new Thread(this);
     parallelism = LQPConfiguration.getInstance().getConfiguration().getInt("node.engine.parallelism", 4);
-    queue = new ConcurrentDiskQueue( parallelism*LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size",500));
+    queue = new ConcurrentDiskQueue(
+        parallelism * LQPConfiguration.getInstance().getConfiguration().getInt("node.list.size", 500));
     indexes = new ArrayList<>(parallelism);
     for (int i = 0; i < parallelism; i++) {
       indexes.add(new LevelDBIndex(
@@ -165,7 +169,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
     }
     log = LoggerFactory.getLogger(LocalIndexListener.class);
     pevent = new ProfileEvent("indexPut", log);
-//    thread.start();
+    //    thread.start();
   }
 
   @Override public void initialize(InfinispanManager manager) {
@@ -176,22 +180,22 @@ import java.util.concurrent.ConcurrentLinkedDeque;
     return this.getClass().toString();
   }
 
-  @Override public  void  close() {
-    if(isClosed)
+  @Override public void close() {
+    if (isClosed)
       return;
     isClosed = true;
-    synchronized (mutex){
+    synchronized (mutex) {
       mutex.notify();
     }
     System.err.println("JOIN Thread in local");
     try {
-      if(thread != null) {
+      if (thread != null) {
         thread.join();
       }
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-    for (LevelDBIndex index : indexes) {
+    for (IntermediateDataIndex index : indexes) {
       index.flush();
       index.close();
     }
@@ -216,43 +220,42 @@ import java.util.concurrent.ConcurrentLinkedDeque;
     confString = s;
   }
 
-  public  void waitForAllData() {
-//    if(isFlushed){
-//      return;
-//    }
-    for (LevelDBIndex index : indexes) {
+  public void waitForAllData() {
+    //    if(isFlushed){
+    //      return;
+    //    }
+    for (IntermediateDataIndex index : indexes) {
       index.flush();
     }
-//    synchronized (mutex) {
-//      flush = true;
-//      try {
-//        mutex.notify();
-//        mutex.wait();
-//      } catch (InterruptedException e) {
-//        e.printStackTrace();
-//      }
-//    }
-//
-//    isFlushed = true;
+    //    synchronized (mutex) {
+    //      flush = true;
+    //      try {
+    //        mutex.notify();
+    //        mutex.wait();
+    //      } catch (InterruptedException e) {
+    //        e.printStackTrace();
+    //      }
+    //    }
+    //
+    //    isFlushed = true;
 
   }
 
   @Override public void run() {
-    while(!flush || !isClosed){
+    while (!flush || !isClosed) {
       EventTriplet e = (EventTriplet) queue.poll();
-      if(e == null){
-        if(isClosed) {
-          if(!queue.isEmpty()){
+      if (e == null) {
+        if (isClosed) {
+          if (!queue.isEmpty()) {
             System.err.println("CLOSING LOCALINDEX LISTENER WHILE NOT EMPTY");
             System.exit(-1);
-          }
-          else{
+          } else {
             break;
           }
         }
-        if(flush){
-          if(queue.isEmpty()){
-            synchronized (mutex){
+        if (flush) {
+          if (queue.isEmpty()) {
+            synchronized (mutex) {
               mutex.notifyAll();
               try {
                 mutex.wait();
@@ -261,14 +264,14 @@ import java.util.concurrent.ConcurrentLinkedDeque;
                 e1.printStackTrace();
               }
             }
-          }else{
-            if(isDirty){
+          } else {
+            if (isDirty) {
               System.err.println("DDDDDDDDDDDIIIIIIIIIIIIIIIIIIIIRRRRRRRRRRRTY");
               System.exit(-1);
             }
           }
         }
-        synchronized (mutex){
+        synchronized (mutex) {
           try {
             mutex.wait();
             continue;
@@ -277,26 +280,26 @@ import java.util.concurrent.ConcurrentLinkedDeque;
           }
         }
       }
-      if(isDirty){
+      if (isDirty) {
         System.err.println("DDDDDDDDDDDIIIIIIIIIIIIIIIIIIIIRRRRRRRRRRRTY");
         System.exit(-1);
       }
-//      System.err.println("*");
+      //      System.err.println("*");
       ComplexIntermediateKey key = (ComplexIntermediateKey) e.getKey();
       int indx = Math.abs(key.hashCode()) % parallelism;
       indexes.get(indx).put(key.getKey(), e.getValue());
-      if(flush) {
+      if (flush) {
         EventTriplet triplet = (EventTriplet) queue.poll();
         while (triplet != null) {
-           key = (ComplexIntermediateKey) triplet.getKey();
-           indx = Math.abs(key.hashCode()) % parallelism;
+          key = (ComplexIntermediateKey) triplet.getKey();
+          indx = Math.abs(key.hashCode()) % parallelism;
           indexes.get(indx).put(key.getKey(), triplet.getValue());
           triplet = (EventTriplet) queue.poll();
         }
-        for (LevelDBIndex index : indexes) {
+        for (IntermediateDataIndex index : indexes) {
           index.flush();
         }
-//        flush = false;
+        //        flush = false;
 
         synchronized (mutex) {
           mutex.notifyAll();

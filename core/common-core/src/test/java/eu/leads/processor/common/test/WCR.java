@@ -40,8 +40,7 @@ public class WCR extends LeadsReducer<String, Integer> {
     return sum;
   }
 
-  @Override
-  public void initialize() {
+  @Override public void initialize() {
     super.initialize();
     sums = new HashMap<String, Integer>();
   }

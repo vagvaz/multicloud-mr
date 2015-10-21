@@ -30,8 +30,7 @@ public class LocalCollector<K, V> extends LeadsCollector<K, V> {
 
   }
 
-  @Override
-  public void reset(){
+  @Override public void reset() {
     combinedValues.clear();
   }
 }

@@ -3,11 +3,7 @@ package eu.leads.processor.web;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.lang.SerializationUtils;
 import org.vertx.java.core.http.HttpClient;
-import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import javax.ws.rs.core.MediaType;
@@ -16,7 +12,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.security.InvalidAlgorithmParameterException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 

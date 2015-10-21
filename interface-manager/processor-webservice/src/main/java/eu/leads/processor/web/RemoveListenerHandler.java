@@ -35,8 +35,7 @@ public class RemoveListenerHandler implements Handler<HttpServerRequest> {
 
   }
 
-  @Override
-  public void handle(HttpServerRequest request) {
+  @Override public void handle(HttpServerRequest request) {
     request.response().setStatusCode(200);
     request.response().putHeader(WebStrings.CONTENT_TYPE, WebStrings.APP_JSON);
     //        log.info("Get Query Results Request");
@@ -81,8 +80,7 @@ public class RemoveListenerHandler implements Handler<HttpServerRequest> {
       this.requestId = requestId;
     }
 
-    @Override
-    public void handle(JsonObject message) {
+    @Override public void handle(JsonObject message) {
       if (message.containsField("error")) {
         log.error("and errror " + message.toString());
         replyForError(message);

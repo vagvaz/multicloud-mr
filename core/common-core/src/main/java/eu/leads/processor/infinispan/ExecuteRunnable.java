@@ -1,11 +1,9 @@
 package eu.leads.processor.infinispan;
 
-import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.core.EngineUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Queue;
 import java.util.Map;
 
 /**
@@ -39,26 +37,26 @@ public class ExecuteRunnable implements Runnable {
     try {
       Map.Entry entry = null;
       while (callable.isContinueRunning() || !callable.isEmpty()) {
-//        System.err.println(callable.getCallableIndex()+": "+ callable.isContinueRunning() + " " + callable.isEmpty() + " sz " + callable.getSize());
-//        System.err.println(callable.getCallableIndex()+" POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
+        //        System.err.println(callable.getCallableIndex()+": "+ callable.isContinueRunning() + " " + callable.isEmpty() + " sz " + callable.getSize());
+        //        System.err.println(callable.getCallableIndex()+" POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
         entry = callable.poll();
         while (entry != null) {
-//          System.err.println(callable.getCallableIndex()+" Run " + run++);
-//          System.err.println(callable.getCallableIndex()+"INSIDE POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
+          //          System.err.println(callable.getCallableIndex()+" Run " + run++);
+          //          System.err.println(callable.getCallableIndex()+"INSIDE POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
           key = entry.getKey();
           value = entry.getValue();
-//          if(run % 100 == 0)
-//            log.error(callable.getCallableIndex()+": EXON  PROCESSED { " + run++ );
+          //          if(run % 100 == 0)
+          //            log.error(callable.getCallableIndex()+": EXON  PROCESSED { " + run++ );
           callable.executeOn(key, value);
-//          log.error(callable.getCallableIndex()+": EXON  PROCESSED }" );
+          //          log.error(callable.getCallableIndex()+": EXON  PROCESSED }" );
           entry = callable.poll();
         }
         try {
-          if(callable.isContinueRunning() && callable.isEmpty()) {
+          if (callable.isContinueRunning() && callable.isEmpty()) {
             synchronized (callable.getInput()) {
-//              PrintUtilities.printAndLog(log,
-//                  callable.getCallableIndex() + "IN SLEEPING " + " is " + callable.isContinueRunning() + " " + callable
-//                      .isEmpty() + " " + ((Queue) callable.getInput()).size());
+              //              PrintUtilities.printAndLog(log,
+              //                  callable.getCallableIndex() + "IN SLEEPING " + " is " + callable.isContinueRunning() + " " + callable
+              //                      .isEmpty() + " " + ((Queue) callable.getInput()).size());
               callable.getInput().wait();
             }
           }
@@ -73,14 +71,14 @@ public class ExecuteRunnable implements Runnable {
         value = entry.getValue();
         callable.executeOn(key, value);
         entry = callable.poll();
-//        System.err.println("stuck here ");
-//        System.err.println(callable.getCallableIndex()+"INSIDE POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
+        //        System.err.println("stuck here ");
+        //        System.err.println(callable.getCallableIndex()+"INSIDE POLLING " + " is " + callable.isContinueRunning() + " " + callable.isEmpty() +" "+ ((Queue)callable.getInput()).size() );
       }
 
       callable = null;
       EngineUtils.addRunnable(this);
       isRunning = false;
-    }catch (Exception e ){
+    } catch (Exception e) {
       e.printStackTrace();
     }
     isRunning = false;
@@ -96,7 +94,9 @@ public class ExecuteRunnable implements Runnable {
 
   public void cancel() {
     isRunning = false;
-    System.err.println("in cacnel " + callable.getCallableIndex()+": "+ callable.isContinueRunning() + " " + callable.isEmpty() + " sz " + callable.getSize());
+    System.err.println(
+        "in cacnel " + callable.getCallableIndex() + ": " + callable.isContinueRunning() + " " + callable.isEmpty()
+            + " sz " + callable.getSize());
     callable.setContinueRunning(false);
     callable.getInput().clear();
   }

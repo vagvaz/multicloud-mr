@@ -43,7 +43,7 @@ public abstract class BasicContinuousOperator implements LeadsContinuousOperator
     }
     emanager = new EnsembleCacheManager(ensembleString);
     output = conf.getString("output");
-//    output = conf.getObject("configuration").getString("output");
+    //    output = conf.getObject("configuration").getString("output");
     outputCache = emanager.getCache(output);
     inputData = new HashMap();
     operatorCallable = new OperatorRunCallable(this);
@@ -86,7 +86,7 @@ public abstract class BasicContinuousOperator implements LeadsContinuousOperator
 
   private void populateInput(Iterator<Map.Entry> iterator) {
     try {
-//      System.out.println("populate input ");
+      //      System.out.println("populate input ");
       while (iterator.hasNext()) {
         Map.Entry entry = iterator.next();
         if (isReduce) {

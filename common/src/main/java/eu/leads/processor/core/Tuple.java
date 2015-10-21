@@ -14,6 +14,7 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
   //    static BasicBSONEncoder encoder = new BasicBSONEncoder();
   //    static BasicBSONDecoder decoder = new BasicBSONDecoder();
   private transient byte[] bytes = null;
+
   public Tuple() {
     super();
   }
@@ -52,7 +53,7 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
 
   private void writeObject(java.io.ObjectOutputStream out) throws IOException {
     // Serialize it
-    if(bytes != null){
+    if (bytes != null) {
       out.writeObject(bytes);
       bytes = null;
       return;
@@ -77,7 +78,7 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
   }
 
   private byte[] serializeWithEncoder(BSONEncoder encoder) {
-      byte[] array = encoder.encode(data);
+    byte[] array = encoder.encode(data);
     try {
       bytes = Snappy.compress(array);
     } catch (IOException e) {
@@ -118,7 +119,7 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
   }
 
   public void writeExternal(ObjectOutput out) throws IOException {
-    if(bytes != null){
+    if (bytes != null) {
       out.writeObject(bytes);
       bytes = null;
       return;
@@ -273,7 +274,7 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
   }
 
   public long getSerializedSize() {
-    if(bytes != null){
+    if (bytes != null) {
       return bytes.length;
     }
 

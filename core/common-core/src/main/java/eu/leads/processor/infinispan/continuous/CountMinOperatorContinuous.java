@@ -5,7 +5,6 @@ import eu.leads.processor.infinispan.LeadsReducer;
 import eu.leads.processor.infinispan.operators.mapreduce.CountMinFederationReducer;
 import eu.leads.processor.infinispan.operators.mapreduce.CountMinLocalReducer;
 import eu.leads.processor.infinispan.operators.mapreduce.CountMinMapper;
-
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -13,14 +12,12 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class CountMinOperatorContinuous extends MapReduceContinuousOperator {
   @Override protected LeadsReducer getReducer() {
-    JsonObject newConf = conf.copy()
-        .putString("composable", "1");
+    JsonObject newConf = conf.copy().putString("composable", "1");
     return new CountMinFederationReducer(newConf.toString());
   }
 
   @Override protected LeadsReducer getLocalReducer() {
-    JsonObject newConf = conf.copy()
-        .putString("composable", "1");
+    JsonObject newConf = conf.copy().putString("composable", "1");
     return new CountMinLocalReducer(newConf.toString());
   }
 

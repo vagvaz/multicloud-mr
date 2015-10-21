@@ -4,20 +4,14 @@ import com.google.common.base.Strings;
 import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.core.Action;
 import eu.leads.processor.core.ActionStatus;
-import eu.leads.processor.core.comp.LeadsMessageHandler;
-import eu.leads.processor.core.net.MessageUtils;
 import eu.leads.processor.core.net.Node;
-import eu.leads.processor.imanager.IManagerConstants;
 import eu.leads.processor.nqe.NQEConstants;
 import org.vertx.java.core.Handler;
-import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -33,8 +27,7 @@ public class StopCQLHandler implements Handler<HttpServerRequest> {
     this.log = log;
   }
 
-  @Override
-  public void handle(HttpServerRequest request) {
+  @Override public void handle(HttpServerRequest request) {
     request.response().setStatusCode(200);
     request.response().putHeader(WebStrings.CONTENT_TYPE, WebStrings.APP_JSON);
     //        log.info("Get Query Results Request");
@@ -42,7 +35,7 @@ public class StopCQLHandler implements Handler<HttpServerRequest> {
 
     String queryId = request.params().get("id");
     if (Strings.isNullOrEmpty(queryId)) {
-      replyForError(request,null);
+      replyForError(request, null);
       return;
     }
     Action action = new Action();
@@ -58,7 +51,7 @@ public class StopCQLHandler implements Handler<HttpServerRequest> {
     queryRequest.putString("queryId", queryId);
     action.setData(queryRequest);
     com.sendToAllGroup(StringConstants.NODEEXECUTORQUEUE, action.asJsonObject());
-    request.response().end( new JsonObject().putString("status","SUCCESS").putString("message","").toString());
+    request.response().end(new JsonObject().putString("status", "SUCCESS").putString("message", "").toString());
   }
 
   public void cleanup(String id) {
@@ -66,14 +59,14 @@ public class StopCQLHandler implements Handler<HttpServerRequest> {
 
 
 
-  private void replyForError(HttpServerRequest request,JsonObject message) {
-      if (message != null) {
-        log.error(message.getString("message"));
-        request.response().end("{}");
-      } else {
-        log.error("Request for Query Status had empty query Id.");
-        request.response().setStatusCode(400);
-      }
-
+  private void replyForError(HttpServerRequest request, JsonObject message) {
+    if (message != null) {
+      log.error(message.getString("message"));
+      request.response().end("{}");
+    } else {
+      log.error("Request for Query Status had empty query Id.");
+      request.response().setStatusCode(400);
     }
+
+  }
 }

@@ -3,7 +3,6 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
 import eu.leads.processor.infinispan.LeadsCombiner;
-
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.Iterator;
@@ -25,8 +24,7 @@ public class CountMinCombiner extends LeadsCombiner<String, Tuple> {
     super(configString);
   }
 
-  @Override
-  public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
+  @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     int sum = 0;
     while (iter.hasNext()) {
       Tuple t = iter.next();
@@ -37,8 +35,7 @@ public class CountMinCombiner extends LeadsCombiner<String, Tuple> {
     collector.emit(reducedKey, output);
   }
 
-  @Override
-  protected void finalizeTask() {
+  @Override protected void finalizeTask() {
     System.out.println(getClass().getName() + " finished!");
 
   }
