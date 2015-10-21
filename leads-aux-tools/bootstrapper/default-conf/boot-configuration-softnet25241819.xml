@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- EDIT USERNAME AND PASSWORD BELOW -->
+<leads-processor-bootstrap>
+    <baseDir>/tmp/boot-conf/</baseDir>
+    <!-- here are all the conf files of the available modules-->
+    <remoteDir>/tmp/</remoteDir>
+    <hdfs>
+        <uri>hdfs://snf-618466.vm.okeanos.grnet.gr:8020</uri>
+        <user>vagvaz</user>
+        <prefix>/user/vagvaz/</prefix>
+    </hdfs>
+    <scheduler>http://localhost:5001</scheduler>
+    <deploymentType>multicloud</deploymentType>
+    <adresses>
+        <MC name='softnet' credentials="softnet">
+            <node name='clu25' privateIp=''>147.27.14.38</node>
+            <node name='clu24' privateIp=''>147.27.14.37</node>
+            <node name='clu19' privateIp=''>147.27.14.35</node>
+            <node name='clu18' privateIp=''>147.27.14.93</node>
+        </MC>
+    </adresses>
+    <!-- localhost, 5.147.254.198-->
+    <startUpDelay>3</startUpDelay>
+    <!--delay between modules startup (seconds) -->
+    <processor>
+        <version>1.0-SNAPSHOT</version>
+        <groupId>gr.tuc.softnet</groupId>
+        <vertxArg>cluster</vertxArg>
+        <component>
+            <name>log-sink</name>
+            <configurationFile>log-sink.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+            <modName>log-sink-module</modName>
+        </component>
+        <component>
+            <name>webservice</name>
+            <configurationFile>webservice.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+            <modName>processor-webservice</modName>
+        </component>
+        <component>
+            <name>imanager</name>
+            <configurationFile>imanager.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>deployer</name>
+            <configurationFile>deployer.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>nqe</name>
+            <configurationFile>nqe.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>planner</name>
+            <configurationFile>planner.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+    </processor>
+    <ssh>
+        <credentials>
+            <id>softnet</id>
+            <username>USERNAME</username>
+            <password>PASSWORD</password>
+            <!--    <rsa>/home/ubuntu/key.rsa</rsa>  a filename -->
+        </credentials>
+    </ssh>
+</leads-processor-bootstrap>

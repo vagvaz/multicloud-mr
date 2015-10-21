@@ -15,9 +15,7 @@ public class HDFSStorageTest {
     conf.setProperty("hdfs.url", "hdfs://snf-618466.vm.okeanos.grnet.gr:8020");
     conf.setProperty("prefix", "/user/vagvaz/");
 
-    LeadsStorage
-        hdfsStorage =
-        LeadsStorageFactory.getInitializedStorage(LeadsStorageFactory.HDFS, conf);
+    LeadsStorage hdfsStorage = LeadsStorageFactory.getInitializedStorage(LeadsStorageFactory.HDFS, conf);
     String[] containers = hdfsStorage.parts("/a");
     for (String c : containers) {
       System.out.println(c);

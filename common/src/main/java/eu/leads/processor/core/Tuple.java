@@ -1,29 +1,19 @@
 package eu.leads.processor.core;
 
 import com.mongodb.util.JSON;
-
-import org.bson.BSONObject;
-import org.bson.BasicBSONDecoder;
-import org.bson.BasicBSONEncoder;
-import org.bson.BasicBSONObject;
+import org.bson.*;
 import org.infinispan.commons.marshall.AdvancedExternalizer;
+import org.xerial.snappy.Snappy;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.io.ObjectStreamException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
 
 //@SerializeWith(Tuple.TupleExternalizer.class)
 public class Tuple extends DataType_bson implements Serializable, Externalizable {
 
-
+  //    static BasicBSONEncoder encoder = new BasicBSONEncoder();
+  //    static BasicBSONDecoder decoder = new BasicBSONDecoder();
+  private transient byte[] bytes = null;
   public Tuple() {
     super();
   }
@@ -35,14 +25,13 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
   }
 
   public Tuple(Tuple tl, Tuple tr, ArrayList<String> ignoreColumns) {
-//        super(tl.toString());
+    //        super(tl.toString());
     super();
     super.copy(tl.asBsonObject());
     if (ignoreColumns != null) {
       for (String field : ignoreColumns) {
-        if (data.containsField(field)) {
+        if (data.containsField(field))
           data.removeField(field);
-        }
       }
       tr.removeAtrributes(ignoreColumns);
     }
@@ -56,46 +45,118 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
   public Tuple(BSONObject object) {
     data = object;
   }
-//
-//  public Tuple(Tuple tmp) {
-//
-//  }
+  //
+  //  public Tuple(Tuple tmp) {
+  //
+  //  }
 
   private void writeObject(java.io.ObjectOutputStream out) throws IOException {
     // Serialize it
-    BasicBSONEncoder encoder = new BasicBSONEncoder();
-    byte[] array = encoder.encode(data);
-    out.writeObject(array);
-//      out.writeInt(data.toString().length());
-//      out.writeBytes(data.toString());
+    if(bytes != null){
+      out.writeObject(bytes);
+      bytes = null;
+      return;
+    }
+
+    BSONEncoder encoder = new BasicBSONEncoder();//TupleUtils.getEncoder();
+    if (encoder == null) {
+      encoder = new BasicBSONEncoder();
+      bytes = serializeWithEncoder(encoder);
+      out.writeObject(bytes);
+
+      bytes = null;
+      encoder = null;
+      return;
+    }
+    bytes = serializeWithEncoder(encoder);
+    out.writeObject(bytes);
+    bytes = null;
+    TupleUtils.addEncoder(encoder);
+    //      out.writeInt(data.toString().length());
+    //      out.writeBytes(data.toString());
+  }
+
+  private byte[] serializeWithEncoder(BSONEncoder encoder) {
+      byte[] array = encoder.encode(data);
+    try {
+      bytes = Snappy.compress(array);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    array = null;
+    return bytes;
   }
 
   private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
     // Deserialize it
+    bytes = null;
     byte[] array = (byte[]) in.readObject();
-    BasicBSONDecoder decoder = new BasicBSONDecoder();
-    data = decoder.readObject(array);
-//         int size = in.readInt();
-//         byte[] bb =  new byte[size];
-//         in.readFully(bb);
-//         String fromString = new String(bb);
-//       data =
+    byte[] uncompressed = Snappy.uncompress(array);
+    BSONDecoder decoder = new BasicBSONDecoder();
+    if (decoder == null) {
+      decoder = new BasicBSONDecoder();
+      data = decoder.readObject(uncompressed);
+      array = null;
+      uncompressed = null;
+      decoder = null;
+      return;
+    }
+    data = decoder.readObject(uncompressed);
+    array = null;
+    uncompressed = null;
+    TupleUtils.addDecoder(decoder);
+    //         int size = in.readInt();
+    //         byte[] bb =  new byte[size];
+    //         in.readFully(bb);
+    //         String fromString = new String(bb);
+    //       data =
   }
 
   private void readObjectNoData() throws ObjectStreamException {
+    bytes = null;
     data = new BasicBSONObject();
   }
 
   public void writeExternal(ObjectOutput out) throws IOException {
-    BasicBSONEncoder encoder = new BasicBSONEncoder();
-    byte[] array = encoder.encode(data);
-    out.writeObject(array);
+    if(bytes != null){
+      out.writeObject(bytes);
+      bytes = null;
+      return;
+    }
+
+    BSONEncoder encoder = TupleUtils.getEncoder();
+    if (encoder == null) {
+      encoder = new BasicBSONEncoder();
+      bytes = serializeWithEncoder(encoder);
+      out.writeObject(bytes);
+
+      bytes = null;
+      encoder = null;
+      return;
+    }
+    bytes = serializeWithEncoder(encoder);
+    out.writeObject(bytes);
+    bytes = null;
+    TupleUtils.addEncoder(encoder);
   }
 
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-    BasicBSONDecoder decoder = new BasicBSONDecoder();
+    bytes = null;
     byte[] array = (byte[]) in.readObject();
-    data = decoder.readObject(array);
+    byte[] uncompressed = Snappy.uncompress(array);
+    BSONDecoder decoder = TupleUtils.getDecoder();//new BasicBSONDecoder();
+    if (decoder == null) {
+      decoder = new BasicBSONDecoder();
+      data = decoder.readObject(uncompressed);
+      array = null;
+      uncompressed = null;
+      decoder = null;
+      return;
+    }
+    data = decoder.readObject(uncompressed);
+    array = null;
+    uncompressed = null;
+    TupleUtils.addDecoder(decoder);
   }
 
   public String asString() {
@@ -150,6 +211,8 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
         data.removeField(field);
       }
     }
+    fields.clear();
+    keep.clear();
   }
 
   public void removeAtrribute(String name) {
@@ -157,9 +220,8 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
   }
 
   public void removeAtrributes(List<String> columns) {
-    for (String column : columns) {
+    for (String column : columns)
       data.removeField(column);
-    }
   }
 
   public Set<String> getFieldNames() {
@@ -175,9 +237,8 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
   }
 
   public void renameAttribute(String oldName, String newName) {
-    if (oldName.equals(newName)) {
+    if (oldName.equals(newName))
       return;
-    }
     Object value = data.get(oldName);
     data.removeField(oldName);
     data.put(newName, value);
@@ -211,37 +272,49 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
     }
   }
 
-  public static class TupleExternalizer implements AdvancedExternalizer<Tuple> {
+  public long getSerializedSize() {
+    if(bytes != null){
+      return bytes.length;
+    }
 
-    @Override
-    public void writeObject(ObjectOutput output, Tuple object) throws IOException {
+    BSONEncoder encoder = TupleUtils.getEncoder();
+    if (encoder == null) {
+      encoder = new BasicBSONEncoder();
+      bytes = serializeWithEncoder(encoder);
+      encoder = null;
+      return bytes.length;
+    }
+    bytes = serializeWithEncoder(encoder);
+    TupleUtils.addEncoder(encoder);
+    return bytes.length;
+  }
+
+  public static class TupleExternalizer implements AdvancedExternalizer<Tuple> {
+    @Override public void writeObject(ObjectOutput output, Tuple object) throws IOException {
       BasicBSONEncoder encoder = new BasicBSONEncoder();
       byte[] array = encoder.encode(object.asBsonObject());
-//            byte[] array1 = Base64.encode(array);
+      //            byte[] array1 = Base64.encode(array);
       output.writeObject(array);
     }
 
-    @Override
-    public Tuple readObject(ObjectInput input) throws IOException, ClassNotFoundException {
+    @Override public Tuple readObject(ObjectInput input) throws IOException, ClassNotFoundException {
       BasicBSONDecoder decoder = new BasicBSONDecoder();
       byte[] array = (byte[]) input.readObject();
-//            String tmp = (String) input.readObject();
-//            byte[] array = Base64.decode(tmp.getBytes());
+      //            String tmp = (String) input.readObject();
+      //            byte[] array = Base64.decode(tmp.getBytes());
 
       BSONObject object = decoder.readObject(array);
       Tuple tuple = new Tuple(object);
       return tuple;
     }
 
-    @Override
-    public Set<Class<? extends Tuple>> getTypeClasses() {
+    @Override public Set<Class<? extends Tuple>> getTypeClasses() {
       Set<Class<? extends Tuple>> result = new HashSet<>();
       result.add(Tuple.class);
       return result;
     }
 
-    @Override
-    public Integer getId() {
+    @Override public Integer getId() {
       return 27011988;
     }
   }

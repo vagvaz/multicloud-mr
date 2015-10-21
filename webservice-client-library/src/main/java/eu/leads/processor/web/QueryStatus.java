@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 /**
  * Created by vagvaz on 3/7/14.
  */
-@JsonAutoDetect
-public class QueryStatus {
-
+@JsonAutoDetect public class QueryStatus {
   private String id;
   private String status;
   private String errorMessage;
@@ -40,8 +38,7 @@ public class QueryStatus {
     this.status = status;
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return id + ":" + status + "\n" + errorMessage;
 
   }

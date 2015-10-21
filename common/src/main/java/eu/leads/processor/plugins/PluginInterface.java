@@ -1,7 +1,6 @@
 package eu.leads.processor.plugins;
 
 import eu.leads.processor.common.infinispan.InfinispanManager;
-
 import org.apache.commons.configuration.Configuration;
 import org.infinispan.Cache;
 
@@ -10,7 +9,6 @@ import org.infinispan.Cache;
  */
 
 public interface PluginInterface {
-
   /**
    * Get the Unique Id of the plugin
    */

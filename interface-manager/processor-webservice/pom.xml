@@ -178,6 +178,7 @@
             </exclusions>
         </dependency>
 
+
         <!-- Add any other dependencies that you want packaged into your module (in the lib dir) here
       as 'compile' dependencies. Here is an example
       <dependency>
@@ -372,19 +373,7 @@
     </build>
     <reporting>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-report-plugin</artifactId>
-                <version>${maven.surefire.report.plugin.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${maven.javadoc.plugin.version}</version>
-                <configuration>
-                    <aggregate>true</aggregate>
-                </configuration>
-            </plugin>
+
         </plugins>
     </reporting>
 </project>

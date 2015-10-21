@@ -16,30 +16,31 @@ public class CountMinMapper extends LeadsMapper<String, Tuple, String, Tuple> {
   int w, d;
   Random random;
 
+  public CountMinMapper() {
+    super();
+  }
+
   public CountMinMapper(JsonObject configuration) {
     super(configuration);
-    random = new Random();
   }
 
   public CountMinMapper(String configuration) {
     super(configuration);
-    random = new Random();
     JsonObject operatorConfiguration = new JsonObject(configuration);
-//    w = operatorConfiguration.getInteger("w");
-//    d = operatorConfiguration.getInteger("d");
   }
 
   @Override
   public void map(String key, Tuple value, Collector<String, Tuple> collector) {
+
     for (String attribute : value.getFieldNames()) {
       for (String word : value.getAttribute(attribute).split(" ")) {
         if (word != null && word.length() > 0) {
+          int[] yDim = hashRandom(word.hashCode());
           for (int i = 0; i < d; i++) {
             // emit <(<row>,<col>), count>
             Tuple output = new Tuple();
             output.setAttribute("count", 1);
-            collector.emit(String.valueOf(i) + "," + String.valueOf(hashRandom(word.hashCode())[i]),
-                           output);
+            collector.emit(String.valueOf(i) + "," + String.valueOf(yDim[i]), output);
           }
         }
       }
@@ -51,6 +52,7 @@ public class CountMinMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     super.initialize();
     w = conf.getInteger("w");
     d = conf.getInteger("d");
+    random = new Random();
   }
 
   @Override

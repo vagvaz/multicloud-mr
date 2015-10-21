@@ -2,7 +2,6 @@ package eu.leads.processor.infinispan;
 
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.math.FilterOperatorTree;
-
 import org.infinispan.filter.KeyValueFilter;
 import org.infinispan.metadata.Metadata;
 
@@ -21,20 +20,18 @@ public class QualFilter implements KeyValueFilter, Serializable {
     this.treeAsString = treeNodeAsString;
   }
 
-  @Override
-  public boolean accept(Object key, Object value, Metadata metadata) {
-    if (!initialized) {
+  @Override public boolean accept(Object key, Object value, Metadata metadata) {
+    if (!initialized)
       initialize();
-    }
-//      System.out.println("key " + key  + " value " + value);
+    //      System.out.println("key " + key  + " value " + value);
     if (key == null || value == null) {
       return false;
     } else {
-//         Tuple tuple = new Tuple((String)value);
+      //         Tuple tuple = new Tuple((String)value);
       Tuple tuple = (Tuple) value;
-//         System.out.println("accept?");
+      //         System.out.println("accept?");
       boolean result = tree.accept(tuple);
-//         System.out.println("="+result);
+      //         System.out.println("="+result);
       return result;
     }
 

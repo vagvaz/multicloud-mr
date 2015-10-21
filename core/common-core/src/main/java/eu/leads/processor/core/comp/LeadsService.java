@@ -8,10 +8,9 @@ import org.vertx.java.core.json.JsonObject;
 public interface LeadsService {
 
   /**
-   * Initialize the service with the given configuration. The initialize creates the required
-   * structures for the service. It does not start the service. It is good practice to send a
-   * message of INITIALIZED to the group in order for parent component process or depenedent
-   * services to be informed.
+   * Initialize the service with the given configuration. The initialize creates the required structures
+   * for the service. It does not start the service. It is good practice to send a message of INITIALIZED to the group
+   * in order for parent component process or depenedent services to be informed.
    *
    * @param config The configuration of the Service
    */
@@ -33,8 +32,8 @@ public interface LeadsService {
   public void stopService();
 
   /**
-   * The fail should call cleanup and stopService. This method is used in order to stop the
-   * execution of the service in case of an error.
+   * The fail should call cleanup and stopService. This method is used in order to stop the execution of the service
+   * in case of an error.
    *
    * @param message Informative message why the service failed.
    */
@@ -48,9 +47,11 @@ public interface LeadsService {
   public ServiceStatus getStatus();
 
   /**
-   * Set the Running Status of the service possible values possible values are
-   * IDLE,INITIALIZING,INITIALIZED,RUNNING,STOPPING,STOPPED,FAILED for more information look at
-   * {@link ServiceStatus}
+   * Set the Running Status of the service possible values
+   * possible values are   IDLE,INITIALIZING,INITIALIZED,RUNNING,STOPPING,STOPPED,FAILED
+   * for more information look at {@link ServiceStatus}
+   *
+   * @param status
    */
   public void setStatus(ServiceStatus status);
 

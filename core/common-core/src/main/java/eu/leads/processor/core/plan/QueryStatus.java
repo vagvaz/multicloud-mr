@@ -1,7 +1,6 @@
 package eu.leads.processor.core.plan;
 
 import eu.leads.processor.core.DataType;
-
 import org.vertx.java.core.json.JsonObject;
 
 /**

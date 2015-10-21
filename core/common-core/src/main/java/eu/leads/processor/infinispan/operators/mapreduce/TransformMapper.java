@@ -2,7 +2,6 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsMapper;
-
 import org.infinispan.distexec.mapreduce.Collector;
 import org.vertx.java.core.json.JsonObject;
 
@@ -21,28 +20,26 @@ public class TransformMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     super(configString);
   }
 
+  public TransformMapper() {
+  }
 
-  @Override
-  public void map(String key, Tuple value, Collector<String, Tuple> collector) {
-//      System.out.println("Called for " + key + "     " + value);
-//        if (!isInitialized)
-//            intialize();
+  @Override public void map(String key, Tuple value, Collector<String, Tuple> collector) {
+    //      System.out.println("Called for " + key + "     " + value);
+    //        if (!isInitialized)
+    //            intialize();
     StringBuilder builder = new StringBuilder();
-//        String tupleId = key.substring(key.indexOf(":"));
-//        Tuple t = new Tuple(value);
+    //        String tupleId = key.substring(key.indexOf(":"));
+    //        Tuple t = new Tuple(value);
     Tuple t = value;
     for (String attribute : t.getFieldNames()) {
       try {
-        if (attribute.endsWith("uri")) {
+        if (attribute.endsWith("uri"))
           t.setAttribute(attribute, transformUri(t.getAttribute(attribute)));
-        }
-        if (attribute.endsWith("fqdnurl")) {
+        if (attribute.endsWith("fqdnurl"))
           t.setAttribute(attribute, transformUri(t.getAttribute(attribute)));
-        }
 
-        if (attribute.endsWith("ts")) {
+        if (attribute.endsWith("ts"))
           t.setAttribute(attribute, transformTs(t.getNumberAttribute(attribute)));
-        }
       } catch (Exception e) {
         System.err.println("error trying to transform attributet " + attribute);
         continue;
@@ -50,7 +47,7 @@ public class TransformMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     }
 
     collector.emit(key, t);
-//        collector.emit(key, t.asString());
+    //        collector.emit(key, t.asString());
 
   }
 
@@ -78,11 +75,10 @@ public class TransformMapper extends LeadsMapper<String, Tuple, String, Tuple> {
     domainName = domainName.substring(0, domainName.length() - 1);
 
     if (parts.length == 2) {
-//            System.out.print("Parts[1]:" + parts[1]);
+      //            System.out.print("Parts[1]:" + parts[1]);
       String[] parts2 = parts[1].split("/");
-      if (parts2[0].startsWith("http")) {
+      if (parts2[0].startsWith("http"))
         ;
-      }
       url = parts2[0] + "://" + domainName;
       for (int i = 1; i < parts2.length; i++) {
         url += "/" + parts2[i];
@@ -94,7 +90,7 @@ public class TransformMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
   private void intialize() {
     isInitialized = true;
-//       System.err.println("-------------Initialize");
+    //       System.err.println("-------------Initialize");
     super.initialize();
   }
 

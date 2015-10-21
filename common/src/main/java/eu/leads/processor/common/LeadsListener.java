@@ -1,6 +1,7 @@
 package eu.leads.processor.common;
 
 import eu.leads.processor.common.infinispan.InfinispanManager;
+import org.vertx.java.core.json.JsonObject;
 
 import java.io.Serializable;
 
@@ -24,6 +25,8 @@ public interface LeadsListener extends Serializable {
    */
   public void setManager(InfinispanManager manager);
 
+  public void initialize(InfinispanManager manager, JsonObject conf);
+
   public void initialize(InfinispanManager manager);
 
   /**
@@ -33,5 +36,8 @@ public interface LeadsListener extends Serializable {
    */
   public String getId();
 
+  public void close();
 
+
+  void setConfString(String s);
 }

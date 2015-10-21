@@ -11,99 +11,80 @@ import java.util.Properties;
 public class InfinispanLeadsStorage implements LeadsStorage {
 
 
-  @Override
-  public boolean initializeReader(Properties configuration) {
+  @Override public boolean initializeReader(Properties configuration) {
     return false;
   }
 
-  @Override
-  public byte[] read(String uri) {
+  @Override public byte[] read(String uri) {
     return new byte[0];
   }
 
-  @Override
-  public List<byte[]> batchRead(List<String> uris) {
+  @Override public List<byte[]> batchRead(List<String> uris) {
     return null;
   }
 
-  @Override
-  public byte[] batcheReadMerge(List<String> uris) {
+  @Override public byte[] batcheReadMerge(List<String> uris) {
     return new byte[0];
   }
 
-  @Override
-  public long size(String path) {
+  @Override public long size(String path) {
     return 0;
   }
 
-  @Override
-  public String[] parts(String uri) {
+  @Override public String[] parts(String uri) {
     return new String[0];
   }
 
-  @Override
-  public boolean exists(String path) {
+  @Override public boolean exists(String path) {
     return false;
   }
 
-  @Override
-  public long download(String source, String destination) {
+  @Override public long download(String source, String destination) {
     return 0;
   }
 
 
-  @Override
-  public boolean initializeWriter(Properties configuration) {
+  @Override public boolean initializeWriter(Properties configuration) {
     return false;
   }
 
-  @Override
-  public boolean write(String uri, InputStream stream) {
+  @Override public boolean write(String uri, InputStream stream) {
     return false;
   }
 
-  @Override
-  public boolean write(Map<String, InputStream> stream) {
+  @Override public boolean write(Map<String, InputStream> stream) {
     return false;
   }
 
-  @Override
-  public boolean write(String uri, List<InputStream> streams) {
+  @Override public boolean write(String uri, List<InputStream> streams) {
     return false;
   }
 
-  @Override
-  public boolean writeData(String uri, byte[] data) {
+  @Override public boolean writeData(String uri, byte[] data) {
     return false;
   }
 
-  @Override
-  public boolean writeData(Map<String, byte[]> data) {
+  @Override public boolean writeData(Map<String, byte[]> data) {
     return false;
   }
 
-  @Override
-  public boolean writeData(String uri, List<byte[]> data) {
+  @Override public boolean writeData(String uri, List<byte[]> data) {
     return false;
   }
 
-  @Override
-  public boolean initialize(Properties configuration) {
+  @Override public boolean initialize(Properties configuration) {
     return false;
   }
 
-  @Override
-  public Properties getConfiguration() {
+  @Override public Properties getConfiguration() {
     return null;
   }
 
-  @Override
-  public void setConfiguration(Properties configuration) {
+  @Override public void setConfiguration(Properties configuration) {
 
   }
 
-  @Override
-  public String getStorageType() {
+  @Override public String getStorageType() {
     return null;
   }
 

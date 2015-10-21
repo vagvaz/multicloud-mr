@@ -1,9 +1,71 @@
 package eu.leads.processor.core;
 
+import eu.leads.processor.conf.LQPConfiguration;
+import org.bson.BSONDecoder;
+import org.bson.BSONEncoder;
+import org.bson.BasicBSONDecoder;
+import org.bson.BasicBSONEncoder;
+
+import java.util.concurrent.ConcurrentLinkedDeque;
+
 /**
  * Created by vagvaz on 9/24/14.
  */
 public class TupleUtils {
+  static ConcurrentLinkedDeque<BSONDecoder> decoders;
+  static ConcurrentLinkedDeque<BSONEncoder> encoders;
+  static Object encCV = new Object();
+  static Object decCV = new Object();
+
+  public static void initialize() {
+    decoders = new ConcurrentLinkedDeque<>();
+    encoders = new ConcurrentLinkedDeque<>();
+    int size = LQPConfiguration.getInstance().getConfiguration().getInt("processor.encoders.size", 200);
+    for (int i = 0; i < size; i++) {
+      decoders.add(new BasicBSONDecoder());
+      encoders.add(new BasicBSONEncoder());
+    }
+  }
+
+  public static BSONDecoder getDecoder() {
+//    while (decoders.isEmpty()) {
+//      synchronized (decCV) {
+//        try {
+//          decCV.wait();
+//        } catch (InterruptedException e) {
+//          e.printStackTrace();
+//        }
+//      }
+//    }
+    return decoders.poll();
+  }
+
+  public static BSONEncoder getEncoder() {
+//    while (encoders.isEmpty()) {
+//      synchronized (encCV) {
+//        try {
+//          encCV.wait();
+//        } catch (InterruptedException e) {
+//          e.printStackTrace();
+//        }
+//      }
+//    }
+    return encoders.poll();
+  }
+
+  public static void addDecoder(BSONDecoder decoder) {
+    decoders.add(decoder);
+//    synchronized (decCV) {
+//      decCV.notify();
+//    }
+  }
+
+  public static void addEncoder(BSONEncoder encoder) {
+    encoders.add(encoder);
+//    synchronized (encCV) {
+//      encCV.notify();
+//    }
+  }
 
   public static int compareValues(Object o1, Object o2, String type) {
     int result = 0;

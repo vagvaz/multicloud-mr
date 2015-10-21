@@ -1,11 +1,10 @@
 package eu.leads.processor.infinispan.operators;
 
-import eu.leads.processor.infinispan.LeadsBaseCallable;
 
+import eu.leads.processor.infinispan.LeadsBaseCallable;
 import org.vertx.java.core.json.JsonObject;
 
 public interface Operator {
-
   void failCleanup();
 
   public JsonObject getConfiguration();
@@ -37,6 +36,14 @@ public interface Operator {
   public void setMapperCallable(LeadsBaseCallable mapperCacllable);
 
   public void setReducerCallable(LeadsBaseCallable reducerCallable);
+
+  public JsonObject getContinuousMap();
+
+  public JsonObject getContinuousReduceLocal();
+
+  public JsonObject getContinuousReduce();
+
+  public String getContinuousListenerClass();
 
   //    public void setupExecution();
   public void setupMapCallable();

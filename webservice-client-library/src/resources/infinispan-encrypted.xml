@@ -20,8 +20,7 @@
         <scheduled-thread-pool name="infinispan-eviction" thread-factory="infinispan-factory"/>
         <scheduled-thread-pool name="infinispan-repl-queue" thread-factory="infinispan-factory"/>
     </threads>
-    <cache-container name="defaultContainer" statistics="true"
-                     default-cache="defaultEncryptedCache">
+    <cache-container name="defaultContainer" statistics="true" default-cache="defaultEncryptedCache">
 
 
         <!--<serialization marshaller="org.infinispan.marshall.core.VersionAwareMarshaller"-->

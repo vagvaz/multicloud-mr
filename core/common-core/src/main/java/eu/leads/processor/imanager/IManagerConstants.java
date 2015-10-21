@@ -4,7 +4,6 @@ package eu.leads.processor.imanager;
  * Created by vagvaz on 8/5/14.
  */
 public class IManagerConstants {
-
   public static final String GET_OBJECT = "getObject";
   public static final String PUT_OBJECT = "putObject";
   public static final String GET_RESULTS = "getResults";
@@ -27,4 +26,8 @@ public class IManagerConstants {
   public static final String UPLOAD_DATA = "uploadData";
   public static final String EXECUTE_MAPREDUCE = "executeMapReduce";
   public static final String COMPLETED_MAPREDUCE = "completedMapReduce";
+  public static final String QUIT = "quit";
+  public static final String STOP_CACHE = "stopCache";
+  public static final String REMOVE_LISTENER = "removeListener";
+  public static final String ADD_LISTENER = "addListener";
 }

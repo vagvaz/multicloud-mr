@@ -1,7 +1,6 @@
 package eu.leads.processor.web;
 
 import com.google.common.base.Strings;
-
 import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.core.Action;
 import eu.leads.processor.core.ActionStatus;
@@ -9,7 +8,6 @@ import eu.leads.processor.core.comp.LeadsMessageHandler;
 import eu.leads.processor.core.net.MessageUtils;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.imanager.IManagerConstants;
-
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpServerRequest;
@@ -62,7 +60,6 @@ public class DeployPluginHandler implements Handler<HttpServerRequest> {
 
 
   private class DeployPluginReplyHandler implements LeadsMessageHandler {
-
     HttpServerRequest request;
     String requestId;
 
@@ -106,7 +103,7 @@ public class DeployPluginHandler implements Handler<HttpServerRequest> {
     private final DeployPluginReplyHandler replyHandler;
     private final String requestId;
 
-    public DeployPluginBodyHandler(String requestId, DeployPluginReplyHandler replyHandler) {
+    public DeployPluginBodyHandler(String requestId,DeployPluginReplyHandler replyHandler) {
       this.replyHandler = replyHandler;
       this.requestId = requestId;
     }

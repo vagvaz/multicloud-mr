@@ -27,8 +27,7 @@ public class ProgressReport extends TimerTask implements Serializable {
     this.prefix = prefix;
   }
 
-  @Override
-  public void run() {
+  @Override public void run() {
     if (maxed) {
       this.cancel();
       //////// StdOutputWriter.getInstance().println("");
@@ -45,19 +44,15 @@ public class ProgressReport extends TimerTask implements Serializable {
   }
 
   public void printReport(double report) {
-    if (report >= 0.999999998) {
+    if (report >= 0.999999998)
       maxed = true;
-    }
     String tmp = "";
     if (!maxed)
-    //            tmp  = prefix + " processed: " + Integer.toString((int)(Math.ceil(report*100))) + "%\r";
-    {
+      //            tmp  = prefix + " processed: " + Integer.toString((int)(Math.ceil(report*100))) + "%\r";
       tmp = prefix + " processed: " + Long.toString(ticks) + " tuples\r";
-    } else
-    //            tmp  = prefix + " processed: " + Integer.toString((int)(Math.ceil(report*100))) + "%\n";
-    {
+    else
+      //            tmp  = prefix + " processed: " + Integer.toString((int)(Math.ceil(report*100))) + "%\n";
       tmp = prefix + " processed: " + Long.toString(ticks) + " tuples\n";
-    }
     //////////////////  StdOutputWriter.getInstance().write(tmp);
   }
 
@@ -70,11 +65,10 @@ public class ProgressReport extends TimerTask implements Serializable {
   }
 
   public double getReport() {
-    if (overall > 0) {
+    if (overall > 0)
       return Math.min(1.0, (double) ticks / overall);
-    } else {
+    else
       return 0.0;
-    }
   }
 
   private void writeObject(ObjectOutputStream out) {

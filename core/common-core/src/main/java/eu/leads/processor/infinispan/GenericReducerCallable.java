@@ -4,7 +4,6 @@ import eu.leads.processor.common.utils.FSUtilities;
 import eu.leads.processor.common.utils.storage.LeadsStorage;
 import eu.leads.processor.common.utils.storage.LeadsStorageFactory;
 import eu.leads.processor.conf.ConfigurationUtilities;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.slf4j.Logger;
@@ -19,7 +18,6 @@ import java.util.Properties;
  * Created by vagvaz on 2/19/15.
  */
 public class GenericReducerCallable<K, V> extends LeadsBaseCallable<K, Object> {
-
   private static final long serialVersionUID = 3724554288677416503L;
   //  private String outputCacheName;
   private String reducerJar;
@@ -35,12 +33,15 @@ public class GenericReducerCallable<K, V> extends LeadsBaseCallable<K, Object> {
   transient LeadsStorage storageLayer;
   transient private Logger log = null;
 
+  public GenericReducerCallable() {
+    super();
+  }
+
   public GenericReducerCallable(String configString, String output) {
     super(configString, output);
   }
 
-  @Override
-  public void initialize() {
+  @Override public void initialize() {
     //Call super initialization
     super.initialize();
     log = LoggerFactory.getLogger(GenericReducerCallable.class);
@@ -55,8 +56,7 @@ public class GenericReducerCallable<K, V> extends LeadsBaseCallable<K, Object> {
     //    collector.setCombiner(combiner);
   }
 
-  private LeadsReducer initializeReducer(String localReduceJarPath, String reducerClassName,
-                                         byte[] reducerConfig) {
+  private LeadsReducer initializeReducer(String localReduceJarPath, String reducerClassName, byte[] reducerConfig) {
 
     LeadsReducer result = null;
     ClassLoader classLoader = null;
@@ -66,19 +66,19 @@ public class GenericReducerCallable<K, V> extends LeadsBaseCallable<K, Object> {
       e.printStackTrace();
     }
 
-//    ConfigurationUtilities.addToClassPath(jarFileName);
+
+    //    ConfigurationUtilities.addToClassPath(jarFileName);
     //      .addToClassPath(System.getProperty("java.io.tmpdir") + "/leads/plugins/" + plugName
     //                        + ".jar");
 
     //    byte[] config = (byte[]) cache.get(plugName + ":conf");
     byte[] config = reducerConfig;
-    FSUtilities.flushToTmpDisk(
-        tmpdirPrefix + "/mapreduce/" + reducerJar + "_" + reducerClassName + "-conf.xml", config);
+    FSUtilities
+        .flushToTmpDisk(tmpdirPrefix + "/mapreduce/" + reducerJar + "_" + reducerClassName + "-conf.xml", config);
     XMLConfiguration pluginConfig = null;
     try {
       pluginConfig =
-          new XMLConfiguration(
-              tmpdirPrefix + "/mapreduce/" + reducerJar + "_" + reducerClassName + "-conf.xml");
+          new XMLConfiguration(tmpdirPrefix + "/mapreduce/" + reducerJar + "_" + reducerClassName + "-conf.xml");
     } catch (ConfigurationException e) {
       e.printStackTrace();
     }
@@ -86,11 +86,10 @@ public class GenericReducerCallable<K, V> extends LeadsBaseCallable<K, Object> {
     String className = reducerClassName;
     if (className != null && !className.equals("")) {
       try {
-        Class<?> mapperClass =
-            Class.forName(reducerClassName, true, classLoader);
+        Class<?> mapperClass = Class.forName(reducerClassName, true, classLoader);
         Constructor<?> con = mapperClass.getConstructor();
         reducer = (LeadsReducer) con.newInstance();
-//        mapper.initialize(pluginConfig, imanager);
+        //        mapper.initialize(pluginConfig, imanager);
         reducer.initialize(pluginConfig);
         result = reducer;
       } catch (ClassNotFoundException e) {
@@ -110,11 +109,8 @@ public class GenericReducerCallable<K, V> extends LeadsBaseCallable<K, Object> {
     return result;
   }
 
-  @Override
-  public void executeOn(K key, Object value) {
-    LeadsIntermediateIterator
-        iterator =
-        new LeadsIntermediateIterator(key.toString(), prefix, imanager);
+  @Override public void executeOn(K key, Object value) {
+    LeadsIntermediateIterator iterator = new LeadsIntermediateIterator(key.toString(), prefix, imanager);
     reducer.reduce(key, iterator, collector);
   }
 }

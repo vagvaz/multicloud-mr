@@ -5,10 +5,10 @@ import eu.leads.processor.core.Action;
 import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.infinispan.LeadsCombiner;
-import eu.leads.processor.infinispan.LeadsReducer;
+import eu.leads.processor.infinispan.continuous.KMeansOperatorContinuous;
+import eu.leads.processor.infinispan.operators.mapreduce.KMeansCombiner;
 import eu.leads.processor.infinispan.operators.mapreduce.KMeansMapper;
 import eu.leads.processor.infinispan.operators.mapreduce.KMeansReducer;
-
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -16,41 +16,38 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class KMeansOperator extends MapReduceOperator {
 
-//  LeadsReducer<?, ?> kMeansReducer;  // same for local and federation reducer
+  //  LeadsReducer<?, ?> kMeansReducer;  // same for local and federation reducer
 
-  public KMeansOperator(Node com,
-                        InfinispanManager persistence,
-                        LogProxy log,
-                        Action action) {
+  public KMeansOperator(Node com, InfinispanManager persistence, LogProxy log, Action action) {
     super(com, persistence, log, action);
   }
 
-  @Override
-  public void init(JsonObject config) {
+  @Override public void init(JsonObject config) {
     super.init(conf);
     setMapper(new KMeansMapper(conf.toString()));
-//    kMeansReducer = new KMeansReducer(conf.toString());
-    setLocalReducer(new KMeansReducer(conf.toString()));
+    //    kMeansReducer = new KMeansReducer(conf.toString());
+    setLocalReducer(new KMeansCombiner(conf.toString()));
     setFederationReducer(new KMeansReducer(conf.toString()));
     init_statistics(this.getClass().getCanonicalName());
   }
 
-  @Override
-  public void setupMapCallable() {
-    LeadsCombiner kMeansCombiner = new KMeansReducer(conf.toString());
+  @Override public String getContinuousListenerClass() {
+    return KMeansOperatorContinuous.class.getCanonicalName().toString();
+  }
+
+  @Override public void setupMapCallable() {
+    LeadsCombiner kMeansCombiner = new KMeansCombiner(conf.toString());
     setCombiner(kMeansCombiner);
     setMapper(new KMeansMapper(conf.toString()));
     super.setupMapCallable();
   }
 
-  @Override
-  public void setupReduceLocalCallable() {
-    setLocalReducer(new KMeansReducer(conf.toString()));
+  @Override public void setupReduceLocalCallable() {
+    setLocalReducer(new KMeansCombiner(conf.toString()));
     super.setupReduceLocalCallable();
   }
 
-  @Override
-  public void setupReduceCallable() {
+  @Override public void setupReduceCallable() {
     setFederationReducer(new KMeansReducer(conf.toString()));
     super.setupReduceCallable();
   }

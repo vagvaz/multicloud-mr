@@ -1,7 +1,7 @@
 package eu.leads.processor.core.net;
 
 import eu.leads.processor.core.comp.LeadsMessageHandler;
-
+import org.slf4j.Logger;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.json.JsonObject;
@@ -15,11 +15,10 @@ import java.util.Set;
  * Created by vagvaz on 7/8/14.
  */
 public class CommunicationHandler implements Handler<Message> {
-
   private Map<String, LeadsMessageHandler> handlers;
   private Node owner;
   private Set<String> requests;
-  private org.vertx.java.core.logging.Logger logger;
+  private Logger logger;
 
   public CommunicationHandler(LeadsMessageHandler defaultHandler, Node owner) {
     this.owner = owner;
@@ -29,35 +28,34 @@ public class CommunicationHandler implements Handler<Message> {
     logger = ((DefaultNode) owner).getLogger();
   }
 
-  @Override
-  public void handle(Message message) {
+  @Override public void handle(Message message) {
 
     JsonObject incoming = (JsonObject) message.body();
     String from = incoming.getString(MessageUtils.FROM);
     String to = incoming.getString(MessageUtils.TO);
     String type = incoming.getString(MessageUtils.COMTYPE);
-//        JsonObject object = new JsonObject();
-//        message.reply(MessageUtils.createAckMessage(object, to, from));
+    //        JsonObject object = new JsonObject();
+    //        message.reply(MessageUtils.createAckMessage(object, to, from));
     if (incoming.getString(MessageUtils.MSGTYPE).equals("ack")) {
-//            logger.info(owner.getId() + " Received ack from " + from + " for " + incoming.getLong(MessageUtils.MSGID));
+      //            logger.info(owner.getId() + " Received ack from " + from + " for " + incoming.getLong(MessageUtils.MSGID));
       owner.succeed(incoming.getLong(MessageUtils.MSGID));
       return;
     } else if (incoming.getString(MessageUtils.MSGTYPE).equals("msg")) {
-//            logger.info(owner.getId() + " Received Message from " + from + " with id " + incoming.getLong(MessageUtils.MSGID));
+      //            logger.info(owner.getId() + " Received Message from " + from + " with id " + incoming.getLong(MessageUtils.MSGID));
       boolean alreadyDelivered = owner.checkIfDelivered(incoming);
       owner.ack(incoming);
-      if (alreadyDelivered) {
+      if (alreadyDelivered)
         return;
-      }
     }
+
+
 
     LeadsMessageHandler handler = handlers.get(to);
     if (requests.remove(to)) {
       owner.unsubscribe(to);
     }
-    if (handler == null) {
+    if (handler == null)
       handler = handlers.get("default");
-    }
     handler.handle((JsonObject) message.body());
   }
 
@@ -68,9 +66,8 @@ public class CommunicationHandler implements Handler<Message> {
 
   public void register(String groupId, LeadsMessageHandler handler) {
     LeadsMessageHandler oldHandler = handlers.remove(groupId);
-    if (oldHandler != null) {
+    if (oldHandler != null)
       oldHandler = null;
-    }
     handlers.put(groupId, handler);
   }
 
@@ -84,9 +81,8 @@ public class CommunicationHandler implements Handler<Message> {
 
   public LeadsMessageHandler getHandler(String groupId) {
     LeadsMessageHandler result = handlers.get(groupId);
-    if (result == null) {
+    if (result == null)
       result = getDefaultHandler();
-    }
     return result;
   }
 

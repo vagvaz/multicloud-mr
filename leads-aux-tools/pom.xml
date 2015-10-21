@@ -14,13 +14,14 @@
     <packaging>pom</packaging>
     <modules>
         <!--<module>data-collection</module>-->
-        <module>data-snapshot</module>
+        <!--<module>data-snapshot</module>-->
         <!--<module>uber-snapshot</module>-->
-        <module>load-csv</module>
+        <!--<module>load-csv</module>-->
         <!--<module>wp4-scheduler-client</module>-->
-        <module>data-replay</module>
+        <!--<module>data-replay</module>-->
         <!--<module>plugin-deployer</module>-->
-        <module>load-amplab</module>
+        <!--<module>load-amplab</module>-->
+        <module>bootstrapper</module>
     </modules>
     <dependencies>
         <dependency>

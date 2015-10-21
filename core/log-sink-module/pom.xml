@@ -8,7 +8,6 @@
     <packaging>jar</packaging>
     <name>Project - log-sink-module</name>
     <url>http://maven.apache.org</url>
-
     <parent>
         <groupId>gr.tuc.softnet</groupId>
         <artifactId>multicloud-mr-core</artifactId>

@@ -2,7 +2,6 @@ package eu.leads.processor.nqe;
 
 import eu.leads.processor.core.ManageVerticle;
 import eu.leads.processor.core.net.MessageUtils;
-
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonObject;
@@ -18,14 +17,12 @@ public class NQELogicManage extends ManageVerticle {
   protected String workerId;
   protected JsonObject workerConfig;
 
-  @Override
-  public void start() {
+  @Override public void start() {
     super.start();
     initialize(config);
   }
 
-  @Override
-  public void initialize(JsonObject config) {
+  @Override public void initialize(JsonObject config) {
     super.initialize(config);
     plannerAddress = config.getString("planner");
     nqeAddress = config.getString("nqe");
@@ -40,43 +37,34 @@ public class NQELogicManage extends ManageVerticle {
 
   }
 
-  @Override
-  public void startService() {
+  @Override public void startService() {
     super.startService();
     if (workerId == null) {
       workerId = "";
-      container
-          .deployWorkerVerticle(NQELogicWorker.class.getCanonicalName(), workerConfig, 1, false,
-                                new Handler<AsyncResult<String>>() {
-                                  @Override
-                                  public void handle(AsyncResult<String> event) {
-                                    if (event.succeeded()) {
-                                      workerId = event.result();
-                                      logProxy.info("NQELogicWorker has been deployed.");
-                                      JsonObject
-                                          statusMessage =
-                                          MessageUtils
-                                              .createServiceStatusMessage(status, id + ".manage",
-                                                                          serviceType);
-                                      com.sendTo(parent, statusMessage);
-                                    } else {
-                                      String msg = "NQELogWorker could not be deployed";
+      container.deployWorkerVerticle(NQELogicWorker.class.getCanonicalName(), workerConfig, 1, false,
+          new Handler<AsyncResult<String>>() {
+            @Override public void handle(AsyncResult<String> event) {
+              if (event.succeeded()) {
+                workerId = event.result();
+                logProxy.info("NQELogicWorker has been deployed.");
+                JsonObject statusMessage = MessageUtils.createServiceStatusMessage(status, id + ".manage", serviceType);
+                com.sendTo(parent, statusMessage);
+              } else {
+                String msg = "NQELogWorker could not be deployed";
 
-                                      fail(msg);
-                                    }
-                                  }
-                                });
-//         com.sendTo(parent, MessageUtils.createServiceStatusMessage(status, id, serviceType));
+                fail(msg);
+              }
+            }
+          });
+      //         com.sendTo(parent, MessageUtils.createServiceStatusMessage(status, id, serviceType));
     }
   }
 
-  @Override
-  public void cleanup() {
+  @Override public void cleanup() {
     super.cleanup();
   }
 
-  @Override
-  public void stopService() {
+  @Override public void stopService() {
     super.stopService();
     if (workerId != null) {
       container.undeployModule(workerId);
@@ -86,21 +74,18 @@ public class NQELogicManage extends ManageVerticle {
 
   }
 
-  @Override
-  public void fail(String message) {
+  @Override public void fail(String message) {
     super.fail(message);
     JsonObject msg = MessageUtils.createServiceStatusMessage(status, id, serviceType);
     msg.putString("message", message);
     com.sendTo(parent, msg);
   }
 
-  @Override
-  public String getServiceType() {
+  @Override public String getServiceType() {
     return serviceType;
   }
 
-  @Override
-  public void exitService() {
+  @Override public void exitService() {
     System.exit(-1);
   }
 

@@ -13,6 +13,7 @@ import org.infinispan.ensemble.EnsembleCacheManager;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Created by vagvaz on 16/07/15.
@@ -30,7 +31,7 @@ public class LocalIndexIteratorTest {
     static int numOfCaches = 4;
     //    static RemoteCacheManager rmanager;
     static IntermediateKeyIndex index;
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
         LQPConfiguration.initialize();
         LQPConfiguration.getInstance().getConfiguration().setProperty("node.current.component",
             "testsync");

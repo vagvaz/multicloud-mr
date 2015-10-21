@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<leads-processor-bootstrap>
+    <baseDir>/tmp/boot-conf/</baseDir>
+    <!-- here are all the conf files of the available modules-->
+    <remoteDir>/tmp/</remoteDir>
+    <hdfs>
+        <uri>hdfs://snf-618466.vm.okeanos.grnet.gr:8020</uri>
+        <user>vagvaz</user>
+        <prefix>/user/vagvaz/</prefix>
+    </hdfs>
+    <scheduler>http://localhost:5001</scheduler>
+    <deploymentType>multicloud</deploymentType>
+    <adresses>
+        <MC name='hamm5' credentials="cloudandheat">
+            <node name='leads-qe1' privateIp='10.105.0.44'>5.147.254.161</node>
+            <node name='leads-qe16' privateIp='10.105.0.8'>5.147.254.166</node>
+            <node name='leads-qe17' privateIp='10.105.0.5'>5.147.254.184</node>
+            <node name='leads-qe18' privateIp='10.105.0.2'>5.147.254.181</node>
+        </MC>
+        <MC name='hamm6' credentials="cloudandheat">
+            <node name='leads-qe2' privateIp='10.106.0.33'>5.147.254.199</node>
+            <node name='leads-qe5' privateIp='10.106.0.17'>5.147.254.203</node>
+            <node name='leads-qe12' privateIp='10.106.0.9'>5.147.254.196</node>
+            <node name='leads-qe13' privateIp='10.106.0.8'>5.147.254.195</node>
+        </MC>
+        <MC name='dresden2' credentials="cloudandheat">
+            <node name='leads-qe3' privateIp='10.102.0.51'>80.156.73.113</node>
+            <node name='leads-qe4' privateIp='10.102.0.63'>80.156.73.116</node>
+            <node name='leads-qe19' privateIp='10.102.0.44'>80.156.73.123</node>
+            <node name='leads-qe20' privateIp='10.102.0.84'>80.156.73.128</node>
+        </MC>
+        <MC name='dd1a' credentials="cloudandheat">
+            <node name='leads-qe8' privateIp='10.130.0.16'>80.156.222.4</node>
+            <node name='leads-qe14' privateIp='10.130.0.104'>80.156.222.23</node>
+            <node name='leads-qe15' privateIp='10.130.0.122'>80.156.222.21</node>
+            <node name='leads-qe22' privateIp='10.130.0.128'>80.156.222.31</node>
+        </MC>
+    </adresses>
+    <!-- localhost, 5.147.254.198-->
+    <startUpDelay>20</startUpDelay>
+    <!--delay between modules startup (seconds) -->
+    <processor>
+        <version>1.0-SNAPSHOT</version>
+        <groupId>gr.tuc.softnet</groupId>
+        <vertxArg>cluster</vertxArg>
+        <component>
+            <name>log-sink</name>
+            <configurationFile>log-sink.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+            <modName>log-sink-module</modName>
+        </component>
+        <component>
+            <name>imanager</name>
+            <configurationFile>imanager.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>planner</name>
+            <configurationFile>planner.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>deployer</name>
+            <configurationFile>deployer.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>nqe</name>
+            <configurationFile>nqe.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>webservice</name>
+            <configurationFile>webservice.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+            <modName>processor-webservice</modName>
+        </component>
+    </processor>
+    <ssh>
+        <credentials>
+            <id>cloudandheat</id>
+            <username>ubuntu</username>
+            <!--<password>testpass</password> -->
+            <rsa>/home/ubuntu/key.rsa</rsa>
+            <!-- a filename -->
+        </credentials>
+        <credentials>
+            <id>softnet</id>
+            <username>USERNAME</username>
+            <password>PASSWORD</password>
+            <!--    <rsa>/home/ubuntu/key.rsa</rsa>  a filename -->
+        </credentials>
+    </ssh>
+</leads-processor-bootstrap>

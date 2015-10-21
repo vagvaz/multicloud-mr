@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<leads-processor-bootstrap>
+    <processor>
+        <ips>localhost</ips>
+        <!-- localhost, 5.147.254.198-->
+        <version>1.0-SNAPSHOT</version>
+        <groupId>gr.tuc.softnet</groupId>
+        <vertxArg>ha</vertxArg>
+        <component>
+            <name>log-sink</name>
+            <configurationFile>log-sink.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+            <modName>log-sink-module</modName>
+        </component>
+        <component>
+            <name>imanager</name>
+            <configurationFile>imanager.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>planner</name>
+            <configurationFile>planner.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>deployer</name>
+            <configurationFile>deployer.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>nqe</name>
+            <configurationFile>nqe.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+        </component>
+        <component>
+            <name>webservice</name>
+            <configurationFile>webservice.xml</configurationFile>
+            <numberOfProcessors>1</numberOfProcessors>
+            <instances>1</instances>
+            <modName>processor-webservice</modName>
+        </component>
+        <ssh>
+            <username>trs</username>
+            <baseDir>/tmp/default-conf/</baseDir>
+            <remoteDir>/tmp/</remoteDir>
+            <password>$kan@pes</password>
+            <!-- <rsa>/tmp/id_rsa</rsa>  a filename -->
+            <startWaitSeconds>1</startWaitSeconds>
+        </ssh>
+    </processor>
+</leads-processor-bootstrap>

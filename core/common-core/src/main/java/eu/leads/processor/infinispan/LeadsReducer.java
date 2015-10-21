@@ -4,7 +4,6 @@ import eu.leads.processor.common.ProgressReport;
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.core.Tuple;
-
 import org.apache.commons.configuration.XMLConfiguration;
 import org.infinispan.Cache;
 import org.infinispan.distexec.mapreduce.Reducer;
@@ -13,20 +12,17 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Created with IntelliJ IDEA. User: vagvaz Date: 11/4/13 Time: 6:08 AM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: vagvaz
+ * Date: 11/4/13
+ * Time: 6:08 AM
+ * To change this template use File | Settings | File Templates.
  */
 public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
-
   /**
    *
    */
@@ -47,13 +43,15 @@ public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
   transient protected Map<String, List<JsonObject>> targetsMap;
   transient protected EmbeddedCacheManager manager;
   transient protected XMLConfiguration xmlConfiguration;
+  transient protected boolean isLocal;
+  transient protected boolean isComposable;
 
   public LeadsReducer() {
   }
 
   public LeadsReducer(JsonObject configuration) {
     this.conf = configuration;
-
+    this.configString = configuration.toString();
   }
 
   public LeadsReducer(String configString) {
@@ -61,12 +59,19 @@ public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
 
   }
 
+  public void setConfigString(String confString) {
+    this.configString = confString;
+  }
+
+  public String getConfigString() {
+    return configString;
+  }
+
   public void setCacheManager(EmbeddedCacheManager manager) {
     this.manager = manager;
   }
 
-  @Override
-  public V reduce(K reducedKey, Iterator<V> iter) {
+  @Override public V reduce(K reducedKey, Iterator<V> iter) {
     return null;
   }
 
@@ -77,8 +82,21 @@ public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
     this.xmlConfiguration = xmlConfiguration;
   }
 
-  public void initialize() {
+  public void initialize() {  // add local or federation
     conf = new JsonObject(configString);
+
+    if (conf.containsField("local")) {
+      isLocal = true;
+    } else {
+      isLocal = false;
+    }
+
+    if (conf.containsField("composable")) {
+      isComposable = true;
+    } else {
+      isComposable = false;
+    }
+
     outputCacheName = conf.getString("output");
     if (conf.containsField("body") && conf.getObject("body").containsField("outputSchema")) {
       outputSchema = conf.getObject("body").getObject("outputSchema");
@@ -89,22 +107,17 @@ public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
       Iterator<Object> targetIterator = targets.iterator();
       while (targetIterator.hasNext()) {
         JsonObject target = (JsonObject) targetIterator.next();
-        List<JsonObject>
-            tars =
-            targetsMap.get(
-                target.getObject("expr").getObject("body").getObject("column").getString("name"));
+        List<JsonObject> tars =
+            targetsMap.get(target.getObject("expr").getObject("body").getObject("column").getString("name"));
         if (tars == null) {
           tars = new ArrayList<>();
         }
         tars.add(target);
-        targetsMap
-            .put(target.getObject("expr").getObject("body").getObject("column").getString("name"),
-                 tars);
+        targetsMap.put(target.getObject("expr").getObject("body").getObject("column").getString("name"), tars);
       }
     }
-    if (thecache != null) {
+    if (thecache != null)
       System.err.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  \n\nLLLLLL " + thecache.size());
-    }
     overall = this.conf.getLong("workload", 100);
     timer = new Timer();
     report = new ProgressReport(this.getClass().toString(), 0, overall);
@@ -116,10 +129,11 @@ public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
   }
 
 
-  protected void finalizeTask() {
-//      report.printReport(report.getReport());
 
-//      timer.cancel();
+  protected void finalizeTask() {
+    //      report.printReport(report.getReport());
+
+    //      timer.cancel();
   }
 
   protected void progress() {
@@ -137,29 +151,29 @@ public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
 
     JsonObject result = new JsonObject();
     //WARNING
-//       System.err.println("out: " + tuple.asString());
+    //       System.err.println("out: " + tuple.asString());
 
     if (targetsMap.size() == 0) {
-//          System.err.println("s 0 ");
+      //          System.err.println("s 0 ");
       return tuple;
 
     }
-//       System.err.println("normal");
+    //       System.err.println("normal");
 
     //END OF WANRING
     List<String> toRemoveFields = new ArrayList<String>();
     Map<String, List<String>> toRename = new HashMap<String, List<String>>();
     for (String field : tuple.getFieldNames()) {
       List<JsonObject> ob = targetsMap.get(field);
-      if (ob == null) {
+      if (ob == null)
         toRemoveFields.add(field);
-      } else {
+      else {
         for (JsonObject obb : ob) {
           List<String> ren = toRename.get(field);
           if (ren == null) {
             ren = new ArrayList<>();
           }
-//               toRename.put(field, ob.getObject("column").getString("name"));
+          //               toRename.put(field, ob.getObject("column").getString("name"));
           ren.add(obb.getObject("column").getString("name"));
           toRename.put(field, ren);
         }
@@ -173,24 +187,24 @@ public class LeadsReducer<K, V> implements Reducer<K, V>, Serializable {
   protected void handlePagerank(Tuple t) {
 
     if (t.hasField("default.webpages.pagerank")) {
-      if (!t.hasField("url")) {
+      if (!t.hasField("url"))
         return;
-      }
       String pagerankStr = t.getAttribute("pagerank");
-//            Double d = Double.parseDouble(pagerankStr);
-//            if (d < 0.0) {
-//
-//                try {
-////                    d = LeadsPrGraph.getPageDistr(t.getAttribute("url"));
-//                    d = (double) LeadsPrGraph.getPageVisitCount(t.getAttribute("url"));
-//
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                t.setAttribute("pagerank", d.toString());
-//        }
+      //            Double d = Double.parseDouble(pagerankStr);
+      //            if (d < 0.0) {
+      //
+      //                try {
+      ////                    d = LeadsPrGraph.getPageDistr(t.getAttribute("url"));
+      //                    d = (double) LeadsPrGraph.getPageVisitCount(t.getAttribute("url"));
+      //
+      //                } catch (IOException e) {
+      //                    e.printStackTrace();
+      //                }
+      //                t.setAttribute("pagerank", d.toString());
+      //        }
     }
   }
+
 
 
 }

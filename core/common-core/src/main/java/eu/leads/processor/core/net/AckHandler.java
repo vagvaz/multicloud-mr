@@ -1,7 +1,6 @@
 package eu.leads.processor.core.net;
 
 import eu.leads.processor.core.comp.LeadsMessageHandler;
-
 import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.Message;
@@ -36,23 +35,22 @@ public class AckHandler implements Handler<AsyncResult<Message<JsonObject>>> {
   }
 
 
-  @Override
-  public void handle(AsyncResult<Message<JsonObject>> result) {
+  @Override public void handle(AsyncResult<Message<JsonObject>> result) {
     logger.fatal("Ack RIN");
     if (result.succeeded()) {
       logger.fatal("Ack RIN");
-//            owner.succeed(msgId);
+      //            owner.succeed(msgId);
       //         if (handler != null)
       //            handler.handle(result.result().body());
     } else {
       //IF maximum number of retries reached then fail the message
-//            if (retries == 0) {
-//                owner.fail(msgId);
-//            } else {
-//                //RETRY Sending
-//                retries--;
-//                owner.retry(msgId, this);
-//            }
+      //            if (retries == 0) {
+      //                owner.fail(msgId);
+      //            } else {
+      //                //RETRY Sending
+      //                retries--;
+      //                owner.retry(msgId, this);
+      //            }
 
     }
   }

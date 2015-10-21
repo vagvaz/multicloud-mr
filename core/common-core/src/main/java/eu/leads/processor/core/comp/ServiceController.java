@@ -4,7 +4,6 @@ import eu.leads.processor.core.ServiceCommand;
 import eu.leads.processor.core.net.MessageTypeConstants;
 import eu.leads.processor.core.net.MessageUtils;
 import eu.leads.processor.core.net.Node;
-
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.HashMap;
@@ -16,7 +15,6 @@ import java.util.Set;
  * Created by vagvaz on 7/29/14.
  */
 public class ServiceController implements LeadsMessageHandler {
-
   Map<String, ServiceStatus> serviceStatus;
   Set<String> services;
   Map<ServiceStatus, Set<String>> serviceSets;
@@ -42,8 +40,7 @@ public class ServiceController implements LeadsMessageHandler {
     this.serviceSets.get(ServiceStatus.IDLE).addAll(services);
   }
 
-  @Override
-  public void handle(JsonObject message) {
+  @Override public void handle(JsonObject message) {
     if (message.getString("type").equals(MessageTypeConstants.SERVICE_STATUS_REPLY)) {
       String service = message.getString(MessageUtils.FROM);
       ServiceStatus serviceStatus = ServiceStatus.valueOf(message.getString("status"));
@@ -153,8 +150,7 @@ public class ServiceController implements LeadsMessageHandler {
       updateServiceStatus(service, serviceStatus);
       checkComponentStatus();
     } else {
-      log.error("Unknown message received from controller in " + owner.getComponentType()
-                + ":" + owner.getId());
+      log.error("Unknown message received from controller in " + owner.getComponentType() + ":" + owner.getId());
     }
   }
 
@@ -187,15 +183,13 @@ public class ServiceController implements LeadsMessageHandler {
 
   private void reportFail(String service, String errorMessage) {
     log.error("Service " + service + " failed");
-    if (!serviceStatus.get(service)
-        .equals(ServiceStatus.FAILED)) { //if service has not failed another time retry
-      if (owner.getState().equals(ComponentState.RUNNING) || owner.getState()
-          .equals(ComponentState.INITIALIZING)) {
+    if (!serviceStatus.get(service).equals(ServiceStatus.FAILED)) { //if service has not failed another time retry
+      if (owner.getState().equals(ComponentState.RUNNING) || owner.getState().equals(ComponentState.INITIALIZING)) {
         sendStartCommand(service);
       }
     } else {
-      log.error("Component " + owner.getComponentType() + ":" + owner.getId()
-                + " failed due to service " + service + " with error\n" + errorMessage);
+      log.error("Component " + owner.getComponentType() + ":" + owner.getId() + " failed due to service " + service
+          + " with error\n" + errorMessage);
       owner.setStatus(ComponentState.FAILED);
     }
   }

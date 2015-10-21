@@ -2,17 +2,24 @@ package eu.leads.processor.infinispan.operators.mapreduce;
 
 import eu.leads.processor.core.Tuple;
 import eu.leads.processor.infinispan.LeadsCollector;
-import eu.leads.processor.infinispan.LeadsReducer;
+import eu.leads.processor.infinispan.LeadsCombiner;
 
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by Apostolos Nydriotis on 2015/07/03.
  */
-public class CountMinLocalReducer extends LeadsReducer<String, Tuple> {
+public class CountMinLocalReducer extends LeadsCombiner<String, Tuple> {
 
+  transient private LeadsCollector collector;
+
+  public CountMinLocalReducer() {
+    super();
+  }
 
   public CountMinLocalReducer(JsonObject configuration) {
     super(configuration);
@@ -20,6 +27,11 @@ public class CountMinLocalReducer extends LeadsReducer<String, Tuple> {
 
   public CountMinLocalReducer(String configuration) {
     super(configuration);
+  }
+
+  @Override
+  public void initialize() {
+    super.initialize();
   }
 
   @Override

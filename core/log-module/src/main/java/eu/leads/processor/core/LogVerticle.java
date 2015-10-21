@@ -3,7 +3,6 @@ package eu.leads.processor.core;
 import eu.leads.processor.core.comp.LeadsMessageHandler;
 import eu.leads.processor.core.net.DefaultNode;
 import eu.leads.processor.core.net.Node;
-
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.platform.Verticle;
@@ -21,8 +20,7 @@ public class LogVerticle extends Verticle {
   public LogVerticle() {
   }
 
-  @Override
-  public void start() {
+  @Override public void start() {
     try {
       super.start();
       logger = container.logger();
@@ -31,11 +29,10 @@ public class LogVerticle extends Verticle {
       componentId = id.substring(0, id.indexOf('.'));
       LeadsMessageHandler logHandler = new LeadsMessageHandler() {
 
-        @Override
-        public void handle(JsonObject msg) {
+        @Override public void handle(JsonObject msg) {
           String type = msg.getString("type");
           String message = msg.getString("message");
-          if(id != null) //return allways for not spamming the output!
+          if (id != null) //return allways for not spamming the output!
             return;
           if (type.equals("info")) {
             logger.info(message);

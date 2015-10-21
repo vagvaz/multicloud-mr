@@ -1,14 +1,12 @@
 package eu.leads.processor.core.plan;
 
 import eu.leads.processor.core.DataType;
-
 import org.vertx.java.core.json.JsonObject;
 
 /**
  * Created by vagvaz on 8/4/14.
  */
 public class ReadStatus extends DataType {
-
   public ReadStatus() {
     super();
     data.putNumber("min", Long.MAX_VALUE);

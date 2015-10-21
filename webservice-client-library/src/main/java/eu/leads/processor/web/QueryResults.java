@@ -22,6 +22,7 @@ public class QueryResults extends JsonObject {
   }
 
 
+
   public QueryResults(String queryId) {
     setId(queryId);
     setMax(-1);
@@ -87,8 +88,7 @@ public class QueryResults extends JsonObject {
     this.putString("message", message);
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return this.encodePrettily();
   }
 

@@ -2,7 +2,6 @@ package eu.leads.processor.core;
 
 import eu.leads.processor.core.net.DefaultNode;
 import eu.leads.processor.core.net.Node;
-
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -194,13 +193,11 @@ public class PersistenceProxy extends Thread {
 
   }
 
-  @Override
-  public void run() {
+  @Override public void run() {
 
     while (toContinue) {
       synchronized (mutex) {
-        System.out.println("Thread " + Thread.currentThread().toString() + " mutex " + mutex
-            .toString());
+        System.out.println("Thread " + Thread.currentThread().toString() + " mutex " + mutex.toString());
         if (action != null) {
           System.out.println("pa");
           bus.sendRequestTo(id, action, replyHandler);

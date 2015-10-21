@@ -21,7 +21,7 @@
         <module>persist-module</module>
         <module>default-logic-mod</module>
         <module>default-comp-mod</module-->
-        <module>log-sink-module</module>
+        <!--<module>log-sink-module</module>-->
         <!--<module>leads-processor-system-bootstrapper</module>-->
     </modules>
     <groupId>gr.tuc.softnet</groupId>

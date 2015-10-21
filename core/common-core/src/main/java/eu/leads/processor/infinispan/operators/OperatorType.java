@@ -1,8 +1,11 @@
 package eu.leads.processor.infinispan.operators;
 
 /**
- * Created with IntelliJ IDEA. User: vagvaz Date: 9/22/13 Time: 6:46 PM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: vagvaz
+ * Date: 9/22/13
+ * Time: 6:46 PM
+ * To change this template use File | Settings | File Templates.
  */
 
 public enum OperatorType {
@@ -23,27 +26,26 @@ public enum OperatorType {
 
     OperatorType result = NONE;
 
-    if (s.equals("READ")) {
+    if (s.equals("READ"))
       result = READ;
-    } else if (s.equals("PROJECT")) {
+    else if (s.equals("PROJECT"))
       result = PROJECT;
-    } else if (s.equals("RENAME")) {
+    else if (s.equals("RENAME"))
       result = RENAME;
-    } else if (s.equals("JOIN")) {
+    else if (s.equals("JOIN"))
       result = JOIN;
-    } else if (s.equals("GROUPBY")) {
+    else if (s.equals("GROUPBY"))
       result = GROUPBY;
-    } else if (s.equals("SORT")) {
+    else if (s.equals("SORT"))
       result = SORT;
-    } else if (s.equals("DISTINCT")) {
+    else if (s.equals("DISTINCT"))
       result = DISTINCT;
-    } else if (s.equals("FILTER")) {
+    else if (s.equals("FILTER"))
       result = FILTER;
-    } else if (s.equals("LIMIT")) {
+    else if (s.equals("LIMIT"))
       result = LIMIT;
-    } else if (s.equals("OUTPUT")) {
+    else if (s.equals("OUTPUT"))
       result = OUTPUT;
-    }
 
     return result;
   }

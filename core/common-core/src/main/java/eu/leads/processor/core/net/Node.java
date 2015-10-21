@@ -2,7 +2,6 @@ package eu.leads.processor.core.net;
 
 import eu.leads.processor.core.ReplyHandler;
 import eu.leads.processor.core.comp.LeadsMessageHandler;
-
 import org.vertx.java.core.Vertx;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.json.JsonObject;
@@ -14,7 +13,6 @@ import java.util.concurrent.Callable;
  * Created by vagvaz on 7/8/14.
  */
 public interface Node {
-
   public void sendTo(String nodeid, JsonObject message);
 
   public void sendRequestTo(String nodeid, JsonObject message, LeadsMessageHandler handler);
@@ -31,12 +29,11 @@ public interface Node {
 
   public void unsubscribe(String groupId);
 
-  public void initialize(JsonObject config, LeadsMessageHandler defaultHandler,
-                         LeadsMessageHandler failHandler, Vertx vertx);
+  public void initialize(JsonObject config, LeadsMessageHandler defaultHandler, LeadsMessageHandler failHandler,
+      Vertx vertx);
 
-  public void initialize(String id, String group, Set<String> groups,
-                         LeadsMessageHandler defaultHandler, LeadsMessageHandler failHandler,
-                         Vertx vertx);
+  public void initialize(String id, String group, Set<String> groups, LeadsMessageHandler defaultHandler,
+      LeadsMessageHandler failHandler, Vertx vertx);
 
   public JsonObject getConfig();
 

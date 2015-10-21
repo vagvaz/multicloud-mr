@@ -7,9 +7,7 @@ import java.util.List;
 /**
  * Created by vagvaz on 3/7/14.
  */
-@JsonAutoDetect
-public class ObjectQuery {
-
+@JsonAutoDetect public class ObjectQuery {
   private String table;
   private String key;
   private List<String> attributes;
@@ -38,8 +36,7 @@ public class ObjectQuery {
     this.attributes = attributes;
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     String result = table + ":" + key + " [ ";
     StringBuilder builder = new StringBuilder();
     for (String attribute : attributes) {

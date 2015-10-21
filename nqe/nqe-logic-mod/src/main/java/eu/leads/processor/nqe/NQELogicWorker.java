@@ -9,10 +9,7 @@ import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.DefaultNode;
 import eu.leads.processor.core.net.MessageUtils;
 import eu.leads.processor.core.net.Node;
-import eu.leads.processor.core.plan.QueryState;
 import eu.leads.processor.imanager.IManagerConstants;
-
-import eu.leads.processor.web.ActionResult;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
@@ -36,8 +33,7 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
   String workQueueAddress;
   String currentCluster;
 
-  @Override
-  public void start() {
+  @Override public void start() {
     super.start();
     LQPConfiguration.initialize();
     config = container.config();
@@ -50,14 +46,12 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
     log = new LogProxy(config.getString("log"), com);
   }
 
-  @Override
-  public void stop() {
+  @Override public void stop() {
     super.stop();
     com.unsubscribeFromAll();
   }
 
-  @Override
-  public void handle(JsonObject msg) {
+  @Override public void handle(JsonObject msg) {
     String type = msg.getString("type");
     String from = msg.getString(MessageUtils.FROM);
     String to = msg.getString(MessageUtils.TO);
@@ -72,12 +66,10 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
       switch (ActionStatus.valueOf(action.getStatus())) {
         case PENDING: //probably received an action from an external source
           if (label.equals(NQEConstants.DEPLOY_OPERATOR)) {
-            action.getData()
-                .putString("replyTo", action.getData().getString("monitor"));
+            action.getData().putString("replyTo", action.getData().getString("monitor"));
             action.setStatus(ActionStatus.INPROCESS.toString());
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
-          } else if ((label.equals(NQEConstants.DEPLOY_PLUGIN))
-                     || (label.equals(NQEConstants.UNDEPLOY_PLUGIN))) {
+          } else if ((label.equals(NQEConstants.DEPLOY_PLUGIN)) || (label.equals(NQEConstants.UNDEPLOY_PLUGIN))) {
             action.setStatus(ActionStatus.INPROCESS.toString());
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else if (label.equals(NQEConstants.DEPLOY_REMOTE_OPERATOR)) {
@@ -85,8 +77,8 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             action.setStatus(ActionStatus.INPROCESS.toString());
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else if (label.equals(NQEConstants.EXECUTE_MAP_REDUCE_JOB)) {
-//            String actionId = UUID.randomUUID().toString();
-//            action.setId(actionId);
+            //            String actionId = UUID.randomUUID().toString();
+            //            action.setId(actionId);
             action.getData().putString("replyTo", from);
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else if (label.equals(IManagerConstants.EXECUTE_MAPREDUCE)) {
@@ -100,6 +92,15 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             action.getData().putString("replyTo", msg.getString("from"));
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else if (label.equals(IManagerConstants.GET_QUERY_STATUS)) {
+            action.getData().putString("replyTo", msg.getString("from"));
+            com.sendWithEventBus(workQueueAddress, action.asJsonObject());
+          } else if (label.equals(IManagerConstants.STOP_CACHE)) {
+            action.getData().putString("replyTo", msg.getString("from"));
+            com.sendWithEventBus(workQueueAddress, action.asJsonObject());
+          } else if (label.equals(IManagerConstants.ADD_LISTENER)) {
+            action.getData().putString("replyTo", msg.getString("from"));
+            com.sendWithEventBus(workQueueAddress, action.asJsonObject());
+          } else if (label.equals(IManagerConstants.REMOVE_LISTENER)) {
             action.getData().putString("replyTo", msg.getString("from"));
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
           } else {
@@ -117,8 +118,7 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
         case COMPLETED: // the action either a part of a multistep workflow (INPROCESSING) or it could be processed.
           if (label.equals(NQEConstants.DEPLOY_OPERATOR)) {
             com.sendTo(action.getData().getString("replyTo"), action.getResult());
-          } else if ((label.equals(NQEConstants.DEPLOY_PLUGIN))
-                     || (label.equals(NQEConstants.UNDEPLOY_PLUGIN))) {
+          } else if ((label.equals(NQEConstants.DEPLOY_PLUGIN)) || (label.equals(NQEConstants.UNDEPLOY_PLUGIN))) {
             //                      action.setStatus(ActionStatus.INPROCESS.toString());
             //                      com.sendWithEventBus((workQueueAddress,action.asJsonObject());
           } else if (label.equals(NQEConstants.DEPLOY_REMOTE_OPERATOR)) {
@@ -155,9 +155,20 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
             com.sendTo(action.getData().getString("replyTo"), action.getResult());
           } else if (label.equals(IManagerConstants.GET_QUERY_STATUS)) {
             com.sendTo(action.getData().getString("replyTo"), action.getResult());
+          } else if (label.equals(IManagerConstants.QUIT)) {
+            System.out.println(" Imanager logic worker recovery ");
+            stop();
+          } else if (label.equals(IManagerConstants.STOP_CACHE)) {
+            JsonObject webServiceReply = action.getResult();
+            com.sendTo(action.getData().getString("replyTo"), webServiceReply);
+          } else if (label.equals(IManagerConstants.ADD_LISTENER)) {
+            JsonObject webServiceReply = action.getResult();
+            com.sendTo(action.getData().getString("replyTo"), webServiceReply);
+          } else if (label.equals(IManagerConstants.REMOVE_LISTENER)) {
+            JsonObject webServiceReply = action.getResult();
+            com.sendTo(action.getData().getString("replyTo"), webServiceReply);
           } else {
-            log.error(
-                "Unknown COMPLETED OR INPROCESS Action received " + action.toString());
+            log.error("Unknown COMPLETED OR INPROCESS Action received " + action.toString());
             return;
           }
           finalizeAction(action);
