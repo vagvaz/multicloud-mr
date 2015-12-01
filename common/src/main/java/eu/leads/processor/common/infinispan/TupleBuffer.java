@@ -2,6 +2,7 @@ package eu.leads.processor.common.infinispan;
 
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.infinispan.ComplexIntermediateKey;
+import io.netty.handler.codec.compression.SnappyFramedDecoder;
 import org.bson.BSONDecoder;
 import org.bson.BSONEncoder;
 import org.bson.BasicBSONDecoder;
@@ -15,6 +16,8 @@ import org.infinispan.remoting.transport.Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xerial.snappy.Snappy;
+import org.xerial.snappy.SnappyInputStream;
+import org.xerial.snappy.SnappyOutputStream;
 
 import java.io.*;
 import java.util.*;
@@ -50,13 +53,50 @@ public class TupleBuffer {
         LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.batchput.batchsize", batchThreshold);
   }
 
-  public TupleBuffer(byte[] bytes) {
+  public TupleBuffer(byte[] bytes) throws IOException, ClassNotFoundException {
     BSONDecoder decoder = new BasicBSONDecoder();
     buffer = new HashMap<>();
     //        int compressedSize = in.readInt();
     byte[] compressed = bytes;//new byte[compressedSize];
+    byte[] uncompressed = Snappy.uncompress(compressed);
     try {
-      byte[] uncompressed = Snappy.uncompress(compressed);
+      ByteArrayInputStream byteStream = new ByteArrayInputStream(uncompressed);
+      ObjectInputStream inputStream = new ObjectInputStream(byteStream);
+      int size = inputStream.readInt();
+      for (int index = 0; index < size; index++) {
+        Object key = inputStream.readObject();
+        //                int tupleBytesSize = inputStream.readInt();
+        //                byte[] tupleBytes = new byte[tupleBytesSize];
+        //                inputStream.read(tupleBytes);
+        //                Tuple tuple = new Tuple(decoder.readObject(tupleBytes));
+        Object tuple = inputStream.readObject();
+        buffer.put(key, tuple);
+      }
+      inputStream.close();
+      byteStream.close();
+
+      inputStream = null;
+      byteStream = null;
+      //      ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
+      this.keyValueDataTransfer = keyValueDataTransfer;
+      //      localAddress = InfinispanClusterSingleton.getInstance().getManager().getMemberName();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public TupleBuffer(byte[] bytes,boolean iscompressed) {
+    BSONDecoder decoder = new BasicBSONDecoder();
+    buffer = new HashMap<>();
+    //        int compressedSize = in.readInt();
+    byte[] compressed = bytes;//new byte[compressedSize];
+    byte[] uncompressed = null;
+    try {
+      if(iscompressed) {
+        uncompressed = Snappy.uncompress(compressed);
+      } else{
+        uncompressed = bytes;
+      }
       ByteArrayInputStream byteStream = new ByteArrayInputStream(uncompressed);
       ObjectInputStream inputStream = new ObjectInputStream(byteStream);
       int size = inputStream.readInt();
@@ -169,7 +209,7 @@ public class TupleBuffer {
       //      if(localCache == null) {
       buffer.put(key, value);
       size++;
-      return (size >= threshold);
+      return (buffer.size() >= threshold);
     }
     //    else{
     //        ensembleCacheUtilsSingle.addLocalFuture(localCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAsync(key,value));
@@ -208,44 +248,6 @@ public class TupleBuffer {
       return result;
     }
 
-    //    byte[] bytes = null;
-    //    synchronized (mutex) {
-    //      if (ensembleCache == null) {
-    //        this.ensembleCache = emanager.getCache(cacheName + ".compressed", new ArrayList<>(emanager.sites()),
-    //            EnsembleCacheManager.Consistency.DIST);
-    //
-    //      }
-    //      //            System.out.println("FLusht to mc " + ensembleCache.getName() + " " + buffer.size());
-    //
-    //      if (buffer.size() == 0)
-    //        return;
-    //      localCounter = (localCounter + 1) % Long.MAX_VALUE;
-    //
-    //      bytes = this.serialize();
-    //      buffer.clear();
-    //      size = 0;
-    //    }
-    //    boolean isok = false;
-    //    try {
-    //      while (!isok) {
-    //        ensembleCache.put(uuid + ":" + Long.toString(localCounter), bytes);
-    //        isok = true;
-    //
-    //      }
-    //    } catch (Exception e) {
-    //      if (e instanceof TimeoutException) {
-    //        try {
-    //          Thread.sleep(10);
-    //        } catch (InterruptedException e1) {
-    //          e1.printStackTrace();
-    //        }
-    //        System.err.println("Timeout Exxcception in slushToMC " + e.getMessage());
-    //        PrintUtilities.logStackTrace(log,e.getStackTrace());
-    //      }
-    //      e.printStackTrace();
-    //
-    //    }
-
   }
 
   public void flushEndToMC() {
@@ -282,12 +284,12 @@ public class TupleBuffer {
     }
   }
 
+
   public byte[] serialize() {
     synchronized (mutex) {
       try {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
-        BSONEncoder encoder = new BasicBSONEncoder();
         outputStream.writeInt(buffer.size());
         for (Map.Entry<Object, Object> entry : buffer.entrySet()) {
           if (entry.getKey() instanceof String || entry.getKey() instanceof ComplexIntermediateKey) {
@@ -302,6 +304,7 @@ public class TupleBuffer {
         }
         buffer.clear();
         outputStream.flush();
+
         outputStream.close();
         byteStream.close();
         byte[] uncompressed = byteStream.toByteArray();

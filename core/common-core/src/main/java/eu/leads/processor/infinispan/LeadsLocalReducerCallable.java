@@ -5,6 +5,7 @@ import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.EngineUtils;
 import eu.leads.processor.core.IntermediateDataIndex;
+import eu.leads.processor.core.netty.IndexManager;
 import org.infinispan.Cache;
 import org.infinispan.interceptors.locking.ClusteringDependentLogic;
 
@@ -138,20 +139,21 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
 
     index = null;
     //        EnsembleCacheUtils.waitForAllPuts();
-    for (Object listener : dataCache.getListeners()) {
-      if (listener instanceof LocalIndexListener) {
-        System.err.println("listener class is " + listener.getClass().toString());
-        LocalIndexListener localIndexListener = (LocalIndexListener) listener;
-        leadsListener = localIndexListener;
-        System.err.println("WaitForAllData");
-        localIndexListener.waitForAllData();
-
-        System.err.println("getIndex");
-        index = localIndexListener.getIndex(callableIndex);
-        //                index.flush();
-        break;
-      }
-    }
+//    for (Object listener : dataCache.getListeners()) {
+//      if (listener instanceof LocalIndexListener) {
+//        System.err.println("listener class is " + listener.getClass().toString());
+//        LocalIndexListener localIndexListener = (LocalIndexListener) listener;
+//        leadsListener = localIndexListener;
+//        System.err.println("WaitForAllData");
+//        localIndexListener.waitForAllData();
+//
+//        System.err.println("getIndex");
+//        index = localIndexListener.getIndex(callableIndex);
+//        //                index.flush();
+//        break;
+//      }
+//    }
+    IndexManager.getIndex(inputCache.getName()+Integer.toString(callableIndex));
     if (index == null) {
       System.err.println("\n\n\n\n\n\nIndex was not installed serious...\n\n\n\n\n\n");
       profilerLog.error("\n\n\n\n\n\nIndex was not installed serious...\n\n\n\n\n\n");

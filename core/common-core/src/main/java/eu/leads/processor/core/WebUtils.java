@@ -1,12 +1,16 @@
 package eu.leads.processor.core;
 
 import eu.leads.processor.common.utils.PrintUtilities;
+import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.web.WebServiceClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by vagvaz on 10/1/15.
@@ -182,4 +186,25 @@ public class WebUtils {
     }
   }
 
+  public static String getEnsembleString(JsonObject globalConfig) {
+    String result = "";
+    JsonObject targetEndpoints = globalConfig.getObject("microclouds");
+    List<String> sites = new ArrayList<>();
+
+    for (String targetMC : targetEndpoints.getFieldNames()) {
+      //         JsonObject mc = targetEndpoints.getObject(targetMC);
+      sites.add(targetMC);
+      //
+    }
+
+    Collections.sort(sites);
+    for (String site : sites) {
+        // If reduceLocal, we only need the local micro-cloud
+        result += globalConfig.getObject("componentsAddrs").getArray(site).get(0).toString() + "|";
+
+      }
+
+    result = result.substring(0, result.length() - 1);
+    return result;
+  }
 }

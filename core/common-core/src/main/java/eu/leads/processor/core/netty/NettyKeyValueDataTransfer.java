@@ -2,18 +2,30 @@ package eu.leads.processor.core.netty;
 
 import eu.leads.processor.common.infinispan.BatchPutRunnable;
 import eu.leads.processor.common.infinispan.KeyValueDataTransfer;
+import eu.leads.processor.common.infinispan.TupleBuffer;
+import eu.leads.processor.common.utils.PrintUtilities;
+import eu.leads.processor.conf.LQPConfiguration;
+import eu.leads.processor.core.Tuple;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.ensemble.EnsembleCacheManager;
+import org.infinispan.ensemble.Site;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
  * Created by vagvaz on 10/21/15.
- * This class will act as a proxy not NettyDataTransport.
+ * This class will act as a proxy to NettyDataTransport.
  * NettyKeyValueDataTransfer provides the minimum required interface and acts as replacement for the
  * EnsembleCacheUtilsSingle, which is used for put/transferring data from one stage (map,reducelocal,reduce) to the next one
  * This class is not going to send directly data to other nodes, but it will use the NettyDataTransport class for sending data.
- * However, the class will have all the information reuquired to decide which node must receive these data.
+ * However, the class will have all the information required to decide which node must receive these data.
  * This class also will gather the necessary metrics (volume of remote/local data written)
  * The local Microcloud can be found from LQPConfiguration.getInstance() and the local IP also can be resolved look at the
  * resolveMC of EnsembleCacheUtils
@@ -25,6 +37,13 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
    * @throws ExecutionException
    * @throws InterruptedException
    */
+
+  private List<String> nodes;
+  private Map<String,Map<String,TupleBuffer>> nodeMaps;
+  private Logger log;
+  private EnsembleCacheManager manager;
+  private int batchSize;
+
   @Override public void clean() throws ExecutionException, InterruptedException {
 
   }
@@ -39,7 +58,7 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
    * @param manager
    */
   @Override public void initialize(EnsembleCacheManager manager) {
-
+    initialize(manager,true);
   }
 
   /**
@@ -50,7 +69,19 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
    * @param isEmbedded
    */
   @Override public void initialize(EnsembleCacheManager manager, boolean isEmbedded) {
+    log = LoggerFactory.getLogger(this.getClass());
+    batchSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.batchsize", 100);
+    this.manager = manager;
+    nodes = new ArrayList<>();
+    nodeMaps = new HashMap<>();
+    for(Site site : manager.sites()){
 
+      for(String nodeURI : site.getName().split(";")){
+        String nodeId = nodeURI.split(":")[0];
+        nodes.add(nodeId);
+        nodeMaps.put(nodeId, new HashMap<String, TupleBuffer>());
+      }
+    }
   }
 
   /**
@@ -62,7 +93,11 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
    * @throws InterruptedException
    */
   @Override public void waitForAuxPuts() throws InterruptedException {
-
+    try {
+      waitForAllPuts();
+    } catch (ExecutionException e) {
+      e.printStackTrace();
+    }
   }
 
   /**
@@ -72,7 +107,19 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
    * @throws ExecutionException
    */
   @Override public void waitForAllPuts() throws InterruptedException, ExecutionException {
+    for(Map.Entry<String,Map<String,TupleBuffer>> nodeEntry : nodeMaps.entrySet()){
+      Map<String,TupleBuffer> nodeBuffer = nodeEntry.getValue();
+      String targetNode = nodeEntry.getKey();
 
+      for(Map.Entry<String,TupleBuffer> cacheEntry : nodeBuffer.entrySet()){
+        String cacheName = cacheEntry.getKey();
+        TupleBuffer buffer = cacheEntry.getValue();
+        if(buffer.getBuffer().size() > 0) {
+          NettyDataTransport.send(targetNode, cacheName, buffer.serialize());
+        }
+      }
+    }
+    NettyDataTransport.waitEverything();
   }
 
   /**
@@ -89,7 +136,30 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
    * @param value
    */
   @Override public void putToCache(BasicCache cache, Object key, Object value) {
-
+    int index = Math.abs(key.hashCode() ) % nodes.size();
+    String target = nodes.get(index);
+    Map<String,TupleBuffer> nodeMap = nodeMaps.get(target);
+    if(nodeMap == null){
+      PrintUtilities.printAndLog(log,"node has not been initialized ");
+      NettyDataTransport.send(target,cache.getName(),key,value);
+      return;
+    }
+    TupleBuffer buffer = nodeMap.get(cache.getName());
+    if(buffer == null){
+      buffer = new TupleBuffer(batchSize,cache.getName(),manager, LQPConfiguration.getInstance().getMicroClusterName(),this);
+      nodeMap.put(cache.getName(),buffer);
+    }
+    if(buffer.add(key,value)){
+      byte[] bytes = buffer.serialize();
+      try {
+        TupleBuffer tupleBuffer = new TupleBuffer(bytes);
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+      }
+      NettyDataTransport.send(target,buffer.getCacheName(),bytes);
+    }
   }
 
   /**
@@ -108,7 +178,7 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
    * This Method should write how many bytes where written to a remote microcloud and how many to the local.
    */
   @Override public void spillMetricData() {
-
+    NettyDataTransport.spillMetricData();
   }
 
   /**
@@ -128,4 +198,5 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
   @Override public void updateRemoteBytes(int length) {
 
   }
+
 }

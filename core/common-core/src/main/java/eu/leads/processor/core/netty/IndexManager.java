@@ -1,5 +1,6 @@
 package eu.leads.processor.core.netty;
 
+import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.IntermediateDataIndex;
 import eu.leads.processor.core.LevelDBIndex;
 import eu.leads.processor.core.MapDBIndex;
@@ -16,11 +17,12 @@ public class IndexManager {
 
   static Map<String, IntermediateDataIndex> indexes;
   static boolean useLevelDB;
-
+  static int parallelism = 4;
   /**
    * initialize the basic Structures
    */
   public static void initialize(Properties properties) {
+    parallelism =  LQPConfiguration.getInstance().getConfiguration().getInt("node.engine.parallelism", 4);
     indexes = new HashMap<>();
     if (properties != null) {
       useLevelDB = true;
@@ -32,7 +34,12 @@ public class IndexManager {
   /**
    * add key value to an index
    */
-  public static void addToIndex(String indexName, Object key, Object value) {
+  public static void addToIndex(String name, Object key, Object value) {
+    String indexName = name;
+    if(name.endsWith(".data")){
+      int index = Math.abs(key.hashCode()) % parallelism;
+      indexName+= Integer.toString(index);
+    }
 
     IntermediateDataIndex index = indexes.get(indexName);
     if (index == null) {
@@ -51,9 +58,9 @@ public class IndexManager {
 
   private static IntermediateDataIndex initializeIndex(String indexName) {
     if (useLevelDB) {
-      return new LevelDBIndex("/tmp/leadsprocessor-data/leveldbIndex/", indexName);
+      return new LevelDBIndex("/tmp/leadsprocessor-data/leveldbIndex/"+indexName, indexName);
     } else {
-      return new MapDBIndex("/tmp/leadsprocessor-data/leveldbIndex/", indexName);
+      return new MapDBIndex("/tmp/leadsprocessor-data/leveldbIndex/"+indexName, indexName);
     }
   }
 

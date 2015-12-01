@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vertx.java.core.json.JsonObject;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -94,7 +95,14 @@ import java.util.concurrent.ConcurrentMap;
   }
 
   private void batchPut(Object key, Object value) {
-    TupleBuffer tupleBuffer = new TupleBuffer((byte[]) value);
+    TupleBuffer tupleBuffer = null;
+    try {
+      tupleBuffer = new TupleBuffer((byte[]) value);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
     //            Map tmpb = new HashMap();
     for (Map.Entry<Object, Object> entry : tupleBuffer.getBuffer().entrySet()) {
       keyValueDataTransfer.putToCacheDirect(targetCache, entry.getKey(), entry.getValue());
@@ -187,7 +195,14 @@ import java.util.concurrent.ConcurrentMap;
         continue;
       }
 
-      TupleBuffer tupleBuffer = new TupleBuffer((byte[]) triplet.getValue());
+      TupleBuffer tupleBuffer = null;
+      try {
+        tupleBuffer = new TupleBuffer((byte[]) triplet.getValue());
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+      }
       //            Map tmpb = new HashMap();
       for (Map.Entry<Object, Object> entry : tupleBuffer.getBuffer().entrySet()) {
         keyValueDataTransfer.putToCacheDirect(targetCache, entry.getKey(), entry.getValue());

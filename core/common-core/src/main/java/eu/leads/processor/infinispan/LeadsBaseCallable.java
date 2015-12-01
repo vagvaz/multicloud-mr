@@ -507,10 +507,13 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
     return collector;
   }
 
+
   public int getSize() {
+    int result = -1;
     synchronized (input) {
-      return input.size();
+      result =  input.size();
     }
+    return result;
   }
 
 

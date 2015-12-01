@@ -1,7 +1,25 @@
 package eu.leads.processor.core.netty;
 
-import io.netty.channel.Channel;
+import eu.leads.processor.common.infinispan.ClusterInfinispanManager;
+import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
+import eu.leads.processor.common.utils.PrintUtilities;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoop;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import org.jboss.marshalling.serial.Serial;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * This class is used to actually transfer/receive data from other nodes.
@@ -14,6 +32,20 @@ import org.vertx.java.core.json.JsonObject;
  */
 public class NettyDataTransport {
   static JsonObject globalConfiguration;
+  static EventLoopGroup workerGroup;
+  static EventLoopGroup bossGroup;
+  static Bootstrap clientBootstrap;
+  static ServerBootstrap serverBootstrap;
+  static Set<ChannelFuture> channelFutures;
+  static Map<String,ChannelFuture> nodes;
+  static String me;
+  static Map<Channel,Set<Integer>> pending;
+  private static NettyClientChannelInitializer clientChannelInitializer;
+  private static NettyServerChannelInitializer serverChannelInitializer;
+  private static ChannelFuture serverFuture;
+  private static int counter = 0;
+  private static Map<String,Long> histogram;
+  private static Logger log = LoggerFactory.getLogger(NettyDataTransport.class);
 
   /**
    * Using the json object we initialize the connections, in particular we use the componentAddrs data the IPs withing
@@ -29,6 +61,73 @@ public class NettyDataTransport {
    * @param globalConfiguration
    */
   public static void initialize(JsonObject globalConfiguration) {
+    NettyDataTransport.globalConfiguration = globalConfiguration;
+    clientChannelInitializer = new NettyClientChannelInitializer();
+    serverChannelInitializer = new NettyServerChannelInitializer();
+    pending = new HashMap<>();
+    nodes = new HashMap<>();
+    channelFutures = new HashSet<>();
+    histogram = new HashMap<>();
+
+    clientBootstrap = new Bootstrap();
+    serverBootstrap = new ServerBootstrap();
+    workerGroup = new NioEventLoopGroup();
+    bossGroup = new NioEventLoopGroup();
+    clientBootstrap.group(workerGroup);
+    clientBootstrap.channel(NioSocketChannel.class);
+    clientBootstrap.option(ChannelOption.SO_KEEPALIVE,true).handler(clientChannelInitializer);
+    serverBootstrap.group(bossGroup,workerGroup).channel(NioServerSocketChannel.class)
+        .option(ChannelOption.SO_BACKLOG,128)
+        .option(ChannelOption.SO_REUSEADDR,true)
+        .childOption(ChannelOption.SO_KEEPALIVE,true)
+//        .childOption(ChannelOption.SO_RCVBUF,2*1024*1024)
+        .childHandler(serverChannelInitializer);
+    try {
+      serverFuture = serverBootstrap.bind(getPort()).sync();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+
+
+    JsonObject componentAddrs = globalConfiguration.getObject("componentsAddrs");
+    for(String microCloud : componentAddrs.getFieldNames()){
+      JsonArray array = componentAddrs.getArray(microCloud);
+      String microCloudIPs = array.get(0);
+      String[] URIs = microCloudIPs.split(";");
+      for(String URI : URIs){
+        String[] parts = URI.split(":");
+        String host = parts[0];
+        String portString = parts[1];
+        boolean ok = false;
+        while(!ok){
+          try {
+            ChannelFuture f = clientBootstrap.connect(host,getPort(portString)).sync();
+
+            ok = true;
+            nodes.put(host,f);
+            pending.put(f.channel(),new HashSet<Integer>(100));
+            channelFutures.add(f);
+            histogram.put(host,0L);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      }
+    }
+  }
+
+  private static int getPort(String portString) {
+    Integer result = Integer.parseInt(portString);
+    return 10000+(result - 11222);
+  }
+
+  private static int getPort() {
+    int result = 10000;
+    ClusterInfinispanManager clusterInfinispanManager =
+        (ClusterInfinispanManager) InfinispanClusterSingleton.getInstance().getManager();
+    result += clusterInfinispanManager.getServerPort()-11222;
+    return result;
   }
 
   /**
@@ -49,7 +148,42 @@ public class NettyDataTransport {
    * @param value
    */
   public static void send(Channel channel, String indexName, Object key, Object value) {
+    send(channel.remoteAddress().toString(),indexName,key,value);
+  }
 
+  public static void send(String name, String indexName, Object key, Object value) {
+    Serializable keySerializable = (Serializable)key;
+    Serializable valueSerializable = (Serializable)value;
+    try {
+      ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
+      ObjectOutputStream oos = new ObjectOutputStream(byteArray);
+      oos.writeObject(key);
+      oos.writeObject(value);
+      send(name,indexName,byteArray.toByteArray());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+  }
+
+
+  public static void send(String target, String cacheName, byte[] bytes) {
+    NettyMessage nettyMessage = new NettyMessage(cacheName,bytes,getCounter());
+    ChannelFuture f = nodes.get(target);
+    pending.get(f.channel()).add(nettyMessage.getMessageId());
+    updateHistogram(target,bytes);
+    f.channel().writeAndFlush(nettyMessage);
+  }
+
+  private static void updateHistogram(String target, byte[] bytes) {
+    Long tmp = histogram.get(target);
+    tmp += bytes.length;
+    histogram.put(target,tmp);
+  }
+
+  private static synchronized int getCounter() {
+    counter = (counter+1) % Integer.MAX_VALUE;
+    return counter;
   }
 
   /**
@@ -62,4 +196,29 @@ public class NettyDataTransport {
 
 
 
+
+  public static void spillMetricData() {
+    for(Map.Entry<String,Long> entry : histogram.entrySet()){
+      PrintUtilities.printAndLog(log,"SPILL: " + entry.getKey() + " " + entry.getValue());
+    }
+  }
+
+  public static void waitEverything() {
+    for(Map.Entry<Channel,Set<Integer>> entry : pending.entrySet()){
+      entry.getKey().flush();
+      while(entry.getValue().size() > 0 ){
+        try {
+          PrintUtilities.printAndLog(log,"Waiting " + entry.getKey().remoteAddress().toString() + " " + entry.getValue().size());
+//          PrintUtilities.printList(entry.getValue());
+          Thread.sleep(Math.max(entry.getValue().size(),100));
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+  }
+
+  public static synchronized void acknowledge(Channel owner, int ackMessageId) {
+    pending.get(owner).remove(ackMessageId);
+  }
 }
