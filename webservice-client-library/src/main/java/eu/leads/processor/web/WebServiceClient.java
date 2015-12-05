@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import eu.leads.processor.infinispan.MapReduceJob;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.SerializationUtils;
 import org.vertx.java.core.http.HttpClient;
@@ -135,6 +136,13 @@ public class WebServiceClient {
   }
 
   public static QueryStatus executeMapReduceJob(JsonObject job, String uri) throws IOException {
+    MapReduceJob mapReduceJob = new MapReduceJob(job.copy());
+    if(!mapReduceJob.isBuiltIn() && mapReduceJob.getJarPath() != null) {
+      String jarPath = mapReduceJob.getJarPath();
+      String host = uri.substring(0,uri.lastIndexOf(":"));
+      String port = uri.substring(uri.lastIndexOf(":")+1,uri.length());
+      uploadJar(host,port,"default",jarPath,"/mapreduce/"+mapReduceJob.getName()+"/",3*1024*1024);
+    }
     URL address = new URL(uri + "/rest/mrjob/submit/");
     HttpURLConnection connection = (HttpURLConnection) address.openConnection();
     connection = setUp(connection, "POST", MediaType.APPLICATION_JSON, true, true);
@@ -142,6 +150,7 @@ public class WebServiceClient {
     String response = getResult(connection);
     QueryStatus result = mapper.readValue(response, QueryStatus.class);
     return result;
+
   }
 
   public static ActionResult executeMapReduce(JsonObject newAction, String uri) throws IOException {

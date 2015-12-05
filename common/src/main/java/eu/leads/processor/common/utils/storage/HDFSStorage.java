@@ -231,11 +231,11 @@ public class HDFSStorage implements LeadsStorage {
 
     @Override
     public long download(String source, String destination) {
-//        hdfs_source = "/"+hdfs_source;
+        //        hdfs_source = "/"+hdfs_source;
         long readBytes = 0;
         try {
-//            String[] pluginPath = hdfs_source.split("/");
-//            String plugin = pluginPath[2];
+            //            String[] pluginPath = hdfs_source.split("/");
+            //            String plugin = pluginPath[2];
             File destFile = new File(destination);
             if (destFile.exists()) {
                 destFile.delete();

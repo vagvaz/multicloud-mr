@@ -3,6 +3,8 @@ package eu.leads.processor.nqe;
 import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.infinispan.InfinispanManager;
+import eu.leads.processor.common.utils.storage.LeadsStorage;
+import eu.leads.processor.common.utils.storage.LeadsStorageFactory;
 import eu.leads.processor.conf.ConfigurationUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Action;
@@ -19,6 +21,8 @@ import eu.leads.processor.imanager.RemoveListenerActionHandler;
 import eu.leads.processor.nqe.handlers.*;
 import eu.leads.processor.web.WebServiceClient;
 import org.infinispan.Cache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
@@ -28,6 +32,7 @@ import org.vertx.java.platform.Verticle;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import static eu.leads.processor.core.ActionStatus.INPROCESS;
 import static eu.leads.processor.core.ActionStatus.valueOf;
@@ -45,13 +50,15 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
   JsonObject config;
   EventBus bus;
   LeadsMessageHandler leadsHandler;
-  LogProxy log;
+  Logger log = LoggerFactory.getLogger(NQEProcessorWorker.class);
+  LogProxy logg;
   InfinispanManager persistence;
   Map<String, ActionHandler> handlers;
   Map<String, Action> activeActions;
   String currentCluster;
   JsonObject globalConfig;
   private Cache jobsCache;
+  LeadsStorage storage;
 
   @Override public void start() {
     super.start();
@@ -153,7 +160,7 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     bus = vertx.eventBus();
     config = container.config();
     globalConfig = config.getObject("global");
-
+    initializeStorage();
     id = config.getString("id");
     gr = config.getString("group");
     logic = config.getString("logic");
@@ -172,25 +179,25 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     jobsCache = (Cache) persistence.getPersisentCache(StringConstants.QUERIESCACHE);
     JsonObject msg = new JsonObject();
     msg.putString("processor", id + ".process");
-    log = new LogProxy(config.getString("log"), com);
     handlers = new HashMap<String, ActionHandler>();
     //     ActionHandler pluginHandler = new DeployPluginActionHandler(com, log, persistence, id, globalConfig);
-    handlers.put(NQEConstants.DEPLOY_OPERATOR, new OperatorActionHandler(com, log, persistence, id));
+    logg = new LogProxy(id,com);
+    handlers.put(NQEConstants.DEPLOY_OPERATOR, new OperatorActionHandler(com, logg, persistence, id));
     //      handlers.put(NQEConstants.DEPLOY_PLUGIN,pluginHandler );
     //      handlers.put(NQEConstants.UNDEPLOY_PLUGIN,pluginHandler);
     handlers.put(NQEConstants.DEPLOY_REMOTE_OPERATOR,
-        new DeployRemoteOpActionHandler(com, log, persistence, id, globalConfig));
+        new DeployRemoteOpActionHandler(com, logg, persistence, id, globalConfig));
     //
-    handlers.put(NQEConstants.EXECUTE_MAP_REDUCE_JOB, new ExecuteMapReduceJobActionHandler(com, log, persistence, id));
+    handlers.put(NQEConstants.EXECUTE_MAP_REDUCE_JOB, new ExecuteMapReduceJobActionHandler(com, logg, persistence, id,storage));
 
-    handlers.put(IManagerConstants.EXECUTE_MAPREDUCE, new ExecuteMRActionHandler(com, log, persistence, id));
-    handlers.put(IManagerConstants.COMPLETED_MAPREDUCE, new CompletedMRActionHandler(com, log, persistence, id));
-    handlers.put(IManagerConstants.PUT_OBJECT, new PutObjectActionHandler(com, log, persistence, id));
-    handlers.put(IManagerConstants.GET_QUERY_STATUS, new GetQueryStatusActionHandler(com, log, persistence, id));
-    handlers.put(IManagerConstants.STOP_CACHE, new StopCacheActionHandler(com, log, persistence, id, globalConfig));
-    handlers.put(IManagerConstants.ADD_LISTENER, new AddListenerActionHandler(com, log, persistence, id, globalConfig));
+    handlers.put(IManagerConstants.EXECUTE_MAPREDUCE, new ExecuteMRActionHandler(com, logg, persistence, id));
+    handlers.put(IManagerConstants.COMPLETED_MAPREDUCE, new CompletedMRActionHandler(com, logg, persistence, id));
+    handlers.put(IManagerConstants.PUT_OBJECT, new PutObjectActionHandler(com, logg, persistence, id));
+    handlers.put(IManagerConstants.GET_QUERY_STATUS, new GetQueryStatusActionHandler(com, logg, persistence, id));
+    handlers.put(IManagerConstants.STOP_CACHE, new StopCacheActionHandler(com, logg, persistence, id, globalConfig));
+    handlers.put(IManagerConstants.ADD_LISTENER, new AddListenerActionHandler(com, logg, persistence, id, globalConfig));
     handlers.put(IManagerConstants.REMOVE_LISTENER,
-        new RemoveListenerActionHandler(com, log, persistence, id, globalConfig));
+        new RemoveListenerActionHandler(com, logg, persistence, id, globalConfig));
     bus.send(workqueue + ".register", msg, new Handler<Message<JsonObject>>() {
       @Override public void handle(Message<JsonObject> event) {
         log.info(id + " Registration " + event.address().toString());
@@ -198,6 +205,29 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     });
 
     log.info(id + " started ....");
+  }
+
+  private void initializeStorage() {
+    Properties storageConf = new Properties();
+    storageConf.setProperty("prefix", "/tmp/leads/");
+    if(globalConfig.containsField("hdfs.uri") && globalConfig.containsField("hdfs.prefix") && globalConfig.containsField("hdfs.user"))
+    {
+      storageConf.setProperty("hdfs.url", globalConfig.getString("hdfs.uri"));
+      storageConf.setProperty("fs.defaultFS", globalConfig.getString("hdfs.uri"));
+      storageConf.setProperty("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+      storageConf.setProperty("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+      storageConf.setProperty("prefix", globalConfig.getString("hdfs.prefix"));
+      storageConf.setProperty("hdfs.user", globalConfig.getString("hdfs.user"));
+      storageConf.setProperty("postfix", "0");
+      System.out.println("USING HDFS yeah!");
+      log.info("using hdfs: " + globalConfig.getString("hdfs.user")+ " @ "+ globalConfig.getString("hdfs.uri") + globalConfig.getString("hdfs.prefix") );
+
+      storage = LeadsStorageFactory.getInitializedStorage(LeadsStorageFactory.HDFS,storageConf);
+    }else
+    {
+      log.info("No defined all hdfs parameters using local storage ");
+      storage = LeadsStorageFactory.getInitializedStorage(LeadsStorageFactory.LOCAL, storageConf);
+    }
   }
 
   private String getURIFromGlobal(String coordinator) {

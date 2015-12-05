@@ -2,6 +2,7 @@ package eu.leads.processor.nqe.handlers;
 
 import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.common.infinispan.InfinispanManager;
+import eu.leads.processor.common.utils.storage.LeadsStorage;
 import eu.leads.processor.core.Action;
 import eu.leads.processor.core.ActionHandler;
 import eu.leads.processor.core.ActionStatus;
@@ -9,6 +10,7 @@ import eu.leads.processor.core.comp.LogProxy;
 import eu.leads.processor.core.net.Node;
 import eu.leads.processor.core.plan.QueryState;
 import eu.leads.processor.core.plan.QueryStatus;
+import eu.leads.processor.infinispan.operators.GenericMapReduceOperator;
 import eu.leads.processor.infinispan.operators.Operator;
 import eu.leads.processor.nqe.NQEConstants;
 
@@ -27,14 +29,15 @@ public class ExecuteMapReduceJobActionHandler implements ActionHandler {
   private final InfinispanManager persistence;
   private final String id;
   private Cache jobsCache;
-
+  private LeadsStorage storage;
   public ExecuteMapReduceJobActionHandler(Node com, LogProxy log, InfinispanManager persistence,
-                                          String id) {
+                                          String id,LeadsStorage storage) {
     this.com = com;
     this.log = log;
     this.persistence = persistence;
     this.id = id;
     jobsCache = (Cache) persistence.getPersisentCache(StringConstants.QUERIESCACHE);
+    this.storage = storage;
   }
 
   @Override
@@ -57,6 +60,10 @@ public class ExecuteMapReduceJobActionHandler implements ActionHandler {
     // - Won't proceed with this (at least for now)as OperatorFactory uses "operatorType" as a flag
     //   while MapReduceOperatorFactory uses job's "name"
     Operator operator = MapReduceOperatorFactory.createOperator(com, persistence, log, result);
+    if(operator instanceof GenericMapReduceOperator){
+      GenericMapReduceOperator gmr = (GenericMapReduceOperator) operator;
+      gmr.setLeadsStorage(storage);
+    }
     if (operator != null) {
       operator.init(result.getData());
       operator.execute();

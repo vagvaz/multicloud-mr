@@ -5,7 +5,6 @@ import eu.leads.processor.common.continuous.EventTriplet;
 import eu.leads.processor.common.infinispan.EnsembleCacheUtilsSingle;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
-import eu.leads.processor.infinispan.operators.GenericMapReduceOperator;
 import eu.leads.processor.plugins.EventType;
 import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.cache.EnsembleCache;
@@ -84,10 +83,8 @@ import java.util.concurrent.Future;
       operator = new WordCountContinuousOperator();
     }else if(operatorClassName.equals(CountMinOperatorContinuous.class.getCanonicalName().toString())){
       operator = new CountMinOperatorContinuous();
-    }else if(operatorClassName.equals(KMeansOperatorContinuous.class.getCanonicalName().toString())) {
+    }else if(operatorClassName.equals(KMeansOperatorContinuous.class.getCanonicalName().toString())){
       operator = new KMeansOperatorContinuous();
-    }else if(operatorClassName.equals(GenericMapReduceOperator.class.getCanonicalName().toString())){
-      operator = new GenericMapReduceContinuous();
     }else{
       PrintUtilities.printAndLog(log,"SERIOIS ERROR Continuous class is not KNOWND " + operatorClassName);
     }

@@ -1,6 +1,8 @@
 package eu.leads.processor.nqe;
 
 import eu.leads.processor.common.StringConstants;
+import eu.leads.processor.common.utils.storage.LeadsStorage;
+import eu.leads.processor.common.utils.storage.LeadsStorageFactory;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Action;
 import eu.leads.processor.core.ActionStatus;
@@ -14,6 +16,7 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.platform.Verticle;
 
+import java.util.Properties;
 import java.util.UUID;
 
 import static eu.leads.processor.core.ActionStatus.PENDING;
@@ -25,6 +28,7 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
 
   private final String componentType = "nqe";
   JsonObject config;
+  JsonObject globalConfig;
   String monitor;
   String nqeGroup;
   LogProxy log;
@@ -32,6 +36,7 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
   String id;
   String workQueueAddress;
   String currentCluster;
+  LeadsStorage storage;
 
   @Override public void start() {
     super.start();
@@ -44,6 +49,34 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
     com = new DefaultNode();
     com.initialize(id, nqeGroup, null, this, null, vertx);
     log = new LogProxy(config.getString("log"), com);
+    Properties storageConf = new Properties();
+    storageConf.setProperty("prefix", "/tmp/leads/");
+
+
+    if(config.containsField("global")){
+      JsonObject global = config.getObject("global");
+      globalConfig = global;
+      if(global.containsField("hdfs.uri") && global.containsField("hdfs.prefix") && global.containsField("hdfs.user"))
+      {
+        storageConf.setProperty("hdfs.url", global.getString("hdfs.uri"));
+        storageConf.setProperty("fs.defaultFS", global.getString("hdfs.uri"));
+        storageConf.setProperty("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+        storageConf.setProperty("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+        storageConf.setProperty("prefix", global.getString("hdfs.prefix"));
+        storageConf.setProperty("hdfs.user", global.getString("hdfs.user"));
+        storageConf.setProperty("postfix", "0");
+        System.out.println("USING HDFS yeah!");
+        log.info("using hdfs: " + global.getString("hdfs.user")+ " @ "+ global.getString("hdfs.uri") + global.getString("hdfs.prefix") );
+
+        storage = LeadsStorageFactory.getInitializedStorage(LeadsStorageFactory.HDFS,storageConf);
+      }else
+      {
+        log.info("No defined all hdfs parameters using local storage ");
+        storage = LeadsStorageFactory.getInitializedStorage(LeadsStorageFactory.LOCAL, storageConf);
+      }
+    }else {
+      storage = LeadsStorageFactory.getInitializedStorage(LeadsStorageFactory.LOCAL, storageConf);
+    }
   }
 
   @Override public void stop() {
@@ -103,7 +136,17 @@ public class NQELogicWorker extends Verticle implements LeadsMessageHandler {
           } else if (label.equals(IManagerConstants.REMOVE_LISTENER)) {
             action.getData().putString("replyTo", msg.getString("from"));
             com.sendWithEventBus(workQueueAddress, action.asJsonObject());
-          } else {
+          } else if(label.equals(IManagerConstants.UPLOAD_DATA)){
+            String path = action.getData().getString("path");
+            byte[] data = action.getData().getBinary("data");
+            storage.writeData(path,data);
+            action.getData().putString("replyTo", msg.getString("from"));
+            JsonObject result = new JsonObject();
+            result.putString("status","SUCCESS");
+            result.putString("message","");
+            com.sendTo(action.getData().getString("replyTo"), result);
+          }
+          else {
             log.error("Unknown PENDING Action received " + action.toString());
             return;
           }

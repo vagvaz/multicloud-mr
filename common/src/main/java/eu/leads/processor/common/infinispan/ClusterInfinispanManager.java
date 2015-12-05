@@ -769,7 +769,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
     List<Future<String>> list = null;
     DistributedTaskBuilder builder = null;
     builder = des.createDistributedTaskBuilder(new AddListenerCallable(cache.getName(),listener));
-    builder.timeout(1, TimeUnit.MINUTES);
+    builder.timeout(10, TimeUnit.MINUTES);
     DistributedTask task = builder.build();
     try {
       list =     des.submitEverywhere(task);

@@ -133,6 +133,15 @@ public abstract class BasicOperator extends Thread implements Operator {
     startTime = System.currentTimeMillis();
     profOperator = new ProfileEvent("Operator " + this.getClass().toString(), profilerLog);
     reduceLocal = action.getData().getObject("operator").containsField("reduceLocal");
+    JsonObject targetEndpoints = action.getData().getObject("operator").getObject("targetEndpoints");
+    if(targetEndpoints == null)
+    {
+      action.getData().getObject("operator").putObject("targetEndpoints",globalConfig.getObject("microclouds").copy());
+    }
+    JsonObject scheduling = action.getData().getObject("operator").getObject("scheduling");
+    if(scheduling == null){
+      action.getData().getObject("operator").putObject("scheduling",globalConfig.getObject("microclouds").copy());
+    }
   }
 
   public JsonObject getConf() {
