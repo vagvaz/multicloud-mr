@@ -42,13 +42,10 @@ public class SubmitWordCountTest {
   private static String ensembleString;
   private static Vector<File> files;
   private static String[] resultWords = {"to", "the", "of", "in", "on"};
-
-
   private static class Putter implements Runnable {
 
     String id;
     long putCount;
-    private int linesPerTuple = 1000;
 
     public Putter(int i) {
       id = String.valueOf(i);
@@ -56,33 +53,30 @@ public class SubmitWordCountTest {
     }
 
     @Override public void run() {
-      LQPConfiguration.initialize();
-      linesPerTuple = LQPConfiguration.getInstance().getConfiguration()
-          .getInt("putter.lines.per.tuple",linesPerTuple);
-
-      File f;
+      int linesPerTupe = 100;
+      File f = null;
 
       EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager((ensembleString));
 
-      EnsembleCache ensembleCache =
-          ensembleCacheManager.getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()),
+      EnsembleCache ensembleCache = ensembleCacheManager
+          .getCache(CACHE_NAME, new ArrayList<>(ensembleCacheManager.sites()),
               EnsembleCacheManager.Consistency.DIST);
 
       while (true) {
-        synchronized (files) {
-          if (files.size() > 0) {
-            f = files.get(0);
-            files.remove(0);
-          } else {
+        try {
+          f = files.remove(0);
+        } catch (Exception e) {
+          if (e instanceof ArrayIndexOutOfBoundsException) {
             break;
           }
+          e.printStackTrace();
         }
 
         System.out.println(id + ": files.get(0).getAbsolutePath() = " + f.getAbsolutePath());
 
         try {
-          BufferedReader bufferedReader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+          BufferedReader bufferedReader
+              = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 
           JsonObject data = new JsonObject();
           String line;
@@ -90,12 +84,12 @@ public class SubmitWordCountTest {
           int lineCount = 0;
           while ((line = bufferedReader.readLine()) != null) {
             data.putString(String.valueOf(lineCount++), line);
-            if (lineCount % linesPerTuple == 0) {
+            if (lineCount % linesPerTupe == 0) {
               ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
               data = new JsonObject();
             }
           }
-          if (lineCount % linesPerTuple != 0) {
+          if (lineCount % linesPerTupe != 0) {
             // put the remaining lines
             ensembleCache.put(id + "-" + String.valueOf(putCount++), new Tuple(data.toString()));
           }
@@ -112,8 +106,6 @@ public class SubmitWordCountTest {
 
   private static void putData(String dataDirectory) {
 
-    PUT_THREADS_COUNT = LQPConfiguration.getInstance().getConfiguration().getInt("putter.threads",
-                                                                                 PUT_THREADS_COUNT);
     File datasetDirectory = new File(dataDirectory);
     File[] allFiles = datasetDirectory.listFiles();
     files = new Vector<File>();
@@ -142,6 +134,7 @@ public class SubmitWordCountTest {
       }
     }
   }
+
 
   public static void main(String[] args) {
 

@@ -20,7 +20,7 @@ import java.util.*;
  */
 public class Boot2 {
   static String[] adresses;
-  static JsonArray clusters = null;
+  static JsonArray clusters =null;
   static String[] components;
   static String[] configurationFiles;
   static String filename;
@@ -52,15 +52,14 @@ public class Boot2 {
 
   static JsonArray jallAddrs = new JsonArray();
   static JsonArray jwebServiceAddrs = new JsonArray();
-  static JsonArray jcomponentsAddrs = new JsonArray();
+  static  JsonArray jcomponentsAddrs = new JsonArray();
   static JsonObject jwebServiceClusterAddrs = new JsonObject();
   static JsonObject jcomponetsClusterAddrs = new JsonObject();
 
   static String start_date_time;
-  static int module_deploy_num = 0;
+  static int module_deploy_num=0;
   static String full_ensemble = "";
   private static boolean norun;
-  private static HashMap<String, String> IPPrvmap;
 
   public static void readConfiguration(String[] args) {
     org.apache.log4j.BasicConfigurator.configure();
@@ -134,16 +133,14 @@ public class Boot2 {
   }
 
   public static void init_components_configuration() {
-    List<HierarchicalConfiguration> components =
-        ((XMLConfiguration) xmlConfiguration).configurationsAt("processor.component");
+    List<HierarchicalConfiguration> components = ((XMLConfiguration) xmlConfiguration).configurationsAt("processor.component");
     if (components == null) { //Maybe components is jsut empty...
       logger.error("No components found exiting");
       System.exit(-1);
     }
     for (HierarchicalConfiguration c : components) {
       ConfigurationNode node = c.getRootNode();
-      logger.info(
-          "Loading configuration, Name: " + c.getString("name") + " Processors " + c.getString("numberOfProcessors"));
+      logger.info("Loading configuration, Name: " + c.getString("name") + " Processors " + c.getString("numberOfProcessors"));
       componentsXml.put(c.getString("name"), c);
       if (c.containsKey("configurationFile")) {
 
@@ -153,8 +150,7 @@ public class Boot2 {
         try {
           subConf = new XMLConfiguration(filePathname);
         } catch (ConfigurationException e) {
-          System.err
-              .println("File " + filePathname + " not found, fix configuration files. \nExiting stopping boot!!!!!!!");
+          System.err.println("File " + filePathname + " not found, fix configuration files. \nExiting stopping boot!!!!!!!");
           System.exit(1);
         }
         componentsConf.put(c.getString("name"), subConf);
@@ -180,7 +176,7 @@ public class Boot2 {
       logger.error("No ssh credentials found exiting");
       System.exit(-1);
     }
-    sshmap = new HashMap<>();
+    sshmap=new HashMap<>();
     for (HierarchicalConfiguration c : components) {
       ConfigurationNode node = c.getRootNode();
       JsonObject ssh = new JsonObject();
@@ -193,9 +189,9 @@ public class Boot2 {
       Iterator<String> ks = c.getKeys();
       while (ks.hasNext()) {
         String key = ks.next();
-        ssh.putString(key, c.getString(key));
+        ssh.putString( key, c.getString(key));
       }
-      sshmap.put(id, ssh);
+      sshmap.put(id,ssh);
     }
 
   }
@@ -209,15 +205,13 @@ public class Boot2 {
     JsonArray clusterPublicIPs;
     JsonArray clusterPrivateIPs;
 
-    List<HierarchicalConfiguration> cmplXadresses =
-        ((XMLConfiguration) xmlConfiguration).configurationsAt("adresses.MC");
+    List<HierarchicalConfiguration> cmplXadresses = ((XMLConfiguration) xmlConfiguration).configurationsAt("adresses.MC");
     if (cmplXadresses == null) { //
       logger.error("Clusters Addresses not found");
       return;
     }
     clusters = new JsonArray();
     IPsshmap = new HashMap<>();
-    IPPrvmap = new HashMap<String,String>();
     for (HierarchicalConfiguration c : cmplXadresses) {
       JsonArray nodesList = new JsonArray();
       ConfigurationNode node = c.getRoot();
@@ -225,25 +219,25 @@ public class Boot2 {
       System.out.println("Cluster Size : " + node.getChildren().size());
       cluster = new JsonObject();
       cluster.putString("name", c.getString("[@name]"));
-      cluster.putString("credentials", c.getString("[@credentials]"));
+      cluster.putString("credentials",c.getString("[@credentials]"));
       List<HierarchicalConfiguration> nodes = c.configurationsAt("node");
-      nodeData = new JsonObject();
-      clusterPublicIPs = new JsonArray();
-      clusterPrivateIPs = new JsonArray();
-      for (HierarchicalConfiguration n : nodes) {
+      nodeData=new JsonObject();
+      clusterPublicIPs  = new JsonArray();
+      clusterPrivateIPs  = new JsonArray();
+      for( HierarchicalConfiguration n :nodes) {
         String prIP = n.getString("[@privateIp]");
         String puIP = n.getString("");
         String name = n.getString("[@name]");
-        if (puIP != null) {
+        if(puIP!=null)
+        {
           clusterPublicIPs.addString(puIP);
           nodeData.putString("publicIp", puIP);
           IPsshmap.put(puIP, sshmap.get(c.getString("[@credentials]")));
-          IPsshmap.get(puIP).putString("privateIP", prIP);
         }
-        if (prIP != null) {
+        if(prIP!=null){
           nodeData.putString("privateIp", prIP);
           clusterPrivateIPs.addString(prIP);
-          IPsshmap.put(prIP, sshmap.get(c.getString("[@credentials]")));
+          IPsshmap.put(prIP,sshmap.get(c.getString("[@credentials]")));
         }
 
         clusterPrivateIPs.addString(prIP);
@@ -254,19 +248,18 @@ public class Boot2 {
       }
       cluster.putArray("nodes", nodesList);
       cluster.putArray("allPublicIps", clusterPublicIPs);
-      cluster.putArray("allPrivateIps", clusterPrivateIPs);
+      cluster.putArray("allPrivateIps",clusterPrivateIPs);
       clusters.add(cluster);
 
     }
   }
 
 
-  public static void singleCloud() {
+  public static void singleCloud(){
     System.out.println("Single cloud deployment");
 
     if (adresses == null) {
-      logger.error(
-          "No Addrs value in the configuration file and single cloud execution, please add at least <adresses>localhost</adresses> for local execution, Exiting");
+      logger.error("No Addrs value in the configuration file and single cloud execution, please add at least <adresses>localhost</adresses> for local execution, Exiting");
       System.exit(-1);
     }
 
@@ -318,7 +311,7 @@ public class Boot2 {
       modJson = set_global_addresses(modJson, jwebServiceClusterAddrs, jcomponetsClusterAddrs);
       for (int i = 0; i < componentsInstances.get(e.getKey()); i++) {
         deployComponent(e.getKey(), modJson, adresses[ip]);
-        System.out.println("\r\nStarted : " + e.getKey() + " At: " + adresses[ip] + ".");
+        System.out.println("\r\nStarted : " + e.getKey() + " At: " + adresses[ip] +".");
         ip = (ip + 1) % adresses.length;
       }
     }
@@ -326,7 +319,7 @@ public class Boot2 {
   }
 
 
-  public static void multiCloud() {
+  public static void multiCloud(){
     //multicloud deployment
     System.out.println("Multi-cloud deployment");
     // System.exit(-1);
@@ -335,25 +328,25 @@ public class Boot2 {
     //globalJson.putObject("microclouds", salt_get("leads_query-engine.map", true));
 
     String JsonCloudsEnv = System.getenv("LEADS_QUERY_ENGINE_CLUSTER_TOPOLOGY");//LEADS_CURRENT_CLUSTER");
-    JsonObject JsonClouds = null;
+    JsonObject JsonClouds=null;
     if (JsonCloudsEnv == null) {
-      if (clusters != null) {
+      if(clusters!=null) {
         JsonClouds = new JsonObject();
-        for (int c = 0; c < clusters.size(); c++) {
+        for(int c=0; c<clusters.size();c++){
           JsonArray tmp = new JsonArray();
-          tmp.add(((JsonObject) clusters.get(c)).getArray("allPublicIps").get(0));
+          tmp.add(((JsonObject)clusters.get(c)).getArray("allPublicIps").get(0));
           JsonClouds.putArray(((JsonObject) clusters.get(c)).getString("name"), tmp);
-          allmcAddrs.put(((JsonObject) clusters.get(c)).getString("name"),
-              ((JsonObject) clusters.get(c)).getArray("allPublicIps"));
+          allmcAddrs.put(((JsonObject)clusters.get(c)).getString("name"),((JsonObject)clusters.get(c)).getArray("allPublicIps"));
         }
-      } else {
+      }else {
         logger.info("Check for microclouds.json file.");
         JsonClouds = read_salt(getJsonfile(baseDir + "microclouds.json", false), true);
       }
-    } else
+    }
+    else
       JsonClouds = read_salt(new JsonObject(JsonCloudsEnv), true);
 
-    if (JsonClouds == null) {
+    if(JsonClouds==null){
       logger.error(" Unable to retrieve any micro-cloud configuration! ");
       System.exit(-1);
     }
@@ -393,12 +386,11 @@ public class Boot2 {
       for (int s = 0; /*s < pAddrs.size() &&*/ instancesCnt < componentsInstancesNames.size(); s++) {
         String address = pAddrs.get(instancesCnt % pAddrs.size());
         clusterComponentsAddressed.addString(address);
-        logger.info("Cur comp " + componentsInstancesNames.get(instancesCnt) + " instances " + componentsInstances
-            .get(componentsInstancesNames.get(instancesCnt)));
+        logger.info("Cur comp " + componentsInstancesNames.get(instancesCnt) + " instances " + componentsInstances.get(componentsInstancesNames.get(instancesCnt)));
         //
 
-        if (instancesPerNode.containsKey(address))
-          instancesPerNode.put(address, instancesPerNode.get(address) + 1);
+        if(instancesPerNode.containsKey(address))
+          instancesPerNode.put(address, instancesPerNode.get(address)+1);
         else
           instancesPerNode.put(address, 1);
         //Also write the cluster name in a text file into home dir ...
@@ -407,19 +399,14 @@ public class Boot2 {
       }
       //compAlladresses.putArray(entry.getKey(), clusterComponentsAddressed);
       String ensembleString = new String();
-      for (String ip : instancesPerNode.keySet()) {
-        int in = 0;
-        do {
-          if(!ip.contains(":")) {
-            ensembleString += ip + ":" + Integer.toString(11222 + in) + ";";
-          }else{
-            ensembleString += ip+";";
-          }
-
+      for (String ip:instancesPerNode.keySet()){
+        int in=0;
+        do{
+          ensembleString+=ip+":"+Integer.toString(11222 + in) + ";";
           in++;
-          if (in >= instancesPerNode.get(ip))
+          if(in>=instancesPerNode.get(ip))
             break;
-        } while (true);
+        }while(true);
 
       }
       //      for(int ip=0; ip<clusterComponentsAddressed.size();ip++){
@@ -428,10 +415,10 @@ public class Boot2 {
       JsonArray ensembleStringtmp = new JsonArray();
       ensembleStringtmp.add(ensembleString.substring(0, ensembleString.length() - 1));
       System.out.println("Ensemble String for " + entry.getKey() + " :" + ensembleStringtmp);
-      if (full_ensemble.isEmpty())
-        full_ensemble = ensembleString.substring(0, ensembleString.length() - 1);
+      if(full_ensemble.isEmpty())
+        full_ensemble=ensembleString.substring(0, ensembleString.length() - 1);
       else
-        full_ensemble = full_ensemble + "|" + ensembleString.substring(0, ensembleString.length() - 1);
+        full_ensemble=full_ensemble+"|"+ensembleString.substring(0, ensembleString.length() - 1);
       compAlladresses.putArray(entry.getKey(), ensembleStringtmp);
       webserviceAlladresses.putArray(entry.getKey(), clusterWebServiceAddressed);
       //      if (instancesCnt >= componentsInstancesNames.size()) {
@@ -442,35 +429,23 @@ public class Boot2 {
     /////////////////
     //set also global variable adresses to
     webserviceJson = set_global_addresses(webserviceJson, webserviceAlladresses, compAlladresses);
-    log_sinkJson = set_global_addresses(log_sinkJson, webserviceAlladresses, compAlladresses);
+    //    log_sinkJson = set_global_addresses(log_sinkJson, webserviceAlladresses, compAlladresses);
 
     for (Map.Entry<String, JsonArray> entry : allmcAddrs.entrySet()) {
-      instancesCnt = 0;
+      instancesCnt=0;
       JsonArray pAddrs = entry.getValue();
       if (pAddrs.size() == 0)
         continue;
 
       //deploy at least one log one webservice modules to each microcloud
-      for (int i = 0; i < pAddrs.size() && i < componentsInstances.get("log-sink"); i++) {
-
-        if(!IPsshmap.get(pAddrs.get(i).toString()).containsField("usePrivate")) {
-          System.out.println(" Deploying log-sink to: " + entry.getKey() + " Ip: " + pAddrs.get(i) + " ");
-          deployComponent("log-sink-module", log_sinkJson, pAddrs.get(i).toString());
-        }
-        else {
-          System.out.println(" Deploying log-sink to: " + entry.getKey() + " Ip: " + IPsshmap.get(pAddrs.get(i).toString()).getString(
-              "privateIP") + " ");
-          deployComponent("log-sink-module", log_sinkJson, IPsshmap.get(pAddrs.get(i).toString()).getString("privateIP"));
-        }
-      }
+      //      for (int i = 0; i < pAddrs.size() && i < componentsInstances.get("log-sink"); i++) {
+      //        System.out.println(" Deploying log-sink to: " + entry.getKey() + " Ip: " + pAddrs.get(i) + " ");
+      //        deployComponent("log-sink-module", log_sinkJson, pAddrs.get(i).toString());
+      //      }
       for (int i = 0; i < pAddrs.size() && i < componentsInstances.get("webservice"); i++) {
 
         System.out.println(" Deploying webservice to: " + entry.getKey() + " Ip: " + pAddrs.get(i) + " ");
-        if(!IPsshmap.get(pAddrs.get(i).toString()).containsField("usePrivate")) {
-          deployComponent("processor-webservice", webserviceJson, pAddrs.get(i).toString());
-        }else{
-          deployComponent("processor-webservice", webserviceJson, IPsshmap.get(pAddrs.get(i).toString()).getString("privateIP"));
-        }
+        deployComponent("processor-webservice", webserviceJson, pAddrs.get(i).toString());
       }
       //TODO Check if successfull deployment ...
 
@@ -478,18 +453,18 @@ public class Boot2 {
       for (int s = 0; /*s < pAddrs.size() &&*/ instancesCnt < componentsInstancesNames.size(); s++) {
         JsonObject modJson = componentsJson.get(componentsInstancesNames.get(instancesCnt));
         //Fixed ?
-        modJson.putString("id", componentsInstancesNames.get(instancesCnt) + "-default-" + get_date_unique_id());
+        modJson.putString("id", componentsInstancesNames.get(instancesCnt) + "-default-" +  get_date_unique_id());
         String address = pAddrs.get(instancesCnt % pAddrs.size()).toString();
         modJson = set_global_addresses(modJson, webserviceAlladresses, compAlladresses);
         deployComponent(componentsInstancesNames.get(instancesCnt).toString(), modJson, address);
-        System.out.println("\r\n Started : " + componentsInstancesNames.get(instancesCnt) + " At: " + address);
+        System.out.println("\r\n Started : " + componentsInstancesNames.get(instancesCnt) + " At: " + address );
         instancesCnt++;
       }
     }
   }
 
-  public static String get_date_unique_id() {
-    return start_date_time + Integer.toString(module_deploy_num++);
+  public static String get_date_unique_id(){
+    return start_date_time+Integer.toString(module_deploy_num++);
   }
 
   public static void main(String[] args) {
@@ -511,8 +486,7 @@ public class Boot2 {
 
   }
 
-  private static JsonObject set_global_addresses(JsonObject modJson, JsonObject jwebServiceAddrs,
-      JsonObject jcomponentsAddrs) {
+  private static JsonObject set_global_addresses(JsonObject modJson, JsonObject jwebServiceAddrs, JsonObject jcomponentsAddrs) {
     JsonObject global = modJson.getObject("global");
     global.putObject("webserviceAddrs", jwebServiceAddrs);
     //    modJson.putArray("allAddrs", jallAddrs);
@@ -563,8 +537,7 @@ public class Boot2 {
   }
 
 
-  private static JsonObject checkandget(Configuration conf, String attribute, JsonObject inputJson,
-      boolean on_error_exit) {
+  private static JsonObject checkandget(Configuration conf, String attribute, JsonObject inputJson, boolean on_error_exit) {
     if (conf.containsKey(attribute))
       inputJson.putString(attribute, getStringValue(conf, attribute, null, on_error_exit));
     return inputJson;
@@ -695,30 +668,28 @@ public class Boot2 {
 
     String command;
     String vertx_executable;
-    if (vertxComponent.contains("web"))
-      vertx_executable = "vertx1g";
-    else if (vertxComponent.contains("log"))//run vertx with lower memory usage (vertxb)
-      vertx_executable = "vertx200m";
-    else if (vertxComponent.contains("iman"))
-      vertx_executable = "vertx2g";
-    else if (vertxComponent.contains("dep"))
-      vertx_executable = "vertx2g";
-    else if (vertxComponent.contains("nqe"))
-      vertx_executable = "vertx2g";
-    else if (vertxComponent.contains("plan"))
-      vertx_executable = "vertx2g";
+    if(vertxComponent.contains("web"))
+      vertx_executable="vertx1g";
+    else if(vertxComponent.contains("log"))//run vertx with lower memory usage (vertxb)
+      vertx_executable="vertx200m";
+    else if(vertxComponent.contains("iman"))
+      vertx_executable="vertx2g";
+    else if(vertxComponent.contains("dep"))
+      vertx_executable="vertx2g";
+    else if(vertxComponent.contains("nqe"))
+      vertx_executable="vertx2g";
+    else if(vertxComponent.contains("plan"))
+      vertx_executable="vertx2g";
     else
-      vertx_executable = "vertx";
+      vertx_executable="vertx";
 
-    command = vertx_executable + " runMod " + vertxComponent + " -conf " + remotedir + "R" + modJson.getString("id")
-        + ".json";
+    command = vertx_executable + " runMod " + vertxComponent + " -conf " + remotedir + "R" + modJson.getString("id") + ".json";
     if (conf.containsKey("processor.vertxArg"))
       command += " -" + conf.getString("processor.vertxArg");
 
     runRemotely(modJson.getString("id"), ip, command);
     for (int t = 0; t < sleepTime * 2; t++) {
-      System.out.printf("\rPlease wait " + sleepTime + "s Deploying: " + component + " elapsed:" + Integer
-          .toString(1 + t * 500 / 1000));
+      System.out.printf("\rPlease wait "+ sleepTime+ "s Deploying: "+ component + " elapsed:" + Integer.toString(1+ t * 500/1000));
       try {
         Thread.sleep(500);
       } catch (InterruptedException e1) {
@@ -741,23 +712,19 @@ public class Boot2 {
         // run top within that bash session
         String command0 = "cd ~/.vertx_mods && screen -S " + session_name;
         // run top within that bash session
-        command1 = command0 + " screen -S  " + session_name + " -p " + (pagecounter++) + " -X stuff $\'" + " bash -l &&"
-            + command + "\r\'";//ping 147.27.18.1";
+        command1 = command0 + " screen -S  " + session_name + " -p " + (pagecounter++) + " -X stuff $\'" + " bash -l &&" + command+ "\r\'";//ping 147.27.18.1";
       } else {
         session_name = "shell_" + ip;
         screensIPmap.put(ip, session_name);
         String command0 = "cd ~/.vertx_mods && screen -AmdS " + session_name + " bash -l";
         // run top within that bash session
-        command1 =
-            command0 + " && " + "screen -S  " + session_name + " -p \" + (pagecounter++) +\" -X stuff $\'" + command
-                + "\r\'";//ping 147.27.18.1";
+        command1 = command0 + " && " + "screen -S  " + session_name + " -p \" + (pagecounter++) +\" -X stuff $\'" + command + "\r\'";//ping 147.27.18.1";
       }
 
     } else {
       String command0 = "cd ~/.vertx_mods &&  screen -AmdS shell_" + id + " bash -l";
       // run top within that bash session
-      command1 =
-          command0 + " && " + "screen -S shell_" + id + " -p 0 -X stuff $\'" + command + "\r\'";//ping 147.27.18.1";
+      command1 = command0 + " && " + "screen -S shell_" + id + " -p 0 -X stuff $\'" + command + "\r\'";//ping 147.27.18.1";
     }
 
     //System.out.print("Cmd: " + command1);
@@ -799,8 +766,7 @@ public class Boot2 {
       while (true) {
         while (in.available() > 0) {
           int i = in.read(tmp, 0, 1024);
-          if (i < 0)
-            break;
+          if (i < 0) break;
           // System.out.print(new String(tmp, 0, i));
           ret += new String(tmp, 0, i);
         }
@@ -885,32 +851,14 @@ public class Boot2 {
 
   }
 
-  private static Session createSession(JSch jsch, String ipa) throws JSchException {
-
-//    ConfigRepository configRepository = null;
-//    try {
-//      configRepository = OpenSSHConfig.parseFile(System.getenv("HOME")+"/.ssh/config");
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
-    //com.jcraft.jsch.OpenSSHConfig.parseFile("~/.ssh/config");
-
-//    jsch.setConfigRepository(configRepository);
-
-    JsonObject sshconf = IPsshmap.get(ipa);
-    String ip  = ipa;
-    if(sshconf.containsField("usePrivate"))
-      ip = sshconf.getString("privateIP");
-    if (sshconf == null) {
-      System.err.println("No ssh configuration for ip: " + ip);
+  private static Session createSession(JSch jsch, String ip) throws JSchException {
+    JsonObject sshconf = IPsshmap.get(ip);
+    if(sshconf==null){
+      System.err.println("No ssh configuration for ip: "+ ip);
       System.exit(-1);
     }
-    Session session = null;
-
-//    if(configRepository.getConfig(ip) == null){
     String username = sshconf.getString("username");//getStringValue(conf, "ssh.username", null, true);
-
-      session = jsch.getSession(username, ip, 22);
+    Session session = jsch.getSession(username, ip, 22);
 
     if (sshconf.containsField("rsa")/*xmlConfiguration.containsKey("ssh.rsa")*/) {
       String privateKey = sshconf.getString("rsa"); //conf.getString("ssh.rsa");
@@ -922,14 +870,10 @@ public class Boot2 {
     else {
       logger.error("No ssh credentials, no password either key ");
       System.out.println("No ssh credentials, no password either key ");
-//      System.exit(-1);
+      System.exit(-1);
     }
     session.setConfig("StrictHostKeyChecking", "no");
     jsch.setKnownHosts("~/.ssh/known_hosts");
-//  }
-//    else{
-//      session = jsch.getSession(ip);
-//    }
     session.connect();
     logger.info("Securely connected to " + ip);
     //System.out.println("Connected");
@@ -991,9 +935,7 @@ public class Boot2 {
     //fix it
     HashMap<String, JsonArray> mcAddrs = new HashMap<>();
     JsonObject microclouds = new JsonObject();
-    String remoteJson = remoteExecute("localhost",
-        "sudo salt-cloud -l 'quiet' --out='json' -c " + baseDir + "salt -m " + baseDir + "salt/" + salt_file
-            + " --query\n");
+    String remoteJson = remoteExecute("localhost", "sudo salt-cloud -l 'quiet' --out='json' -c " + baseDir + "salt -m " + baseDir + "salt/" + salt_file + " --query\n");
     if (remoteJson.isEmpty())
       return null;
 

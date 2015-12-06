@@ -1,5 +1,6 @@
 package eu.leads.processor.web;
 
+import data.LineDataLoader;
 import eu.leads.processor.ResultSetIterator;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
@@ -45,7 +46,8 @@ public class MapReduceJobSubmitter {
     int port = 8080;
     String dataPath = LQPConfiguration.getInstance().getConfiguration()
         .getString("data-path", ".");  // "/home/ap0n/Desktop/tmp-dataset"
-
+    boolean loadData = LQPConfiguration.getInstance().getConfiguration().getBoolean("load-data",
+        false);
     configurationFile = LQPConfiguration.getInstance().getConfiguration().getString("configuration-path",null);
     System.out.println("data path " + dataPath);
 
@@ -62,12 +64,12 @@ public class MapReduceJobSubmitter {
     boolean combine = LQPConfiguration.getInstance().getConfiguration().getBoolean("use-combine",
         true);
     boolean recComposableReduce = LQPConfiguration.getInstance().getConfiguration()
-        .getBoolean("recComposableReduce", false);
-    System.out.println("isRecComposableReduce " + recComposableReduce);
+        .getBoolean("pipelineReduce", false);
+    System.out.println("pipelineReduce " + recComposableReduce);
 
     boolean recComposableLocalReduce = LQPConfiguration.getInstance().getConfiguration()
-        .getBoolean("recComposableLocalReduce", false);
-    System.out.println("isRecComposableLocalReduce " + recComposableLocalReduce);
+        .getBoolean("pipelineLocalReduce", false);
+    System.out.println("pipelineLocalReduce " + recComposableLocalReduce);
 
     System.out.println("use combine " + combine);
     //set the default microclouds
@@ -172,9 +174,10 @@ public class MapReduceJobSubmitter {
 
       ensembleString = ensembleString.substring(0, ensembleString.length() - 1);
 
-//      if (loadData) {
+      if (loadData) {
+        LineDataLoader.putData(dataPath,inputCache,ensembleString);
 //        putData(dataPath);
-//      }
+      }
 
       QueryStatus res = WebServiceClient.executeMapReduceJob(job.asJsonObject(), host + ":" + port);
       String id = res.getId();

@@ -141,7 +141,7 @@ public class WebServiceClient {
       String jarPath = mapReduceJob.getJarPath();
       String host = uri.substring(0,uri.lastIndexOf(":"));
       String port = uri.substring(uri.lastIndexOf(":")+1,uri.length());
-      uploadJar(host,port,"default",jarPath,"/mapreduce/"+mapReduceJob.getName()+"/",3*1024*1024);
+      uploadJar(host,port,"default",jarPath,"/mapreduce/"+mapReduceJob.getName()+"/",5*1024*1024);
     }
     URL address = new URL(uri + "/rest/mrjob/submit/");
     HttpURLConnection connection = (HttpURLConnection) address.openConnection();
