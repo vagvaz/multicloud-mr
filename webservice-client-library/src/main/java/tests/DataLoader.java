@@ -244,7 +244,7 @@ public class DataLoader {
               data = new JsonObject();
             }
 
-            if (bytesToLoad >= bytesLoaded) {
+            if (bytesToLoad <= bytesLoaded) {
               break;
             }
 
