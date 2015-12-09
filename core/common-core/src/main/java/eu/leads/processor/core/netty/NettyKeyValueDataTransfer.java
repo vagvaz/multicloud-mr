@@ -67,6 +67,7 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
    * @param isEmbedded
    */
   @Override public void initialize(EnsembleCacheManager manager, boolean isEmbedded) {
+    NettyDataTransport.initializeNodes();
     log = LoggerFactory.getLogger(this.getClass());
     batchSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.batchsize", 100);
     this.manager = manager;

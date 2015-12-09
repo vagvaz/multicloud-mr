@@ -46,6 +46,7 @@ public class NettyDataTransport {
   private static int counter = 0;
   private static Map<String,Long> histogram;
   private static Logger log = LoggerFactory.getLogger(NettyDataTransport.class);
+  private static boolean nodesInitialized = false;
 
   /**
    * Using the json object we initialize the connections, in particular we use the componentAddrs data the IPs withing
@@ -87,9 +88,12 @@ public class NettyDataTransport {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+  }
 
-
-
+  public synchronized static void initializeNodes(){
+    if(nodesInitialized){
+      return;
+    }
     JsonObject componentAddrs = globalConfiguration.getObject("componentsAddrs");
     List<String> clouds = new ArrayList(componentAddrs.getFieldNames());
     Collections.sort(clouds);
@@ -117,6 +121,7 @@ public class NettyDataTransport {
         }
       }
     }
+    nodesInitialized=true;
   }
 
   private static int getPort(String portString) {
