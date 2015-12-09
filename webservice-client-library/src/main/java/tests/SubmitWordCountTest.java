@@ -3,6 +3,8 @@ package tests;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
+import eu.leads.processor.core.netty.KeyRequest;
+import eu.leads.processor.core.netty.MRNettyClient;
 import eu.leads.processor.web.QueryStatus;
 import eu.leads.processor.web.WebServiceClient;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -41,6 +43,7 @@ public class SubmitWordCountTest {
   private static String ensembleString;
   private static Vector<File> files;
   private static String[] resultWords = {"to", "the", "of", "in", "on"};
+  private static JsonObject globalConfig;
 
 
   private static class Putter implements Runnable {
@@ -143,10 +146,23 @@ public class SubmitWordCountTest {
     host = "http://" + SOFTNET_IP;  // softnet
 
     String propertiesFile = "client.properties";
-    if (args.length != 1) {
+    if (args.length != 2) {
       PrintUsage();
     } else {
       propertiesFile = args[0];
+      File file = new File(args[1]);
+      long size = file.length();
+      try {
+        FileInputStream fis = new FileInputStream(args[1]);
+        byte[] bytes = new byte[(int)size];
+        fis.read(bytes);
+        String json = new String(bytes);
+        globalConfig = new JsonObject(json);
+      } catch (FileNotFoundException e) {
+        e.printStackTrace();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
     LQPConfiguration.getInstance().initialize();
     LQPConfiguration.getInstance().loadFile(propertiesFile);
@@ -270,7 +286,7 @@ public class SubmitWordCountTest {
         }
       }
       long end = System.currentTimeMillis();
-      printResults(id, 5);
+//      printResults(id, 5);
       verifyResults(id, resultWords, ensembleString);
       flushToFile("metrics");
       clearCache("metrics");
@@ -319,19 +335,31 @@ public class SubmitWordCountTest {
     return result;
   }
 
-  private static void verifyResults(String id, String[] resultWords, String ensembleString) {
-    EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
-    EnsembleCache cache = ensembleCacheManager
-        .getCache(id, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
-    for (String word : resultWords) {
-      Object result = getKeyFrom(cache, word);
-      if (result != null) {
-        System.out.println(word + "--->" + result.toString());
-      } else {
-        System.out.println(word + " NULL");
+  private static void verifyResults(String cache, String[] resultWords, String ensembleString) {
+//    EnsembleCacheManager ensembleCacheManager = new EnsembleCacheManager(ensembleString);
+//    EnsembleCache cache = ensembleCacheManager
+//        .getCache(id, new ArrayList<>(ensembleCacheManager.sites()), EnsembleCacheManager.Consistency.DIST);
+//    for (String word : resultWords) {
+//      Object result = getKeyFrom(cache, word);
+//      if (result != null) {
+//        System.out.println(word + "--->" + result.toString());
+//      } else {
+//        System.out.println(word + " NULL");
+//      }
+//    }
+    MRNettyClient client = new MRNettyClient(globalConfig.getObject("global"));
+      for(String word : resultWords){
+        KeyRequest keyRequest = new KeyRequest(cache,word);
+        client.request(word,keyRequest);
+        try {
+          Thread.sleep(500);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
       }
+    client.close();
     }
-  }
+
 
   private static RemoteCacheManager createRemoteCacheManager(String host) {
     ConfigurationBuilder builder = new ConfigurationBuilder();

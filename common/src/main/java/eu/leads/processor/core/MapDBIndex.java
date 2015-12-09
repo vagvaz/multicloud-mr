@@ -2,44 +2,38 @@ package eu.leads.processor.core;
 
 import eu.leads.processor.common.utils.PrintUtilities;
 import org.bson.BasicBSONEncoder;
-import org.infinispan.commons.util.Util;
-import org.iq80.leveldb.*;
-import org.slf4j.Logger;
+import org.mapdb.BTreeMap;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 
-import static org.fusesource.leveldbjni.JniDBFactory.asString;
-import static org.fusesource.leveldbjni.JniDBFactory.bytes;
 
 /**
- * Created by vagvaz on 8/17/15.
+ * Created by vagvaz on 10/11/15.
  */
-public class LevelDBIndex implements IntermediateDataIndex {
-  private static final String JNI_DB_FACTORY_CLASS_NAME = "org.fusesource.leveldbjni.JniDBFactory";
-  private static final String JAVA_DB_FACTORY_CLASS_NAME = "org.iq80.leveldb.impl.Iq80DBFactory";
+public class MapDBIndex implements IntermediateDataIndex {
   private static Tuple t;
-  private WriteOptions writeOptions;
-  private DB keysDB;
-  private DB dataDB;
+  private DB theDb;
+
+  BTreeMap<String, Integer> keysDB;
+  BTreeMap<Object, Object> dataDB;
   private File baseDirFile;
   private File keydbFile;
   private File datadbFile;
-  private Options options;
-  private LevelDBIterator keyIterator;
-  private LevelDBDataIterator valuesIterator;
-  private int batchSize = 50000;
-  private int batchCount = 0;
-  private WriteBatch batch;
-  private WriteBatch keyBatch;
-  private DBFactory dbfactory;
-  private Logger log = LoggerFactory.getLogger(LevelDBIndex.class);
-  private boolean isclosed = false;
-  //    private BasicBSONEncoder encoder = new BasicBSONEncoder();
 
-  public LevelDBIndex(String baseDir, String name) {
+  private Iterable<Map.Entry<String, Integer>> keyIterator;
+  private MapDBDataIterator valuesIterator;
+  //  private int batchSize = ;
+  private int batchCount = 0;
+
+  private org.slf4j.Logger log = LoggerFactory.getLogger(MapDBIndex.class);
+
+  public MapDBIndex(String baseDir, String name) {
     baseDirFile = new File(baseDir);
     if (baseDirFile.exists() && baseDirFile.isDirectory()) {
       for (File f : baseDirFile.listFiles()) {
@@ -49,52 +43,44 @@ public class LevelDBIndex implements IntermediateDataIndex {
     } else if (baseDirFile.exists()) {
       baseDirFile.delete();
     }
-    baseDirFile.mkdirs();
+    baseDirFile.getParentFile().mkdirs();
     keydbFile = new File(baseDirFile.toString() + "/keydb");
     datadbFile = new File(baseDirFile.toString() + "/datadb");
-    options = new Options();
-    options.writeBufferSize(50 * 1024 * 1024);
-    options.createIfMissing(true);
-    //        options.blockSize(LQPConfiguration.getInstance().getConfiguration()
-    //            .getInt("leads.processor.infinispan.leveldb.blocksize", 16)*1024*1024);
-    //        options.cacheSize(LQPConfiguration.getInstance().getConfiguration()
-    //            .getInt("leads.processor.infinispan.leveldb.cachesize", 256)*1024*1024);
-    options.blockSize(4 * 1024);
 
-    options.compressionType(CompressionType.SNAPPY);
-    options.cacheSize(64 * 1024 * 1024);
-    dbfactory = Util.getInstance(JNI_DB_FACTORY_CLASS_NAME, LevelDBIndex.class.getClassLoader());
-    //        JniDBFactory.pushMemoryPool(128*1024*1024);
+
     try {
-      keysDB = dbfactory.open(keydbFile, options.verifyChecksums(true));
-      dataDB = dbfactory.open(datadbFile, options);
-      writeOptions = new WriteOptions();
-      writeOptions.sync(false);
+      theDb = DBMaker.tempFileDB().transactionDisable().closeOnJvmShutdown().deleteFilesAfterClose().asyncWriteEnable()
+          .asyncWriteQueueSize(50000).executorEnable().make();
+      keysDB = theDb.createTreeMap(keydbFile.getName()).nodeSize(1024)
+          .make(); // /dbfactory.open(keydbFile,options.verifyChecksums(true));
+      dataDB = theDb.createTreeMap(datadbFile.getName()).nodeSize(1024).make();
 
-      batch = dataDB.createWriteBatch();
-    } catch (IOException e) {
+
+
+    } catch (Exception e) {
       e.printStackTrace();
     }
 
   }
 
   public void printKeys() {
-    DBIterator iterator = keysDB.iterator();
-    iterator.seekToFirst();
+    Iterator iterator = keysDB.descendingMap().entrySet().iterator();
+    //    iterator.seekToFirst();
     while (iterator.hasNext()) {
-      System.out.println(asString(iterator.next().getKey()));
+      Map.Entry e = (Map.Entry) iterator.next();
+      System.out.println(e.getKey() + " -> " + e.getValue());
     }
-
-    iterator = dataDB.iterator();
-    iterator.seekToFirst();
+    System.out.println("keyvalues++++++++++++++++++\n");
+    iterator = dataDB.descendingMap().entrySet().iterator();
     while (iterator.hasNext()) {
-      System.out.println(asString(iterator.next().getKey()));
+      Map.Entry e = (Map.Entry) iterator.next();
+      System.out.println(e.getKey());
     }
     System.out.println("values-------------\n");
   }
 
   @Override public Iterable<Map.Entry<String, Integer>> getKeysIterator() {
-    keyIterator = new LevelDBIterator(keysDB);
+    keyIterator = keysDB.descendingMap().entrySet();
     return keyIterator;
   }
 
@@ -102,18 +88,20 @@ public class LevelDBIndex implements IntermediateDataIndex {
     //        if(valuesIterator != null){
     //            valuesIterator.close();
     //        }
+    String realKey = key.substring(0,key.lastIndexOf("{}"));
     if (valuesIterator == null)
-      valuesIterator = new LevelDBDataIterator(dataDB, key, counter);
+      valuesIterator = new MapDBDataIterator(dataDB, realKey, counter);
     //        }
 
-    valuesIterator.initialize(key, counter);
+
+    valuesIterator.initialize(realKey, counter);
     return valuesIterator;
 
   }
 
   public static void main(String[] args) {
-    for (int i = 0; i < 100; i++) {
-      LevelDBIndex index = new LevelDBIndex("/tmp/testdb/", "mydb");
+    for (int i = 0; i < 1; i++) {
+      MapDBIndex index = new MapDBIndex("/tmp/testdb/foo/bar/lakia/ma", "mydb");
       if (t == null)
         initTuple();
       int numberofkeys = 500000;
@@ -139,7 +127,7 @@ public class LevelDBIndex implements IntermediateDataIndex {
       System.out.println("Put " + (total) + " in " + (dur) + " avg " + avg);
       int counter = 0;
 
-      //               index.printKeys();
+      //           index.printKeys();
 
       start = System.nanoTime();
       //        for(int key = 0; key < numberofkeys; key++) {
@@ -183,17 +171,14 @@ public class LevelDBIndex implements IntermediateDataIndex {
   //    80.156.73.113:11222;80.156.73.116:11222;80.156.73.123:11222;80.156.73.128:11222
   //    ;
   @Override public synchronized void flush() {
-    try {
-      if (dataDB != null) {
-        if (batch != null) {
-          dataDB.write(batch);
-          batch.close();
-          batch = dataDB.createWriteBatch();
-        }
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    //    try {
+
+    //      dataDB.write(batch);
+    //      batch.close();
+    //      batch = dataDB.createWriteBatch();
+    //    } catch (IOException e) {
+    //      e.printStackTrace();
+    //    }
     //        printKeys();
 
   }
@@ -238,7 +223,7 @@ public class LevelDBIndex implements IntermediateDataIndex {
     return t;
   }
 
-  @Override public synchronized void put(Object key, Object value) {
+  @Override public void put(Object key, Object value) {
     add(key, value);
   }
 
@@ -249,35 +234,22 @@ public class LevelDBIndex implements IntermediateDataIndex {
 
       key = keyObject.toString();
       value = (Tuple) valueObject;
-      byte[] count = keysDB.get(bytes(key + "{}"));
-      Integer counter = -1;
-      if (count == null) {
+      Integer counter = keysDB.get((key + "{}"));
+
+      if (counter == null) {
         counter = 0;
       } else {
-        //            ByteBuffer bytebuf = ByteBuffer.wrap(count);
-        counter = Integer.parseInt(new String(count));
         counter += 1;
       }
-      byte[] keyvalue = bytes(counter.toString());
-      keysDB.put(bytes(key + "{}"), keyvalue, writeOptions);
-      //        encoder = new BasicBSONEncoder();
+
+      keysDB.put(key + "{}", counter);
+
       BasicBSONEncoder encoder = new BasicBSONEncoder();
       byte[] b = encoder.encode(value.asBsonObject());
 
       //        System.out.println(b.length);
       //        dataDB.put(bytes(key+"{}"+counter),b,writeOptions);
-      batch.put(bytes(key + "{}" + counter), b);
-      batchCount++;
-      if (batchCount >= batchSize) {
-        try {
-          dataDB.write(batch, writeOptions);
-          batch.close();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-        batch = dataDB.createWriteBatch();
-        batchCount = 0;
-      }
+      dataDB.put((key + "{}" + counter), b);
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -288,59 +260,33 @@ public class LevelDBIndex implements IntermediateDataIndex {
 
   //
 
-  @Override public synchronized void close() {
-
-    if (isclosed)
-      return;
-    isclosed = true;
+  @Override public void close() {
     if (keyIterator != null) {
-      keyIterator.close();
+      //      keyIterator.close();
+
     }
     keyIterator = null;
     if (valuesIterator != null) {
-      valuesIterator.close();
-
+      //      valuesIterator.close();
     }
     valuesIterator = null;
-    if (keysDB != null) {
-      try {
-        keysDB.close();
-        dbfactory.destroy(keydbFile, new Options());
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-    keysDB = null;
-    if (dataDB != null) {
-      try {
-        if (batch != null) {
-          batch.close();
-        }
-
-        dataDB.close();
-        dbfactory.destroy(datadbFile, new Options());
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
+    //    if(keysDB != null){
+    //      try {
+    //        keysDB.close();
+    //      } catch (Exception e) {
+    //        e.printStackTrace();
+    //      }
+    //    }
+    //    keysDB = null;
+    //    if(dataDB != null){
+    //      try {
+    //        dataDB.close();
+    //      } catch (Exception e) {
+    //        e.printStackTrace();
+    //      }
+    //    }
     dataDB = null;
-    //        for(File f : keydbFile.listFiles())
-    //        {
-    //            f.delete();
-    //        }
-    //        keydbFile.delete();
-    //
-    //        for(File f : datadbFile.listFiles())
-    //        {
-    //            f.delete();
-    //        }
-    //        datadbFile.delete();
-    //
-    //        baseDirFile = new File(baseDirFile.toString()+"/");
-    //        for(File f : baseDirFile.listFiles())
-    //        {
-    //            f.delete();
-    //        }
+    theDb.close();
     if (baseDirFile.exists()) {
       baseDirFile.delete();
     }
@@ -353,7 +299,12 @@ public class LevelDBIndex implements IntermediateDataIndex {
     //        JniDBFactory.popMemoryPool();
   }
 
+  @Override public Serializable getKey(String key) {
+    return (Serializable) dataDB.get(key + "{}" + 0);
+  }
+
   @Override public void finalize() {
     System.err.println("Finalize leveldb Index " + this.baseDirFile.toString());
   }
+
 }

@@ -12,7 +12,8 @@ import java.util.List;
  */
 public class AcknowledgeDecoder extends ByteToMessageDecoder {
   @Override protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-    in.markReaderIndex();
+//    System.err.println("ACKDEC " );
+//    in.markReaderIndex();
     if(in.readableBytes() < 4){
       in.resetReaderIndex();
       return;

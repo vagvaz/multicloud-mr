@@ -57,15 +57,19 @@ public class LevelDBDataIterator implements Iterator<Object> {
 
   private boolean validateKey(byte[] key) {
     String keyString = getKey(key);
-    if (this.key.equals(keyString.split("\\{\\}")[0])) {
-      return true;
+    try {
+      if (this.key.equals(keyString)){//.substring(0, keyString.lastIndexOf("{}")))) {
+        return true;
+      }
+    }catch (Exception e){
+      System.err.println("Exception in validateKey " + keyString + e.getClass().getCanonicalName().toString() + " " + e.getMessage());
     }
     return false;
   }
 
   private String getKey(byte[] key) {
     String result = new String(key);
-    return result.split("\\{\\}")[0];
+    return result.substring(0,result.lastIndexOf("{}"));
   }
 
   @Override public void remove() {

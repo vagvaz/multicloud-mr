@@ -1,11 +1,13 @@
 package eu.leads.processor.core.netty;
 
+import eu.leads.processor.common.utils.PrintUtilities;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.CorruptedFrameException;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -13,8 +15,11 @@ import java.util.List;
  */
 public class NettyMessageDecoder  extends ByteToMessageDecoder {
   @Override protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+//    System.err.println("DEC NettyMSG " );
     // Wait until the length prefix is available.
+    in.markReaderIndex();
     if (in.readableBytes() < 5) {
+      in.markReaderIndex();
       return;
     }
 
@@ -36,6 +41,13 @@ public class NettyMessageDecoder  extends ByteToMessageDecoder {
     // Convert the received data into a new BigInteger.
     byte[] decoded = new byte[dataLength];
     in.readBytes(decoded);
-    out.add(new NettyMessage(decoded));
+    for (int i = 0; i < decoded.length; i++) {
+      if(decoded[i]  != i % 128){
+        throw new IOException("Corrupted Bytes " + i);
+      }
+    }
+    System.err.println("DEC rec " + decoded.length + " succ ");
+    return;
+//    out.add(new NettyMessage(decoded));
   }
 }

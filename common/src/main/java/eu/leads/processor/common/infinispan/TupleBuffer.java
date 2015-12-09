@@ -57,6 +57,14 @@ public class TupleBuffer {
     BSONDecoder decoder = new BasicBSONDecoder();
     buffer = new HashMap<>();
     //        int compressedSize = in.readInt();
+//    if(buffer != null){
+//      for (int i = 0; i < bytes.length; i++) {
+//        if(bytes[i]  != i % 128){
+//          throw new IOException("Corrupted Bytes " + i);
+//        }
+//      }
+//      return;
+//    }
     byte[] compressed = bytes;//new byte[compressedSize];
     byte[] uncompressed = Snappy.uncompress(compressed);
     try {
@@ -85,77 +93,6 @@ public class TupleBuffer {
     }
   }
 
-  public TupleBuffer(byte[] bytes,boolean iscompressed) {
-    BSONDecoder decoder = new BasicBSONDecoder();
-    buffer = new HashMap<>();
-    //        int compressedSize = in.readInt();
-    byte[] compressed = bytes;//new byte[compressedSize];
-    byte[] uncompressed = null;
-    try {
-      if(iscompressed) {
-        uncompressed = Snappy.uncompress(compressed);
-      } else{
-        uncompressed = bytes;
-      }
-      ByteArrayInputStream byteStream = new ByteArrayInputStream(uncompressed);
-      ObjectInputStream inputStream = new ObjectInputStream(byteStream);
-      int size = inputStream.readInt();
-      for (int index = 0; index < size; index++) {
-        Object key = inputStream.readObject();
-        //                int tupleBytesSize = inputStream.readInt();
-        //                byte[] tupleBytes = new byte[tupleBytesSize];
-        //                inputStream.read(tupleBytes);
-        //                Tuple tuple = new Tuple(decoder.readObject(tupleBytes));
-        Object tuple = inputStream.readObject();
-        buffer.put(key, tuple);
-      }
-      inputStream.close();
-      byteStream.close();
-
-      inputStream = null;
-      byteStream = null;
-      //      ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
-      this.keyValueDataTransfer = keyValueDataTransfer;
-      //      localAddress = InfinispanClusterSingleton.getInstance().getManager().getMemberName();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
-  //  public TupleBuffer(int threshold){
-  //    buffer = new HashMap<>();
-  //    this.threshold = threshold;
-  //    localCounter = 0;
-  //    uuid = UUID.randomUUID().toString();
-  //    batchThreshold = LQPConfiguration.getInstance().getConfiguration().getInt(
-  //        "node.ensemble.batchput.batchsize", batchThreshold);
-  ////    nodeMaps = new HashMap<>();
-  ////    localAddress = InfinispanClusterSingleton.getInstance().getManager().getMemberName();
-  //  }
-
-  //  public TupleBuffer(int threshold, BasicCache cache, EnsembleCacheManager ensembleCacheManager,EnsembleCacheUtilsSingle ensembleCacheUtilsSingle) {
-  //    this.ensembleCacheUtilsSingle = ensembleCacheUtilsSingle;
-  //    //    this.ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
-  //    this.threshold = threshold;
-  //    buffer = new HashMap<>();
-  //    this.emanager = ensembleCacheManager;
-  //    this.ensembleCache = emanager.getCache(cache.getName()+".compressed", new ArrayList<>(ensembleCacheManager.sites()),
-  //        EnsembleCacheManager.Consistency.DIST);
-  ////    nodeMaps = new HashMap<>();
-  ////    localAddress = InfinispanClusterSingleton.getInstance().getManager().getMemberName();
-  //    if(cache instanceof Cache){
-  //      localCache = (Cache) cache;
-  ////      distMan = localCache.getAdvancedCache().getDistributionManager();
-  ////      for(Address address :((Cache) cache).getAdvancedCache().getRpcManager().getMembers()){
-  ////        nodeMaps.put(address.toString(),new HashMap<Object, Object>());
-  ////      }
-  //    }
-  //    localCounter = 0;
-  //    this.cacheName = cache.getName();
-  //    uuid = UUID.randomUUID().toString();
-  //    batchThreshold = LQPConfiguration.getInstance().getConfiguration().getInt(
-  //        "node.ensemble.batchput.batchsize", batchThreshold);
-  //
-  //  }
 
   public TupleBuffer(int threshold, String cacheName, EnsembleCacheManager ensembleCacheManager, String mc,
       KeyValueDataTransfer keyValueDataTransfer) {
@@ -286,6 +223,13 @@ public class TupleBuffer {
 
 
   public byte[] serialize() {
+//    byte[] foo = new byte[961];
+//    if(foo != null){
+//      for(int i =0; i < foo.length;i++){
+//        foo[i] = (byte) (i % 128);
+//      }
+//      return foo;
+//    }
     synchronized (mutex) {
       try {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();

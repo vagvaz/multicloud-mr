@@ -6,6 +6,7 @@ import eu.leads.processor.common.infinispan.TupleBuffer;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
+import io.netty.channel.Channel;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.ensemble.EnsembleCacheManager;
 import org.infinispan.ensemble.Site;
@@ -13,10 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -72,16 +70,18 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
     log = LoggerFactory.getLogger(this.getClass());
     batchSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.batchsize", 100);
     this.manager = manager;
-    nodes = new ArrayList<>();
-    nodeMaps = new HashMap<>();
-    for(Site site : manager.sites()){
+    TreeMap map = (TreeMap) NettyDataTransport.getNodes();
 
-      for(String nodeURI : site.getName().split(";")){
-        String nodeId = nodeURI.split(":")[0];
-        nodes.add(nodeId);
+    nodes = new ArrayList<>(new TreeSet(map.descendingKeySet()));
+    nodeMaps = new HashMap<>();
+    for(String nodeId : nodes){
+//
+//        nodes.add(nodeId);
         nodeMaps.put(nodeId, new HashMap<String, TupleBuffer>());
       }
-    }
+//    }
+
+
   }
 
   /**
@@ -151,13 +151,6 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
     }
     if(buffer.add(key,value)){
       byte[] bytes = buffer.serialize();
-      try {
-        TupleBuffer tupleBuffer = new TupleBuffer(bytes);
-      } catch (IOException e) {
-        e.printStackTrace();
-      } catch (ClassNotFoundException e) {
-        e.printStackTrace();
-      }
       NettyDataTransport.send(target,buffer.getCacheName(),bytes);
     }
   }

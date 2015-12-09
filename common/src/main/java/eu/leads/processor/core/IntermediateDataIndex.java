@@ -1,5 +1,6 @@
 package eu.leads.processor.core;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -18,4 +19,6 @@ public interface IntermediateDataIndex {
   void put(Object key, Object value);
 
   void close();
+
+  Serializable getKey(String key);
 }

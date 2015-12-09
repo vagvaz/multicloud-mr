@@ -24,13 +24,15 @@ public class AcknowledgeHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) {
     ack++;
-    PrintUtilities.printAndLog(log,"Acked: " + ack);
+//    System.err.println("AckHandler " );
+//    PrintUtilities.printAndLog(log,"Acked: " + ack);
     AcknowledgeMessage buf = (AcknowledgeMessage) msg;
     NettyDataTransport.acknowledge(owner,buf.getAckMessageId());
   }
 
   @Override
   public void channelReadComplete(ChannelHandlerContext ctx) {
+//    System.err.println("AckREADComplet " );
     ctx.flush();
   }
 

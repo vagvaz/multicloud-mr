@@ -8,7 +8,7 @@ import java.nio.ByteBuffer;
 /**
  * Created by vagvaz on 11/25/15.
  */
-public class NettyMessage {
+public class NettyMessage implements Serializable {
   private int messageId;
   String cacheName;
   byte[] bytes;

@@ -49,7 +49,7 @@ public class MapDBDataIterator implements Iterator {
 
   private boolean validateKey(String key) {
     String keyString = key;
-    if (this.key.equals(keyString.split("\\{\\}")[0])) {
+    if (this.key.equals(keyString.substring(0,keyString.lastIndexOf("{}")))) {
       return true;
     }
     return false;

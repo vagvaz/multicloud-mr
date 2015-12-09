@@ -65,7 +65,7 @@ public class NettyDataTransport {
     clientChannelInitializer = new NettyClientChannelInitializer();
     serverChannelInitializer = new NettyServerChannelInitializer();
     pending = new HashMap<>();
-    nodes = new HashMap<>();
+    nodes = new TreeMap<>();
     channelFutures = new HashSet<>();
     histogram = new HashMap<>();
 
@@ -91,7 +91,9 @@ public class NettyDataTransport {
 
 
     JsonObject componentAddrs = globalConfiguration.getObject("componentsAddrs");
-    for(String microCloud : componentAddrs.getFieldNames()){
+    List<String> clouds = new ArrayList(componentAddrs.getFieldNames());
+    Collections.sort(clouds);
+    for(String microCloud : clouds ){
       JsonArray array = componentAddrs.getArray(microCloud);
       String microCloudIPs = array.get(0);
       String[] URIs = microCloudIPs.split(";");
@@ -172,7 +174,7 @@ public class NettyDataTransport {
     ChannelFuture f = nodes.get(target);
     pending.get(f.channel()).add(nettyMessage.getMessageId());
     updateHistogram(target,bytes);
-    f.channel().writeAndFlush(nettyMessage);
+    f.channel().writeAndFlush(nettyMessage,f.channel().voidPromise());
   }
 
   private static void updateHistogram(String target, byte[] bytes) {
@@ -210,7 +212,7 @@ public class NettyDataTransport {
         try {
           PrintUtilities.printAndLog(log,"Waiting " + entry.getKey().remoteAddress().toString() + " " + entry.getValue().size());
 //          PrintUtilities.printList(entry.getValue());
-          Thread.sleep(Math.max(entry.getValue().size(),100));
+          Thread.sleep(Math.min(Math.max(entry.getValue().size(),100),5000));
         } catch (InterruptedException e) {
           e.printStackTrace();
         }
@@ -220,5 +222,9 @@ public class NettyDataTransport {
 
   public static synchronized void acknowledge(Channel owner, int ackMessageId) {
     pending.get(owner).remove(ackMessageId);
+  }
+
+  public static Map<String, ChannelFuture> getNodes() {
+    return nodes;
   }
 }
