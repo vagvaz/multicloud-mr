@@ -42,7 +42,12 @@ public class NettyNodeTest {
     /**
      * !!NETTY new code for the new
      */
-    IndexManager.initialize(new Properties());
+    boolean useleveld = LQPConfiguration.getInstance().getConfiguration().getBoolean("index.use.leveldb",true);
+    if(useleveld){
+      IndexManager.initialize(new Properties());
+    }else {
+      IndexManager.initialize(null);
+    }
     NettyDataTransport.initialize(globalConfig);
     /**
      * END OF CODE
