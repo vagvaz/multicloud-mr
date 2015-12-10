@@ -175,8 +175,12 @@ public class NQEProcessorWorker extends Verticle implements Handler<Message<Json
     /**
      * !!NETTY new code for the new
      */
-    IndexManager.initialize(new Properties());
-    NettyDataTransport.initialize(globalConfig);
+    boolean useleveld = LQPConfiguration.getInstance().getConfiguration().getBoolean("index.use.leveldb",true);
+    if(useleveld){
+      IndexManager.initialize(new Properties());
+    }else {
+      IndexManager.initialize(null);
+    }    NettyDataTransport.initialize(globalConfig);
     /**
      * END OF CODE
      */

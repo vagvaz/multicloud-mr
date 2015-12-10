@@ -7,9 +7,6 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.*;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -77,12 +74,12 @@ public class NettyDataTransport {
 
     clientBootstrap = new Bootstrap();
     serverBootstrap = new ServerBootstrap();
-    workerGroup = new EpollEventLoopGroup();
-    bossGroup = new EpollEventLoopGroup();
+    workerGroup = new NioEventLoopGroup();
+    bossGroup = new NioEventLoopGroup();
     clientBootstrap.group(workerGroup);
-    clientBootstrap.channel(EpollSocketChannel.class);
+    clientBootstrap.channel(NioSocketChannel.class);
     clientBootstrap.option(ChannelOption.SO_KEEPALIVE,true).handler(clientChannelInitializer);
-    serverBootstrap.group(bossGroup,workerGroup).channel(EpollServerSocketChannel.class)
+    serverBootstrap.group(bossGroup,workerGroup).channel(NioServerSocketChannel.class)
         .option(ChannelOption.SO_BACKLOG,128)
         .option(ChannelOption.SO_REUSEADDR,true)
         .childOption(ChannelOption.SO_KEEPALIVE,true)
