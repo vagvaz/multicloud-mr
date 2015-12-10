@@ -184,6 +184,9 @@ import java.util.Queue;
     if (isClosed)
       return;
     isClosed = true;
+    if(isClosed){
+      return;
+    }
     synchronized (mutex) {
       mutex.notify();
     }
