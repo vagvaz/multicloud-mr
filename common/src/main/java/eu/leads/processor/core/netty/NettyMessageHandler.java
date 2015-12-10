@@ -17,14 +17,24 @@ import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by vagvaz on 11/25/15.
  */
 public class NettyMessageHandler extends ChannelInboundHandlerAdapter {
   private Logger log = LoggerFactory.getLogger(this.getClass());
+  ThreadPoolExecutor threadPoolExecutor;
   int received = 0;
   int replied = 0;
+
+  public NettyMessageHandler() {
+    threadPoolExecutor = new ThreadPoolExecutor(4,8,1000, TimeUnit.MILLISECONDS,  new LinkedBlockingDeque<Runnable>());
+  }
+
   @Override public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 //    System.err.println("NEtyyHandler " );
       if(msg instanceof AcknowledgeMessage){
@@ -32,38 +42,12 @@ public class NettyMessageHandler extends ChannelInboundHandlerAdapter {
         NettyDataTransport.acknowledge(ctx.channel(),ack.getAckMessageId());
       }
       else if(msg instanceof  NettyMessage) {
-        try {
           received++;
+
+
           NettyMessage nettyMessage = (NettyMessage) msg;
-          String indexName = nettyMessage.getCacheName();
-          //        byte[] bytes = Snappy.uncompress( nettyMessage.getBytes());
-          //        ByteArrayInputStream byteArray = new ByteArrayInputStream(bytes);
-          //        ObjectInputStream ois = new ObjectInputStream(byteArray);
-          //        Object firstObject = ois.readObject();
-          //        if(firstObject instanceof TupleBuffer){
-          try {
-            TupleBuffer buffer = new TupleBuffer(nettyMessage.getBytes());//(TupleBuffer)firstObject;
-            for (Map.Entry<Object, Object> entry : buffer.getBuffer().entrySet()) {
-              IndexManager.addToIndex(indexName, entry.getKey(), entry.getValue());
-            }
-          } catch (Exception e) {
-            PrintUtilities.printAndLog(log,
-                "MessageID " + nettyMessage.getMessageId() + " cache " + nettyMessage.getCacheName() + " bytes lenght" + nettyMessage.getBytes().length);
-            PrintUtilities.printAndLog(log, e.getMessage());
-            PrintUtilities.logStackTrace(log, e.getStackTrace());
-          }
-
-
-          //        } else if(firstObject instanceof String || firstObject instanceof ComplexIntermediateKey){
-          //          Object secondObject = ois.readObject();
-          //          IndexManager.addToIndex(indexName,firstObject,secondObject);
-          //        } else{
-          //          PrintUtilities.printAndLog(log,"Unknown class in NettyMessage " + firstObject.getClass().toString());
-          //        }
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-        replyForMessage(ctx, (NettyMessage) msg);
+          NettyMessageRunnable runnable = new NettyMessageRunnable(ctx,nettyMessage);
+          threadPoolExecutor.submit(runnable);
       }
       else if (msg instanceof KeyRequest){
         KeyRequest keyRequest = (KeyRequest)msg;

@@ -356,6 +356,7 @@ public class LevelDBIndex implements IntermediateDataIndex {
   }
 
   @Override public Serializable getKey(String key) {
+    this.flush();
     byte[] values = dataDB.get(bytes(key + "{}"+0));
     if(values == null){
       return null;
