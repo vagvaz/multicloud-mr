@@ -65,6 +65,13 @@ public class IndexManager {
   }
 
   public static IntermediateDataIndex getIndex(String indexName) {
-    return indexes.get(indexName);
+    IntermediateDataIndex index = indexes.get(indexName);
+    if (index == null) {
+      synchronized (indexes) {
+        index = initializeIndex(indexName);
+        indexes.put(indexName, index);
+      }
+    }
+    return index;
   }
 }
