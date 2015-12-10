@@ -7,6 +7,9 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.*;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -74,12 +77,12 @@ public class NettyDataTransport {
 
     clientBootstrap = new Bootstrap();
     serverBootstrap = new ServerBootstrap();
-    workerGroup = new NioEventLoopGroup();
-    bossGroup = new NioEventLoopGroup();
+    workerGroup = new EpollEventLoopGroup();
+    bossGroup = new EpollEventLoopGroup();
     clientBootstrap.group(workerGroup);
-    clientBootstrap.channel(NioSocketChannel.class);
+    clientBootstrap.channel(EpollSocketChannel.class);
     clientBootstrap.option(ChannelOption.SO_KEEPALIVE,true).handler(clientChannelInitializer);
-    serverBootstrap.group(bossGroup,workerGroup).channel(NioServerSocketChannel.class)
+    serverBootstrap.group(bossGroup,workerGroup).channel(EpollServerSocketChannel.class)
         .option(ChannelOption.SO_BACKLOG,128)
         .option(ChannelOption.SO_REUSEADDR,true)
         .childOption(ChannelOption.SO_KEEPALIVE,true)
@@ -181,7 +184,7 @@ public class NettyDataTransport {
     ChannelFuture f = nodes.get(target);
     pending.get(f.channel()).add(nettyMessage.getMessageId());
     updateHistogram(target,bytes);
-    f.channel().writeAndFlush(nettyMessage,f.channel().voidPromise());
+    f.channel().write(nettyMessage,f.channel().voidPromise());
   }
 
   private static void updateHistogram(String target, byte[] bytes) {
@@ -214,6 +217,9 @@ public class NettyDataTransport {
   }
 
   public static void waitEverything() {
+    for(Map.Entry<String,ChannelFuture> entry: nodes.entrySet()){
+      entry.getValue().channel().flush();
+    }
     for(Map.Entry<Channel,Set<Integer>> entry : pending.entrySet()){
       entry.getKey().flush();
       while(entry.getValue().size() > 0 ){
