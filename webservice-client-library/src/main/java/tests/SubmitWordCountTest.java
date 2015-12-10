@@ -42,7 +42,7 @@ public class SubmitWordCountTest {
   private static String webserviceAddress;
   private static String ensembleString;
   private static Vector<File> files;
-  private static String[] resultWords = {"to", "the", "of", "in", "on"};
+  private static String[] resultWords = {"recovered,","recovered.","0.0246","1997–98","to", "the", "of", "in", "on"};
   private static JsonObject globalConfig;
 
 
@@ -252,7 +252,6 @@ public class SubmitWordCountTest {
 
     JsonObject targetEndpoints = scheduling;
     jsonObject.getObject("operator").putObject("targetEndpoints", targetEndpoints);
-
 
     try {
       ensembleString = "";

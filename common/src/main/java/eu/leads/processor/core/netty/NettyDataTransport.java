@@ -15,11 +15,13 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.jboss.marshalling.serial.Serial;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.vertx.java.core.impl.ConcurrentHashSet;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class is used to actually transfer/receive data from other nodes.
@@ -43,7 +45,7 @@ public class NettyDataTransport {
   private static NettyClientChannelInitializer clientChannelInitializer;
   private static NettyServerChannelInitializer serverChannelInitializer;
   private static ChannelFuture serverFuture;
-  private static int counter = 0;
+  private static AtomicInteger counter = new AtomicInteger(0);
   private static Map<String,Long> histogram;
   private static Logger log = LoggerFactory.getLogger(NettyDataTransport.class);
   private static boolean nodesInitialized = false;
@@ -112,7 +114,7 @@ public class NettyDataTransport {
 
             ok = true;
             nodes.put(host,f);
-            pending.put(f.channel(),new HashSet<Integer>(100));
+            pending.put(f.channel(),new ConcurrentHashSet<Integer>(100));
             channelFutures.add(f);
             histogram.put(host,0L);
           } catch (Exception e) {
@@ -188,9 +190,10 @@ public class NettyDataTransport {
     histogram.put(target,tmp);
   }
 
-  private static synchronized int getCounter() {
-    counter = (counter+1) % Integer.MAX_VALUE;
-    return counter;
+  private static  int getCounter() {
+//    counter = (counter+1) % Integer.MAX_VALUE;
+//    return counter;
+    return counter.addAndGet(1);
   }
 
   /**
@@ -225,7 +228,7 @@ public class NettyDataTransport {
     }
   }
 
-  public static synchronized void acknowledge(Channel owner, int ackMessageId) {
+  public static void acknowledge(Channel owner, int ackMessageId) {
     pending.get(owner).remove(ackMessageId);
   }
 

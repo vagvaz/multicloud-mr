@@ -2,6 +2,7 @@ package eu.leads.processor.core.netty;
 
 import eu.leads.processor.common.infinispan.TupleBuffer;
 import eu.leads.processor.common.utils.PrintUtilities;
+import eu.leads.processor.core.IntermediateDataIndex;
 import eu.leads.processor.infinispan.ComplexIntermediateKey;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -67,8 +68,13 @@ public class NettyMessageHandler extends ChannelInboundHandlerAdapter {
       else if (msg instanceof KeyRequest){
         KeyRequest keyRequest = (KeyRequest)msg;
         if(keyRequest.getValue() == null){
-          Serializable value = IndexManager.getIndex(keyRequest.getCache()).getKey(keyRequest.getKey());
-          keyRequest.setValue(value);
+          IntermediateDataIndex index = IndexManager.getIndex(keyRequest.getCache());
+          if(index != null) {
+            Serializable value = index.getKey(keyRequest.getKey());
+            keyRequest.setValue(value);
+          } else{
+            keyRequest.setValue("");
+          }
           ctx.writeAndFlush(keyRequest);
         }else{
           System.err.println("key-request-arrived: " + keyRequest.getKey() + "-->" + keyRequest.getValue().toString());
