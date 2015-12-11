@@ -5,6 +5,7 @@ import eu.leads.processor.common.StringConstants;
 import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.Tuple;
+import eu.leads.processor.core.netty.IndexManager;
 import org.infinispan.Cache;
 import org.infinispan.commands.RemoveCacheCommand;
 import org.infinispan.configuration.cache.CacheMode;
@@ -652,6 +653,7 @@ public class ClusterInfinispanManager implements InfinispanManager {
   private void removeCache(String name) {
 
     System.err.println("------REMOVE " + name);
+    IndexManager.removeIndex(name);
     DistributedExecutorService des = new DefaultExecutorService(manager.getCache());
     List<Future<Void>> list = des.submitEverywhere(new StopCacheCallable(name));
     for (Future<Void> future : list) {

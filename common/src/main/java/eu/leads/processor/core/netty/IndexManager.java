@@ -74,4 +74,25 @@ public class IndexManager {
     }
     return index;
   }
+
+  public static void removeIndex(String name) {
+
+    if(name.endsWith(".data")){
+
+      for (int i = 0; i < parallelism; i++) {
+        IntermediateDataIndex index = indexes.get(name+i);
+        if(index != null)
+        {
+          index.close();
+        }
+      }
+      return;
+    }else{
+      IntermediateDataIndex index = indexes.get(name);
+      if(index != null){
+        index.close();
+      }
+
+    }
+  }
 }

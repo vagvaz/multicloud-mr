@@ -3,10 +3,14 @@ package eu.leads.processor.core.netty;
 import eu.leads.processor.common.infinispan.ClusterInfinispanManager;
 import eu.leads.processor.common.infinispan.InfinispanClusterSingleton;
 import eu.leads.processor.common.utils.PrintUtilities;
+import eu.leads.processor.conf.LQPConfiguration;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.*;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -73,13 +77,15 @@ public class NettyDataTransport {
     histogram = new HashMap<>();
 
     clientBootstrap = new Bootstrap();
-    serverBootstrap = new ServerBootstrap();
-    workerGroup = new NioEventLoopGroup();
-    bossGroup = new NioEventLoopGroup();
-    clientBootstrap.group(workerGroup);
-    clientBootstrap.channel(NioSocketChannel.class);
+    serverBootstrap = new ServerBootstrap(  );
+    workerGroup = new EpollEventLoopGroup(LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.threads", 100),null,256);
+    EventLoopGroup clientGroup = new EpollEventLoopGroup(LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.threads", 100),null,256);
+    bossGroup = new EpollEventLoopGroup();
+
+    clientBootstrap.group(clientGroup);
+    clientBootstrap.channel(EpollSocketChannel.class);
     clientBootstrap.option(ChannelOption.SO_KEEPALIVE,true).handler(clientChannelInitializer);
-    serverBootstrap.group(bossGroup,workerGroup).channel(NioServerSocketChannel.class)
+    serverBootstrap.group(bossGroup,workerGroup).channel(EpollServerSocketChannel.class)
         .option(ChannelOption.SO_BACKLOG,128)
         .option(ChannelOption.SO_REUSEADDR,true)
         .childOption(ChannelOption.SO_KEEPALIVE,true)

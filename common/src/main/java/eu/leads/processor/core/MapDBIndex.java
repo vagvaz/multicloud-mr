@@ -1,6 +1,7 @@
 package eu.leads.processor.core;
 
 import eu.leads.processor.common.utils.PrintUtilities;
+import org.bson.BasicBSONDecoder;
 import org.bson.BasicBSONEncoder;
 import org.mapdb.BTreeMap;
 import org.mapdb.DB;
@@ -28,6 +29,7 @@ public class MapDBIndex implements IntermediateDataIndex {
 
   private Iterable<Map.Entry<String, Integer>> keyIterator;
   private MapDBDataIterator valuesIterator;
+  boolean closed = false;
   //  private int batchSize = ;
   private int batchCount = 0;
 
@@ -80,7 +82,7 @@ public class MapDBIndex implements IntermediateDataIndex {
   }
 
   @Override public Iterable<Map.Entry<String, Integer>> getKeysIterator() {
-    keyIterator = keysDB.descendingMap().entrySet();
+    keyIterator = new MapDBKeyIterator(keysDB.descendingMap().entrySet());
     return keyIterator;
   }
 
@@ -88,7 +90,7 @@ public class MapDBIndex implements IntermediateDataIndex {
     //        if(valuesIterator != null){
     //            valuesIterator.close();
     //        }
-    String realKey = key.substring(0,key.lastIndexOf("{}"));
+    String realKey = key;// key.substring(0,key.lastIndexOf("{}"));
     if (valuesIterator == null)
       valuesIterator = new MapDBDataIterator(dataDB, realKey, counter);
     //        }
@@ -260,7 +262,11 @@ public class MapDBIndex implements IntermediateDataIndex {
 
   //
 
-  @Override public void close() {
+  @Override public synchronized void close() {
+    if(this.closed){
+      return;
+    }
+    closed = true;
     if (keyIterator != null) {
       //      keyIterator.close();
 
@@ -300,7 +306,10 @@ public class MapDBIndex implements IntermediateDataIndex {
   }
 
   @Override public Serializable getKey(String key) {
-    return (Serializable) dataDB.get(key + "{}" + 0);
+    byte[] bytes = (byte[]) dataDB.get(key + "{}" + 0);
+    BasicBSONDecoder decoder = new BasicBSONDecoder();
+    Serializable result = (Serializable) decoder.readObject(bytes);
+    return result;
   }
 
   @Override public void finalize() {
