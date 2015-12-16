@@ -308,8 +308,12 @@ public class MapDBIndex implements IntermediateDataIndex {
   @Override public Serializable getKey(String key) {
     byte[] bytes = (byte[]) dataDB.get(key + "{}" + 0);
     BasicBSONDecoder decoder = new BasicBSONDecoder();
-    Serializable result = (Serializable) decoder.readObject(bytes);
-    return result;
+    if(bytes != null) {
+      Serializable result = (Serializable) decoder.readObject(bytes);
+      return result;
+    } else{
+      return new Tuple();
+    }
   }
 
   @Override public void finalize() {

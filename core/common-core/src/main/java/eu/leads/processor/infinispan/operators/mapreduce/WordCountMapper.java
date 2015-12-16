@@ -11,7 +11,7 @@ import org.vertx.java.core.json.JsonObject;
 public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
 
   int w = 0;
-
+  boolean shouldEmit = true;
   public WordCountMapper(JsonObject configuration) {
     super(configuration);
   }
@@ -23,6 +23,13 @@ public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
   public WordCountMapper() {
   }
 
+  @Override public void initialize() {
+    super.initialize();
+    if(conf.containsField("emit")) {
+      shouldEmit = conf.getBoolean("emit", true);
+    }
+  }
+
   @Override public void map(String key, Tuple value, Collector<String, Tuple> collector) {
     //    System.out.println(getClass().getName() + ".map!");
     for (String attribute : value.getFieldNames()) {
@@ -30,7 +37,9 @@ public class WordCountMapper extends LeadsMapper<String, Tuple, String, Tuple> {
         if (word != null && word.length() > 0) {
           Tuple outputTuple = new Tuple();
           outputTuple.setAttribute("count", 1);
-          collector.emit(word, outputTuple);
+          if(shouldEmit) {
+            collector.emit(word, outputTuple);
+          }
         }
       }
     }

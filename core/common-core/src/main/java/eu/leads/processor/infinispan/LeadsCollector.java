@@ -47,6 +47,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   protected Map<KOut, List<VOut>> combinedValues;
   private KeyValueDataTransfer keyValueDataTransfer;
   private LocalCollector localCollector;
+  private boolean dontCombine = false;
 
   public LeadsCollector(int maxCollectorSize, String collectorCacheName) {
     super();
@@ -218,7 +219,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     localCollector = new LocalCollector(0, "");
     maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize", 10000);
     percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent", 75);
-
+    dontCombine = LQPConfiguration.getInstance().getConfiguration().getBoolean("node.combiner.nocombine",false);
     /**
      * !!NETTY new code for the new
      */
@@ -256,13 +257,21 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
         output(key, value);
       } else {
         if (useCombiner) {
+          boolean newKey = false;
           List<VOut> values = buffer.get(key);
           if (values == null) {
+            newKey = true;
             values = new LinkedList<>();
             buffer.put(key, values);
           }
-          values.add(value);
-          emitCount++;
+          if(dontCombine){
+            if(!newKey){
+              return;
+            }
+          }
+            values.add(value);
+            emitCount++;
+
           if (isOverflown()) {
             combine(false);
           }
@@ -286,11 +295,17 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     //    log.error("Run combine " + maxCollectorSize + " " + buffer.size());
     localCollector = new LocalCollector(0, "");
     int lastSize = emitCount;
-    for (Map.Entry<KOut, List<VOut>> entry : buffer.entrySet()) {
-      combiner.reduce(entry.getKey(), entry.getValue().iterator(), localCollector);
+    if(!dontCombine) {
+      for (Map.Entry<KOut, List<VOut>> entry : buffer.entrySet()) {
+        combiner.reduce(entry.getKey(), entry.getValue().iterator(), localCollector);
+      }
     }
-
-    Map<KOut, List<VOut>> combinedValues = localCollector.getCombinedValues();
+    Map<KOut, List<VOut>> combinedValues = null;
+    if(!dontCombine) {
+     combinedValues = localCollector.getCombinedValues();
+    } else{
+      combinedValues = buffer;
+    }
     if (force || (combinedValues.size() >= maxCollectorSize * percent) || (lastSize * percent <= combinedValues
         .size())) {
       //      PrintUtilities.printAndLog(log,"Flush " + combinedValues.size() + " " + lastSize);
@@ -323,9 +338,9 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     //      remoteData += value.toString().length();
     //    }
 
-    synchronized (mutex) {
+//    synchronized (mutex) {
       counter++;
-    }
+//    }
     baseIntermKey.setKey(key.toString());
     baseIntermKey.setCounter(counter);
     ComplexIntermediateKey newKey =

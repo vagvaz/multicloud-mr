@@ -8,9 +8,6 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.*;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -53,6 +50,7 @@ public class NettyDataTransport {
   private static Map<String,Long> histogram;
   private static Logger log = LoggerFactory.getLogger(NettyDataTransport.class);
   private static boolean nodesInitialized = false;
+  private static boolean discard = false;
 
   /**
    * Using the json object we initialize the connections, in particular we use the componentAddrs data the IPs withing
@@ -69,6 +67,7 @@ public class NettyDataTransport {
    */
   public static void initialize(JsonObject globalConfiguration) {
     NettyDataTransport.globalConfiguration = globalConfiguration;
+    discard = LQPConfiguration.getInstance().getConfiguration().getBoolean("transfer.discard",false);
     clientChannelInitializer = new NettyClientChannelInitializer();
     serverChannelInitializer = new NettyServerChannelInitializer();
     pending = new HashMap<>();
@@ -77,19 +76,17 @@ public class NettyDataTransport {
     histogram = new HashMap<>();
 
     clientBootstrap = new Bootstrap();
-    serverBootstrap = new ServerBootstrap(  );
-    workerGroup = new EpollEventLoopGroup(LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.threads", 100),null,256);
-    EventLoopGroup clientGroup = new EpollEventLoopGroup(LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.threads", 100),null,256);
-    bossGroup = new EpollEventLoopGroup();
-
-    clientBootstrap.group(clientGroup);
-    clientBootstrap.channel(EpollSocketChannel.class);
+    serverBootstrap = new ServerBootstrap();
+    workerGroup = new NioEventLoopGroup();
+    bossGroup = new NioEventLoopGroup();
+    clientBootstrap.group(workerGroup);
+    clientBootstrap.channel(NioSocketChannel.class);
     clientBootstrap.option(ChannelOption.SO_KEEPALIVE,true).handler(clientChannelInitializer);
-    serverBootstrap.group(bossGroup,workerGroup).channel(EpollServerSocketChannel.class)
+    serverBootstrap.group(bossGroup,workerGroup).channel(NioServerSocketChannel.class)
         .option(ChannelOption.SO_BACKLOG,128)
         .option(ChannelOption.SO_REUSEADDR,true)
         .childOption(ChannelOption.SO_KEEPALIVE,true)
-//        .childOption(ChannelOption.SO_RCVBUF,2*1024*1024)
+        //        .childOption(ChannelOption.SO_RCVBUF,2*1024*1024)
         .childHandler(serverChannelInitializer);
     try {
       serverFuture = serverBootstrap.bind(getPort()).sync();
@@ -185,9 +182,13 @@ public class NettyDataTransport {
   public static void send(String target, String cacheName, byte[] bytes) {
     NettyMessage nettyMessage = new NettyMessage(cacheName,bytes,getCounter());
     ChannelFuture f = nodes.get(target);
-    pending.get(f.channel()).add(nettyMessage.getMessageId());
-    updateHistogram(target,bytes);
-    f.channel().write(nettyMessage,f.channel().voidPromise());
+    if(!discard) {
+      pending.get(f.channel()).add(nettyMessage.getMessageId());
+
+      updateHistogram(target, bytes);
+
+      f.channel().write(nettyMessage, f.channel().voidPromise());
+    }
   }
 
   private static void updateHistogram(String target, byte[] bytes) {
@@ -197,8 +198,8 @@ public class NettyDataTransport {
   }
 
   private static  int getCounter() {
-//    counter = (counter+1) % Integer.MAX_VALUE;
-//    return counter;
+    //    counter = (counter+1) % Integer.MAX_VALUE;
+    //    return counter;
     return counter.addAndGet(1);
   }
 
@@ -228,7 +229,7 @@ public class NettyDataTransport {
       while(entry.getValue().size() > 0 ){
         try {
           PrintUtilities.printAndLog(log,"Waiting " + entry.getKey().remoteAddress().toString() + " " + entry.getValue().size());
-//          PrintUtilities.printList(entry.getValue());
+          //          PrintUtilities.printList(entry.getValue());
           Thread.sleep(Math.min(Math.max(entry.getValue().size(),100),5000));
         } catch (InterruptedException e) {
           e.printStackTrace();

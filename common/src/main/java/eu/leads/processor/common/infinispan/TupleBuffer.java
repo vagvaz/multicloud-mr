@@ -28,6 +28,9 @@ import java.util.*;
 public class TupleBuffer {
   ;
   HashMap<Object, Object> buffer;
+  ByteArrayOutputStream bufferBos;
+  ObjectOutputStream objectBufferOos;
+
   private transient int threshold;
   private transient EnsembleCacheManager emanager;
   private transient EnsembleCache ensembleCache;
