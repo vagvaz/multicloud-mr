@@ -222,7 +222,7 @@ public class SubmitWordCountTest {
 
     JsonObject jsonObject = new JsonObject();
     jsonObject.putObject("operator", new JsonObject());
-    jsonObject.getObject("operator").putObject("configuration", new JsonObject());
+    jsonObject.getObject("operator").putObject("configuration", new JsonObject().putBoolean("emit",true));
     jsonObject.getObject("operator").putString("name", "wordCount");
     jsonObject.getObject("operator").putArray("inputs", new JsonArray().add(CACHE_NAME));
     jsonObject.getObject("operator").putString("output", "testOutputCache");
@@ -265,6 +265,11 @@ public class SubmitWordCountTest {
         putData(dataPath);
       }
 
+
+      //check Connection
+      MRNettyClient client = new MRNettyClient(globalConfig.getObject("global"));
+      client.close();
+      client = null;
       QueryStatus res = WebServiceClient.executeMapReduceJob(jsonObject, host + ":" + port);
       String id = res.getId();
       System.out.println("Submitted job. id: " + id);
@@ -287,6 +292,7 @@ public class SubmitWordCountTest {
       long end = System.currentTimeMillis();
 //      printResults(id, 5);
       verifyResults(id, resultWords, ensembleString);
+      System.exit(0);
       flushToFile("metrics");
       clearCache("metrics");
 
