@@ -145,12 +145,12 @@ public class TupleBuffer {
   }
 
   public boolean add(Object key, Object value) {
-    synchronized (mutex) {
+//    synchronized (mutex) {
       //      if(localCache == null) {
       buffer.put(key, value);
       size++;
       return (buffer.size() >= threshold);
-    }
+//    }
     //    else{
     //        ensembleCacheUtilsSingle.addLocalFuture(localCache.getAdvancedCache().withFlags(Flag.IGNORE_RETURN_VALUES).putAsync(key,value));
     //        ensembleCacheUtilsSingle.putToCacheDirect(localCache,key,value);
@@ -165,7 +165,7 @@ public class TupleBuffer {
       return null;
     }
     Map result = new HashMap();
-    synchronized (mutex) {
+//    synchronized (mutex) {vagvaz
       //      if (ensembleCache == null) {
       //                this.ensembleCache = emanager.getCache(cacheName + ".compressed", new ArrayList<>(emanager.sites()),
       //                    EnsembleCacheManager.Consistency.DIST);
@@ -186,7 +186,7 @@ public class TupleBuffer {
         result.put("uuid", uuid);
       }
       return result;
-    }
+//    }vagvaz
 
   }
 
@@ -233,7 +233,7 @@ public class TupleBuffer {
 //      }
 //      return foo;
 //    }
-    synchronized (mutex) {
+//    synchronized (mutex) { vagvaz
       try {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ObjectOutputStream outputStream = new ObjectOutputStream(byteStream);
@@ -262,7 +262,7 @@ public class TupleBuffer {
       } catch (IOException ioe) {
         ioe.printStackTrace();
       }
-    }
+//    } vagvaz
     return null;
   }
 
@@ -278,7 +278,7 @@ public class TupleBuffer {
     //      }
     //    }
     //    distMan = localCache.getAdvancedCache().getDistributionManager();
-    synchronized (mutex) {
+//    synchronized (mutex) { vagvaz
       if (buffer == null || buffer.size() == 0)
         return;
       //        return null;
@@ -307,7 +307,7 @@ public class TupleBuffer {
       //          }
       //        }
 
-    }
+//    }vagvaz
     //    return result;
   }
 

@@ -79,11 +79,9 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
   }
 
   @Override public void executeOn(kOut key, Object value) {
-    //    LeadsIntermediateIterator<vOut> values = new LeadsIntermediateIterator<>((String) key, prefix,
-    //                                                                             imanager);
-    //    Iterator<vOut> values = ((List)value).iterator();
+    //        LeadsIntermediateIterator<vOut> values = new LeadsIntermediateIterator<>((String) key,prefix,imanager);
     try {
-      Iterator<vOut> values = (Iterator<vOut>) value;
+      Iterator<vOut> values = (Iterator<vOut>) value;//((List)value).iterator();
       reducer.reduce(key, values, collector);
     } catch (Exception e) {
       e.printStackTrace();
@@ -153,7 +151,8 @@ public class LeadsLocalReducerCallable<kOut, vOut> extends LeadsBaseCallable<kOu
 //        break;
 //      }
 //    }
-    IndexManager.getIndex(inputCache.getName()+Integer.toString(callableIndex));
+    index = IndexManager.getIndex(inputCache.getName()+Integer.toString(callableIndex));
+    index.flush();
     if (index == null) {
       System.err.println("\n\n\n\n\n\nIndex was not installed serious...\n\n\n\n\n\n");
       profilerLog.error("\n\n\n\n\n\nIndex was not installed serious...\n\n\n\n\n\n");
