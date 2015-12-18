@@ -349,7 +349,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
                 if (roundRobinWithoutAddition % callableParallelism == 0) {
                   //                  PrintUtilities.printAndLog(profilerLog, "Sleeping because everyting full " + roundRobinWithoutAddition);
                   Thread.sleep((roundRobinWithoutAddition / callableParallelism) * sleepTimeMilis+1,
-                      (roundRobinWithoutAddition / callableParallelism) * sleepTimeNanos+1);
+                      Math.max((roundRobinWithoutAddition / callableParallelism) * sleepTimeNanos+1,999999));
                   //                  roundRobinWithoutAddition = 0;
                 }
                 //              i = (i+1)%callableParallelism;

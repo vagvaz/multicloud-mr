@@ -46,6 +46,7 @@ public class TupleBuffer {
   private transient KeyValueDataTransfer keyValueDataTransfer;
   private transient Address localAddress;
   private transient DistributionManager distributionManager;
+
   //  private transient Map<Address,Map<Object,Object>> nodeMaps;
 
   public TupleBuffer() {
@@ -112,6 +113,12 @@ public class TupleBuffer {
     uuid = UUID.randomUUID().toString();
     batchThreshold =
         LQPConfiguration.getInstance().getConfiguration().getInt("node.ensemble.batchput.batchsize", batchThreshold);
+//    bufferBos = new ByteArrayOutputStream();
+//    try {
+//      objectBufferOos = new ObjectOutputStream(bufferBos);
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    }
   }
 
   public TupleBuffer(int localBatchSize, Cache localCache, KeyValueDataTransfer keyValueDataTransfer) {
@@ -250,6 +257,7 @@ public class TupleBuffer {
           outputStream.writeObject(entry.getValue());
         }
         buffer.clear();
+        size = 0;
         outputStream.flush();
 
         outputStream.close();
