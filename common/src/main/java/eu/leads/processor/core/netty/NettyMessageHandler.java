@@ -75,6 +75,10 @@ public class NettyMessageHandler extends ChannelInboundHandlerAdapter {
     ctx.flush();
   }
 
+  @Override public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    super.exceptionCaught(ctx, cause);
+  }
+
   private void replyForMessage(ChannelHandlerContext ctx, NettyMessage nettyMessage) {
 //    ByteBuf buf =  io.netty.buffer.Unpooled.buffer(4);
 //    buf.writeInt(nettyMessage.getMessageId());

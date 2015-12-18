@@ -348,8 +348,8 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
                 roundRobinWithoutAddition++;
                 if (roundRobinWithoutAddition % callableParallelism == 0) {
                   //                  PrintUtilities.printAndLog(profilerLog, "Sleeping because everyting full " + roundRobinWithoutAddition);
-                  Thread.sleep((roundRobinWithoutAddition / callableParallelism) * sleepTimeMilis,
-                      (roundRobinWithoutAddition / callableParallelism) * sleepTimeNanos);
+                  Thread.sleep((roundRobinWithoutAddition / callableParallelism) * sleepTimeMilis+1,
+                      (roundRobinWithoutAddition / callableParallelism) * sleepTimeNanos+1);
                   //                  roundRobinWithoutAddition = 0;
                 }
                 //              i = (i+1)%callableParallelism;
@@ -369,7 +369,7 @@ public abstract class LeadsBaseCallable<K, V> implements LeadsCallable<K, V>,
             }
           }
         } else {
-          profilerLog.error("Exception in LEADSBASEBACALLABE " + e.getClass().toString());
+          profilerLog.error("Exception in LEADSBASEBACALLABE " + e.getClass().toString() + "msg: " + e.getMessage());
           PrintUtilities.logStackTrace(profilerLog, e.getStackTrace());
         }
       }

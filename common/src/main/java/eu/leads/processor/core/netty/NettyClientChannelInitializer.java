@@ -20,7 +20,7 @@ public class NettyClientChannelInitializer extends ChannelInitializer<SocketChan
     ChannelPipeline pipeline = ch.pipeline();
 
     pipeline.addLast(new ObjectEncoder());
-    pipeline.addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
+    pipeline.addLast(new ObjectDecoder(1024*1024*50,ClassResolvers.cacheDisabled(null)));
     pipeline.addLast(new NettyMessageHandler());
   }
 }
