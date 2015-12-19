@@ -309,17 +309,17 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   private void combine(boolean force) { //force the output of values
     //    log.error("Run combine " + maxCollectorSize + " " + buffer.size());
 
-    while(combineExecutor.getQueue().size() > 5){
+    while(combineExecutor.getQueue().size() > 100){
       try {
         Thread.sleep(10);
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
-    if (emitCount != buffer.size() || emitCount * percent >= buffer.size()) {
+//    if (emitCount != buffer.size() || emitCount * percent >= buffer.size()) {
       CombineRunnable runnable =
           new CombineRunnable(combiner, buffer, keyValueDataTransfer, intermediateDataCache, emitCount.intValue(),
-              counter, baseIntermKey, localCollector);
+              counter, baseIntermKey, localCollector,percent);
       combineExecutor.submit(runnable);
       buffer = new HashedMap();
       int diff = Integer.MAX_VALUE - counter;
@@ -329,23 +329,23 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
         counter = emitCount - diff;
       }
       emitCount = 0;
-    }else{
-      for (Map.Entry<KOut,List<VOut>> entry : buffer.entrySet()) {
-        List<VOut> list = entry.getValue();
-        if (list.size() > 1)
-          combiner.reduce(entry.getKey(), list.iterator(), localCollector);
-      }
-
-
-      Map<KOut, List<VOut>> combinedValues = null;
-      //    if(!dontCombine) {
-      combinedValues = localCollector.getCombinedValues();
-      for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
-        output(entry.getKey(), entry.getValue().get(0));
-      }
-      localCollector.reset();
-      buffer.clear();
-    }
+//    }else{
+//      for (Map.Entry<KOut,List<VOut>> entry : buffer.entrySet()) {
+//        List<VOut> list = entry.getValue();
+//        if (list.size() > 1)
+//          combiner.reduce(entry.getKey(), list.iterator(), localCollector);
+//      }
+//
+//
+//      Map<KOut, List<VOut>> combinedValues = null;
+//      //    if(!dontCombine) {
+//      combinedValues = localCollector.getCombinedValues();
+//      for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
+//        output(entry.getKey(), entry.getValue().get(0));
+//      }
+//      localCollector.reset();
+//      buffer.clear();
+//    }
   }
 
   //  private void combine(boolean force) { //force the output of values

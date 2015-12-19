@@ -12,6 +12,7 @@ import java.util.Map;
 public class CombineRunnable<KOut,VOut> implements Runnable {
   private final int lastSize;
   private final LocalCollector localCollector;
+  private final double percent;
   private  ComplexIntermediateKey baseIntermKey;
   private  int counter;
   private  KeyValueDataTransfer keyValueDataTransfer;
@@ -20,7 +21,7 @@ public class CombineRunnable<KOut,VOut> implements Runnable {
   private BasicCache intermediateDataCache;
 
   public <KOut, VOut> CombineRunnable(LeadsCombiner<KOut, VOut> combiner, Map buffer,
-      KeyValueDataTransfer keyValueDataTransfer, BasicCache intermediateDataCache,int lastSize,int counter, ComplexIntermediateKey baseIntermKey,LocalCollector localCollector) {
+      KeyValueDataTransfer keyValueDataTransfer, BasicCache intermediateDataCache,int lastSize,int counter, ComplexIntermediateKey baseIntermKey,LocalCollector localCollector,double percent) {
     this.combiner =  combiner;
     this.buffer = buffer;
     this.keyValueDataTransfer = keyValueDataTransfer;
@@ -29,6 +30,7 @@ public class CombineRunnable<KOut,VOut> implements Runnable {
     this.baseIntermKey = baseIntermKey;
     this.intermediateDataCache = intermediateDataCache;
     this.localCollector = localCollector;
+    this.percent = percent;
   }
 
   @Override public void run() {
@@ -48,11 +50,12 @@ public class CombineRunnable<KOut,VOut> implements Runnable {
 
     }
     Map<KOut, List<VOut>> combinedValues = localCollector.getCombinedValues();
-
-    for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
-      output(entry.getKey(), entry.getValue().get(0));
-    }
-    localCollector.reset();
+//    if(lastSize * percent >= combinedValues.size()) {
+      for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
+        output(entry.getKey(), entry.getValue().get(0));
+      }
+      localCollector.reset();
+//    }
     buffer.clear();
   }
 
