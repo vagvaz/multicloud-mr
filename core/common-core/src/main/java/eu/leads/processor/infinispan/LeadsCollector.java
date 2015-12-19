@@ -62,7 +62,6 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     //    this.maxCollectorSize = maxCollectorSize;
     cacheName = collectorCacheName;
     emitCount = 0;
-    System.err.println("LEADSCOLLECTOR " + this);
   }
 
   public LeadsCollector(int maxCollectorSize, String cacheName, InfinispanManager manager) {
@@ -304,9 +303,17 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     //    log.error("Run combine " + maxCollectorSize + " " + buffer.size());
     localCollector = new LocalCollector(0, "");
     int lastSize = emitCount;
+    if(lastSize == buffer.size() && !force){
+      return;
+    }
     if(!dontCombine) {
       for (Map.Entry<KOut, List<VOut>> entry : buffer.entrySet()) {
-        combiner.reduce(entry.getKey(), entry.getValue().iterator(), localCollector);
+        if(entry.getValue().size() > 1) {
+          combiner.reduce(entry.getKey(), entry.getValue().iterator(), localCollector);
+        }
+        else{
+          localCollector.getCombinedValues().put(entry.getKey(),entry.getValue());
+        }
       }
     }
     Map<KOut, List<VOut>> combinedValues = null;
@@ -315,8 +322,8 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     } else{
       combinedValues = buffer;
     }
-    if (force || (combinedValues.size() >= maxCollectorSize * percent) || (lastSize * percent <= combinedValues
-        .size())) {
+    if (force || (combinedValues.size() >= maxCollectorSize * percent)){// || (lastSize * percent <= combinedValues
+//        .size())) {
       //      PrintUtilities.printAndLog(log,"Flush " + combinedValues.size() + " " + lastSize);
       for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
         for (VOut v : entry.getValue()) {
