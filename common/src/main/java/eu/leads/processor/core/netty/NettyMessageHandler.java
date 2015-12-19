@@ -32,7 +32,7 @@ public class NettyMessageHandler extends ChannelInboundHandlerAdapter {
   int replied = 0;
 
   public NettyMessageHandler() {
-    threadPoolExecutor = new ThreadPoolExecutor(4,4,1000, TimeUnit.MILLISECONDS,  new LinkedBlockingDeque<Runnable>());
+    threadPoolExecutor = new ThreadPoolExecutor(8,8,1000, TimeUnit.MILLISECONDS,  new LinkedBlockingDeque<Runnable>());
   }
 
   @Override public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {

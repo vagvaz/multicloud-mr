@@ -259,7 +259,12 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   }
 
   public void emit(KOut key, VOut value) {
-
+    if(inCombine){
+      List<VOut> values = buffer.get(key);
+      values.clear();
+      values.add(value);
+      return;
+    }
     if (onMap) {
       if (isReduceLocal) {
         output(key, value);
@@ -301,27 +306,28 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   private void combine(boolean force) { //force the output of values
     //    log.error("Run combine " + maxCollectorSize + " " + buffer.size());
-    localCollector = new LocalCollector(0, "");
+//    localCollector = new LocalCollector(0, "");
     int lastSize = emitCount;
-    if(lastSize == buffer.size() && !force){
-      return;
-    }
-    if(!dontCombine) {
+//    if( && !force){
+//      return;
+//    }
+//    if(!dontCombine) {
+    if(lastSize != buffer.size()) {
+      inCombine = true;
       for (Map.Entry<KOut, List<VOut>> entry : buffer.entrySet()) {
-        if(entry.getValue().size() > 1) {
-          combiner.reduce(entry.getKey(), entry.getValue().iterator(), localCollector);
-        }
-        else{
-          localCollector.getCombinedValues().put(entry.getKey(),entry.getValue());
+        if (entry.getValue().size() > 1) {
+          combiner.reduce(entry.getKey(), entry.getValue().iterator(), this);
         }
       }
+      inCombine = false;
     }
+//    }
     Map<KOut, List<VOut>> combinedValues = null;
-    if(!dontCombine) {
-     combinedValues = localCollector.getCombinedValues();
-    } else{
+//    if(!dontCombine) {
+//     combinedValues = localCollector.getCombinedValues();
+//    } else{
       combinedValues = buffer;
-    }
+//    }
     if (force || (combinedValues.size() >= maxCollectorSize * percent)){// || (lastSize * percent <= combinedValues
 //        .size())) {
       //      PrintUtilities.printAndLog(log,"Flush " + combinedValues.size() + " " + lastSize);
@@ -333,8 +339,8 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       buffer.clear();
       emitCount = 0; // the size is 0 since we have written everything
     } else {
-      buffer.clear();
-      buffer = combinedValues;
+//      buffer.clear();
+//      buffer = combinedValues;
       emitCount = buffer.size(); // the size is only one per each key
     }
     localCollector = null;

@@ -50,7 +50,7 @@ public class WordCountReducer extends LeadsCombiner<String, Tuple> {
   @Override public void reduce(String reducedKey, Iterator<Tuple> iter, LeadsCollector collector) {
     //    System.out.println(getClass().getName() + ".reduce!");
     int sum = 0;
-    ProfileEvent event = new ProfileEvent("WCRComputeSum", log);
+//    ProfileEvent event = new ProfileEvent("WCRComputeSum", log);
     while (true) {
       try {
         Tuple input = iter.next();
@@ -76,13 +76,13 @@ public class WordCountReducer extends LeadsCombiner<String, Tuple> {
       }
     }
 
-    event.end();
+//    event.end();
     if (!isComposableButNotLocal) {
-      event.start("WRCOutputResult");
+//      List<VOut> values = buffer.get(key); event.start("WRCOutputResult");
       Tuple output = new Tuple();
       output.setAttribute("count", sum);
       collector.emit(reducedKey, output);
-      event.end();
+//      event.end();
     }
   }
 
