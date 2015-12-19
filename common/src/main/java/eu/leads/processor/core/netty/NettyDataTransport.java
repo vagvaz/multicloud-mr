@@ -229,7 +229,7 @@ public class NettyDataTransport {
       entry.getKey().flush();
       while(entry.getValue().size() > 0 ){
         try {
-          PrintUtilities.printAndLog(log,"Waiting " + entry.getKey().remoteAddress().toString() + " " + entry.getValue().size());
+          PrintUtilities.printAndLog(log,"Waiting " + entry.getKey().remoteAddress() + " " + entry.getValue().size());
           //          PrintUtilities.printList(entry.getValue());
           Thread.sleep(Math.min(Math.max(entry.getValue().size()*100,500),50000));
         } catch (InterruptedException e) {
