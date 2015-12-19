@@ -80,6 +80,7 @@ public class NettyDataTransport {
     workerGroup = new NioEventLoopGroup();
     bossGroup = new NioEventLoopGroup();
     clientBootstrap.group(workerGroup);
+//    clientBootstrap.group(workerGroup);
     clientBootstrap.channel(NioSocketChannel.class);
     clientBootstrap.option(ChannelOption.SO_KEEPALIVE,true).handler(clientChannelInitializer);
     serverBootstrap.group(bossGroup,workerGroup).channel(NioServerSocketChannel.class)
@@ -230,7 +231,7 @@ public class NettyDataTransport {
         try {
           PrintUtilities.printAndLog(log,"Waiting " + entry.getKey().remoteAddress().toString() + " " + entry.getValue().size());
           //          PrintUtilities.printList(entry.getValue());
-          Thread.sleep(Math.min(Math.max(entry.getValue().size(),100),5000));
+          Thread.sleep(Math.min(Math.max(entry.getValue().size()*100,500),50000));
         } catch (InterruptedException e) {
           e.printStackTrace();
         }

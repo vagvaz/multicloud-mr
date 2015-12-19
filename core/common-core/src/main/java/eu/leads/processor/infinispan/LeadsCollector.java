@@ -2,8 +2,12 @@ package eu.leads.processor.infinispan;
 
 import eu.leads.processor.common.infinispan.InfinispanManager;
 import eu.leads.processor.common.infinispan.KeyValueDataTransfer;
+import eu.leads.processor.common.utils.PrintUtilities;
 import eu.leads.processor.conf.LQPConfiguration;
 import eu.leads.processor.core.netty.NettyKeyValueDataTransfer;
+import io.netty.util.concurrent.SingleThreadEventExecutor;
+import net.sf.cglib.core.Local;
+import org.apache.commons.collections.map.HashedMap;
 import org.infinispan.commons.api.BasicCache;
 import org.infinispan.distexec.mapreduce.Collector;
 import org.infinispan.ensemble.EnsembleCacheManager;
@@ -14,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 
 public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serializable {
 
@@ -48,6 +52,8 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   private KeyValueDataTransfer keyValueDataTransfer;
   private LocalCollector localCollector;
   private boolean dontCombine = false;
+  private boolean inCombine = false;
+  private transient ThreadPoolExecutor combineExecutor;
 
   public LeadsCollector(int maxCollectorSize, String collectorCacheName) {
     super();
@@ -56,6 +62,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     //    this.maxCollectorSize = maxCollectorSize;
     cacheName = collectorCacheName;
     emitCount = 0;
+    System.err.println("LEADSCOLLECTOR " + this);
   }
 
   public LeadsCollector(int maxCollectorSize, String cacheName, InfinispanManager manager) {
@@ -67,6 +74,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     this.cacheName = cacheName;
     storeCache = (BasicCache) emanager
         .getCache(cacheName, new ArrayList<>(emanager.sites()), EnsembleCacheManager.Consistency.DIST);
+    //    System.err.println("LEADSCOLLECTOR ISPN" + this);
   }
 
   public LeadsCollector(LeadsCollector other) {
@@ -89,6 +97,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     //    this.currentKey = other.currentKey;
     this.mutex = new Object();
     //    this.ensembleCacheUtilsSingle = new EnsembleCacheUtilsSingle();
+    System.err.println("LEADSCOLLECTOR COPY" + this);
   }
 
   public LeadsCombiner<KOut, VOut> getCombiner() {
@@ -216,6 +225,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   }
 
   public void initializeCache(String inputCacheName, InfinispanManager imanager) {
+    combineExecutor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue());
     localCollector = new LocalCollector(0, "");
     maxCollectorSize = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.buffersize", 10000);
     percent = LQPConfiguration.getInstance().getConfiguration().getInt("node.combiner.percent", 75);
@@ -251,7 +261,12 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   }
 
   public void emit(KOut key, VOut value) {
-
+    if(inCombine){
+      List<VOut> values = buffer.get(key);
+      values.clear();
+      values.add(value);
+      return;
+    }
     if (onMap) {
       if (isReduceLocal) {
         output(key, value);
@@ -269,8 +284,8 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
               return;
             }
           }
-            values.add(value);
-            emitCount++;
+          values.add(value);
+          emitCount++;
 
           if (isOverflown()) {
             combine(false);
@@ -293,36 +308,84 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
 
   private void combine(boolean force) { //force the output of values
     //    log.error("Run combine " + maxCollectorSize + " " + buffer.size());
-    localCollector = new LocalCollector(0, "");
-    int lastSize = emitCount;
-    if(!dontCombine) {
-      for (Map.Entry<KOut, List<VOut>> entry : buffer.entrySet()) {
-        combiner.reduce(entry.getKey(), entry.getValue().iterator(), localCollector);
+
+    while(combineExecutor.getQueue().size() > 5){
+      try {
+        Thread.sleep(10);
+      } catch (Exception e) {
+        e.printStackTrace();
       }
     }
-    Map<KOut, List<VOut>> combinedValues = null;
-    if(!dontCombine) {
-     combinedValues = localCollector.getCombinedValues();
-    } else{
-      combinedValues = buffer;
-    }
-    if (force || (combinedValues.size() >= maxCollectorSize * percent) || (lastSize * percent <= combinedValues
-        .size())) {
-      //      PrintUtilities.printAndLog(log,"Flush " + combinedValues.size() + " " + lastSize);
+    if (emitCount != buffer.size() || emitCount * percent >= buffer.size()) {
+      CombineRunnable runnable =
+          new CombineRunnable(combiner, buffer, keyValueDataTransfer, intermediateDataCache, emitCount.intValue(),
+              counter, baseIntermKey, localCollector);
+      combineExecutor.submit(runnable);
+      buffer = new HashedMap();
+      int diff = Integer.MAX_VALUE - counter;
+      if (diff > emitCount) {
+        counter += emitCount;
+      } else {
+        counter = emitCount - diff;
+      }
+      emitCount = 0;
+    }else{
+      for (Map.Entry<KOut,List<VOut>> entry : buffer.entrySet()) {
+        List<VOut> list = entry.getValue();
+        if (list.size() > 1)
+          combiner.reduce(entry.getKey(), list.iterator(), localCollector);
+      }
+
+
+      Map<KOut, List<VOut>> combinedValues = null;
+      //    if(!dontCombine) {
+      combinedValues = localCollector.getCombinedValues();
       for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
-        for (VOut v : entry.getValue()) {
-          output(entry.getKey(), v);
-        }
+        output(entry.getKey(), entry.getValue().get(0));
       }
+      localCollector.reset();
       buffer.clear();
-      emitCount = 0; // the size is 0 since we have written everything
-    } else {
-      buffer.clear();
-      buffer = combinedValues;
-      emitCount = buffer.size(); // the size is only one per each key
     }
-    localCollector = null;
   }
+
+  //  private void combine(boolean force) { //force the output of values
+  //    //    log.error("Run combine " + maxCollectorSize + " " + buffer.size());
+  //    inCombine = true;
+  //    //    localCollector = new LocalCollector(0, "");
+  //    int lastSize = emitCount;
+  //    if(!dontCombine) {
+  //      if (lastSize != buffer.size()) {
+  //        for (Map.Entry<KOut,List<VOut>> entry : buffer.entrySet()) {
+  //          List<VOut> list = entry.getValue();
+  //          if (list.size() > 1)
+  //            combiner.reduce(entry.getKey(), list.iterator(), this);
+  //        }
+  //      }
+  //    }
+  //    Map<KOut, List<VOut>> combinedValues = null;
+  //    //    if(!dontCombine) {
+  //    //     combinedValues = localCollector.getCombinedValues();
+  //    //    } else{
+  //    combinedValues = buffer;
+  //    //    }
+  //    if (force || (combinedValues.size() >= maxCollectorSize * percent) || (lastSize * percent <= combinedValues
+  //        .size())) {
+  //      //      PrintUtilities.printAndLog(log,"Flush " + combinedValues.size() + " " + lastSize);
+  //      for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
+  //        //        for (VOut v : entry.getValue()) {
+  //        output(entry.getKey(), entry.getValue().get(0));
+  //        //        }
+  //      }
+  //      buffer.clear();
+  //      emitCount = 0; // the size is 0 since we have written everything
+  //    } else {
+  //      //      buffer.clear();
+  //      //      buffer = combinedValues;
+  //      emitCount = buffer.size(); // the size is only one per each key
+  //    }
+  //    localCollector = null;
+  //    inCombine = false;
+  //  }
 
   private void output(KOut key, VOut value) {
     //    if(key.hashCode() % emanager.sites().size() == indexSite){
@@ -338,9 +401,9 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     //      remoteData += value.toString().length();
     //    }
 
-//    synchronized (mutex) {
-      counter++;
-//    }
+    //    synchronized (mutex) {
+    counter++;
+    //    }
     baseIntermKey.setKey(key.toString());
     baseIntermKey.setCounter(counter);
     ComplexIntermediateKey newKey =
@@ -353,6 +416,13 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     try {
       if (useCombiner) {
         combine(true);
+      }
+
+      int pending = combineExecutor.getQueue().size();
+      while( pending > 0 || combineExecutor.getActiveCount() > 0 ){
+        PrintUtilities.printAndLog(log,"Collector sleeping for " + pending);
+        pending = combineExecutor.getQueue().size();
+        Thread.sleep(pending + 1);
       }
       if (combiner != null) {
         combiner.finalizeTask();
@@ -370,12 +440,6 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
       e.printStackTrace();
     }
   }
-  //
-  //  public void initializeCache(EmbeddedCacheManager manager) {
-  //    imanager = new ClusterInfinispanManager(manager);
-  //    storeCache = (Cache) imanager.getPersisentCache(cacheName);
-  //  }
-
 
   public void reset() {
     //    storeCache.clear();

@@ -1,6 +1,7 @@
 package eu.leads.processor.infinispan;
 
 import eu.leads.processor.common.infinispan.InfinispanManager;
+import org.apache.commons.collections.map.HashedMap;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -17,7 +18,7 @@ public class LocalCollector<K, V> extends LeadsCollector<K, V> {
 
   public LocalCollector(int maxCollectorSize, String cacheName, InfinispanManager manager) {
     super(maxCollectorSize, cacheName, manager);
-    combinedValues = new HashMap();
+    combinedValues = new HashedMap();
   }
 
   @Override public void emit(K key, V value) {

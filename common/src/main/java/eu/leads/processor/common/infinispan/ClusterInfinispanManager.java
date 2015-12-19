@@ -174,9 +174,9 @@ public class ClusterInfinispanManager implements InfinispanManager {
 
 
 
-    TestCacheManagerFactory.amendMarshaller(holder.getGlobalConfigurationBuilder());
-    holder.getDefaultConfigurationBuilder().transaction()
-        .transactionManagerLookup(new JBossStandaloneJTAManagerLookup());
+//    TestCacheManagerFactory.amendMarshaller(holder.getGlobalConfigurationBuilder());
+//    holder.getDefaultConfigurationBuilder().transaction()
+//        .transactionManagerLookup(new JBossStandaloneJTAManagerLookup());
     GlobalConfiguration gc = holder.getGlobalConfigurationBuilder().build();
     manager = new DefaultCacheManager(gc, initDefaultCacheConfigBuilder().build(gc), true);
     manager.defineConfiguration("defaultCache", getCacheDefaultConfiguration("defaultCache"));

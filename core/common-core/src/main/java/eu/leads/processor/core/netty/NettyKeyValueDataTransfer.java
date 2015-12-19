@@ -115,7 +115,8 @@ public class NettyKeyValueDataTransfer implements KeyValueDataTransfer {
       for(Map.Entry<String,TupleBuffer> cacheEntry : nodeBuffer.entrySet()){
         String cacheName = cacheEntry.getKey();
         TupleBuffer buffer = cacheEntry.getValue();
-        if(buffer.getBuffer().size() > 0) {
+        if(buffer.getSize() > 0) {
+//        if(buffer.getBuffer().size() > 0) {
           NettyDataTransport.send(targetNode, cacheName, buffer.serialize());
         }
       }

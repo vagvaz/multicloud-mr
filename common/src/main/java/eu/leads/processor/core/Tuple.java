@@ -59,7 +59,7 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
       return;
     }
 
-    BSONEncoder encoder = new BasicBSONEncoder();//TupleUtils.getEncoder();
+    BSONEncoder encoder = TupleUtils.getEncoder();
     if (encoder == null) {
       encoder = new BasicBSONEncoder();
       bytes = serializeWithEncoder(encoder);
@@ -93,7 +93,7 @@ public class Tuple extends DataType_bson implements Serializable, Externalizable
     bytes = null;
     byte[] array = (byte[]) in.readObject();
     byte[] uncompressed = Snappy.uncompress(array);
-    BSONDecoder decoder = new BasicBSONDecoder();
+    BSONDecoder decoder = TupleUtils.getDecoder();// new BasicBSONDecoder();
     if (decoder == null) {
       decoder = new BasicBSONDecoder();
       data = decoder.readObject(uncompressed);

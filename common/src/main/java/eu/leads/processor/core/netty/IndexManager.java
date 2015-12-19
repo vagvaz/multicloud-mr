@@ -39,6 +39,20 @@ public class IndexManager {
     if(name.endsWith(".data")){
       int index = Math.abs(key.hashCode()) % parallelism;
       indexName+= Integer.toString(index);
+      IntermediateDataIndex indexI = indexes.get(indexName);
+      if (indexI == null) {
+        synchronized (indexes) {
+          indexI = indexes.get(indexName);
+          if (indexI != null) {
+            indexI.put(key, value);
+            return;
+          }
+          indexI = initializeIndex(indexName);
+          indexes.put(indexName, indexI);
+        }
+      }
+      indexI.put(key, value);
+      return;
     }
 
     IntermediateDataIndex index = indexes.get(indexName);
