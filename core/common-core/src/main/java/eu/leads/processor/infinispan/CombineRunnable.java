@@ -54,12 +54,12 @@ public class CombineRunnable<KOut,VOut> implements Runnable {
     } else{
       combinedValues = buffer;
     }
-    if(lastSize * percent <= combinedValues.size()) {
+//    if(lastSize * percent <= combinedValues.size()) {
       for (Map.Entry<KOut, List<VOut>> entry : combinedValues.entrySet()) {
         output(entry.getKey(), entry.getValue().get(0));
       }
       localCollector.reset();
-    }
+//    }
     buffer.clear();
   }
 
