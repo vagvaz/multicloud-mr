@@ -309,9 +309,9 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
   private void combine(boolean force) { //force the output of values
     //    log.error("Run combine " + maxCollectorSize + " " + buffer.size());
 
-    while(combineExecutor.getQueue().size() > 20){
+    while(combineExecutor.getQueue().size() > 0 || combineExecutor.getActiveCount() > 0){
       try {
-        Thread.sleep(10);
+        Thread.yield();
       } catch (Exception e) {
         e.printStackTrace();
       }
