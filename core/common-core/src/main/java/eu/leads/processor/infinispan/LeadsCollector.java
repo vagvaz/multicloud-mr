@@ -424,6 +424,7 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
         pending = combineExecutor.getQueue().size();
         Thread.sleep(pending + 1);
       }
+      flushLocal(localCollector);
       if (combiner != null) {
         combiner.finalizeTask();
       }
@@ -439,6 +440,14 @@ public class LeadsCollector<KOut, VOut> implements Collector<KOut, VOut>, Serial
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  private void flushLocal(LocalCollector localCollector) {
+    Map<KOut, List<VOut>> c = localCollector.getCombinedValues();
+      for (Map.Entry<KOut, List<VOut>> entry : c.entrySet()) {
+        output(entry.getKey(), entry.getValue().get(0));
+      }
+      localCollector.reset();
   }
 
   public void reset() {
